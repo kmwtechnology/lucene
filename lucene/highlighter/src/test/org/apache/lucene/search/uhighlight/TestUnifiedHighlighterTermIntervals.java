@@ -35,7 +35,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.intervals.IntervalQuery;
 import org.apache.lucene.queries.intervals.Intervals;
 import org.apache.lucene.search.DocIdSetIterator;
@@ -660,7 +660,7 @@ public class TestUnifiedHighlighterTermIntervals extends LuceneTestCase {
 
     IndexSearcher searcher = newSearcher(ir);
     UnifiedHighlighter highlighter = randomUnifiedHighlighter(searcher, indexAnalyzer);
-    int docID = searcher.search(new TermQuery(new Term("id", "id")), 1).scoreDocs[0].doc;
+    int docID = searcher.search(new TermQuery(new QueryTerm("id", "id", 0)), 1).scoreDocs[0].doc;
     Query query = new IntervalQuery("body", Intervals.term("highlighting"));
     int[] docIDs = new int[1];
     docIDs[0] = docID;
@@ -788,7 +788,7 @@ public class TestUnifiedHighlighterTermIntervals extends LuceneTestCase {
 
     IndexSearcher searcher = newSearcher(ir);
     UnifiedHighlighter highlighter = randomUnifiedHighlighter(searcher, indexAnalyzer);
-    int docID = searcher.search(new TermQuery(new Term("id", "id")), 1).scoreDocs[0].doc;
+    int docID = searcher.search(new TermQuery(new QueryTerm("id", "id", 0)), 1).scoreDocs[0].doc;
 
     Query query = new IntervalQuery("body", Intervals.term("highlighting"));
     int[] docIDs = new int[1];
@@ -819,7 +819,7 @@ public class TestUnifiedHighlighterTermIntervals extends LuceneTestCase {
 
     IndexSearcher searcher = newSearcher(ir);
     UnifiedHighlighter highlighter = randomUnifiedHighlighter(searcher, indexAnalyzer);
-    int docID = searcher.search(new TermQuery(new Term("id", "id")), 1).scoreDocs[0].doc;
+    int docID = searcher.search(new TermQuery(new QueryTerm("id", "id", 0)), 1).scoreDocs[0].doc;
 
     Query query = new IntervalQuery("body", Intervals.term("highlighting"));
     int[] docIDs = new int[1];

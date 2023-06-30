@@ -23,7 +23,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -60,8 +60,8 @@ public class TestNeedsScores extends LuceneTestCase {
 
   /** prohibited clauses in booleanquery don't need scoring */
   public void testProhibitedClause() throws Exception {
-    Query required = new TermQuery(new Term("field", "this"));
-    Query prohibited = new TermQuery(new Term("field", "3"));
+    Query required = new TermQuery(new QueryTerm("field", "this", 0));
+    Query prohibited = new TermQuery(new QueryTerm("field", "3", 0));
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(new AssertNeedsScores(required, ScoreMode.TOP_SCORES), BooleanClause.Occur.MUST);
     bq.add(
@@ -72,7 +72,7 @@ public class TestNeedsScores extends LuceneTestCase {
 
   /** nested inside constant score query */
   public void testConstantScoreQuery() throws Exception {
-    Query term = new TermQuery(new Term("field", "this"));
+    Query term = new TermQuery(new QueryTerm("field", "this", 0));
 
     // Counting queries and top-score queries that compute the hit count should use
     // COMPLETE_NO_SCORES

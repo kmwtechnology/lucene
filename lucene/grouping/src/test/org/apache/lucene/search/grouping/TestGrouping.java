@@ -40,6 +40,7 @@ import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.function.ValueSource;
@@ -145,11 +146,11 @@ public class TestGrouping extends LuceneTestCase {
 
     final FirstPassGroupingCollector<?> c1 =
         createRandomFirstPassCollector(groupField, groupSort, 10);
-    indexSearcher.search(new TermQuery(new Term("content", "random")), c1);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "random", 0)), c1);
 
     final TopGroupsCollector<?> c2 =
         createSecondPassCollector(c1, groupSort, Sort.RELEVANCE, 0, 5, true);
-    indexSearcher.search(new TermQuery(new Term("content", "random")), c2);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "random", 0)), c2);
 
     final TopGroups<?> groups = c2.getTopGroups(0);
     assertFalse(Float.isNaN(groups.maxScore));
@@ -834,7 +835,8 @@ public class TestGrouping extends LuceneTestCase {
       Set<Integer> seenIDs = new HashSet<>();
       for (int contentID = 0; contentID < 3; contentID++) {
         final ScoreDoc[] hits =
-            s.search(new TermQuery(new Term("content", "real" + contentID)), numDocs).scoreDocs;
+            s.search(new TermQuery(new QueryTerm("content", "real" + contentID, 0)), numDocs)
+                .scoreDocs;
         for (ScoreDoc hit : hits) {
           int idValue = docIDToID[hit.doc];
 
@@ -858,7 +860,7 @@ public class TestGrouping extends LuceneTestCase {
       // group, so we can use single pass collector
       dirBlocks = newDirectory();
       rBlocks = getDocBlockReader(dirBlocks, groupDocs);
-      final Query lastDocInBlock = new TermQuery(new Term("groupend", "x"));
+      final Query lastDocInBlock = new TermQuery(new QueryTerm("groupend", "x", 0));
 
       final IndexSearcher sBlocks = newSearcher(rBlocks);
       // This test relies on the fact that longer fields produce lower scores
@@ -890,7 +892,7 @@ public class TestGrouping extends LuceneTestCase {
         // "real"+contentID)) +
         // " dfnew=" + sBlocks.docFreq(new Term("content", "real"+contentID)));
         final ScoreDoc[] hits =
-            sBlocks.search(new TermQuery(new Term("content", "real" + contentID)), numDocs)
+            sBlocks.search(new TermQuery(new QueryTerm("content", "real" + contentID, 0)), numDocs)
                 .scoreDocs;
         for (ScoreDoc hit : hits) {
           final GroupDoc gd = groupDocsByID[docIDToIDBlocks[hit.doc]];
@@ -937,9 +939,9 @@ public class TestGrouping extends LuceneTestCase {
                   + " searchTerm="
                   + searchTerm
                   + " dF="
-                  + r.docFreq(new Term("content", searchTerm))
+                  + r.docFreq(new QueryTerm("content", searchTerm, 0))
                   + " dFBlock="
-                  + rBlocks.docFreq(new Term("content", searchTerm))
+                  + rBlocks.docFreq(new QueryTerm("content", searchTerm, 0))
                   + " topNGroups="
                   + topNGroups
                   + " groupOffset="
@@ -1001,7 +1003,7 @@ public class TestGrouping extends LuceneTestCase {
         }
 
         // Search top reader:
-        final Query query = new TermQuery(new Term("content", searchTerm));
+        final Query query = new TermQuery(new QueryTerm("content", searchTerm, 0));
 
         s.search(query, c);
 

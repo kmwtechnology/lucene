@@ -50,6 +50,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.index.Term;
@@ -545,10 +546,10 @@ public class AnalyzingInfixSuggester extends Lookup implements Closeable {
   protected Query getLastTokenQuery(String token) throws IOException {
     if (token.length() < minPrefixChars) {
       // The leading ngram was directly indexed:
-      return new TermQuery(new Term(TEXTGRAMS_FIELD_NAME, token));
+      return new TermQuery(new QueryTerm(TEXTGRAMS_FIELD_NAME, token, 0));
     }
 
-    return new PrefixQuery(new Term(TEXT_FIELD_NAME, token));
+    return new PrefixQuery(new QueryTerm(TEXT_FIELD_NAME, token, 0));
   }
 
   /**
@@ -606,7 +607,7 @@ public class AnalyzingInfixSuggester extends Lookup implements Closeable {
 
     // TODO: if we had a BinaryTermField we could fix
     // this "must be valid ut8f" limitation:
-    query.add(new TermQuery(new Term(CONTEXTS_FIELD_NAME, context)), clause);
+    query.add(new TermQuery(new QueryTerm(CONTEXTS_FIELD_NAME, context, 0)), clause);
   }
 
   /**
@@ -658,7 +659,7 @@ public class AnalyzingInfixSuggester extends Lookup implements Closeable {
       while (ts.incrementToken()) {
         if (lastToken != null) {
           matchedTokens.add(lastToken);
-          query.add(new TermQuery(new Term(TEXT_FIELD_NAME, lastToken)), occur);
+          query.add(new TermQuery(new QueryTerm(TEXT_FIELD_NAME, lastToken, 0)), occur);
         }
         lastToken = termAtt.toString();
         if (lastToken != null) {
@@ -683,7 +684,7 @@ public class AnalyzingInfixSuggester extends Lookup implements Closeable {
           // that if query ends with a space we only show
           // exact matches for that term:
           matchedTokens.add(lastToken);
-          lastQuery = new TermQuery(new Term(TEXT_FIELD_NAME, lastToken));
+          lastQuery = new TermQuery(new QueryTerm(TEXT_FIELD_NAME, lastToken, 0));
         }
 
         if (lastQuery != null) {

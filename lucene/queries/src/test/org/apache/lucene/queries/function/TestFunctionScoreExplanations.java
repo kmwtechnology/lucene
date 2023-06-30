@@ -18,7 +18,7 @@
 package org.apache.lucene.queries.function;
 
 import java.io.IOException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -35,19 +35,19 @@ import org.apache.lucene.tests.search.BaseExplanationTestCase;
 public class TestFunctionScoreExplanations extends BaseExplanationTestCase {
 
   public void testOneTerm() throws Exception {
-    Query q = new TermQuery(new Term(FIELD, "w1"));
+    Query q = new TermQuery(new QueryTerm(FIELD, "w1", 0));
     FunctionScoreQuery fsq = new FunctionScoreQuery(q, DoubleValuesSource.constant(5));
     qtest(fsq, new int[] {0, 1, 2, 3});
   }
 
   public void testBoost() throws Exception {
-    Query q = new TermQuery(new Term(FIELD, "w1"));
+    Query q = new TermQuery(new QueryTerm(FIELD, "w1", 0));
     FunctionScoreQuery csq = new FunctionScoreQuery(q, DoubleValuesSource.constant(5));
     qtest(new BoostQuery(csq, 4), new int[] {0, 1, 2, 3});
   }
 
   public void testTopLevelBoost() throws Exception {
-    Query q = new TermQuery(new Term(FIELD, "w1"));
+    Query q = new TermQuery(new QueryTerm(FIELD, "w1", 0));
     FunctionScoreQuery csq = new FunctionScoreQuery(q, DoubleValuesSource.constant(5));
     BooleanQuery.Builder bqB = new BooleanQuery.Builder();
     bqB.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
@@ -58,7 +58,7 @@ public class TestFunctionScoreExplanations extends BaseExplanationTestCase {
 
   public void testExplanationsIncludingScore() throws Exception {
 
-    Query q = new TermQuery(new Term(FIELD, "w1"));
+    Query q = new TermQuery(new QueryTerm(FIELD, "w1", 0));
     FunctionScoreQuery fsq = new FunctionScoreQuery(q, DoubleValuesSource.SCORES);
 
     qtest(fsq, new int[] {0, 1, 2, 3});

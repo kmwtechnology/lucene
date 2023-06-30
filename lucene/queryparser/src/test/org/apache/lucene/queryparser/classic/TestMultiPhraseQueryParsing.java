@@ -21,7 +21,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -102,9 +102,11 @@ public class TestMultiPhraseQueryParsing extends LuceneTestCase {
     assertTrue("wrong query type!", q instanceof MultiPhraseQuery);
 
     MultiPhraseQuery.Builder multiPhraseQueryBuilder = new MultiPhraseQuery.Builder();
-    multiPhraseQueryBuilder.add(new Term[] {new Term("field", "a"), new Term("field", "1")}, -1);
-    multiPhraseQueryBuilder.add(new Term[] {new Term("field", "b"), new Term("field", "1")}, 0);
-    multiPhraseQueryBuilder.add(new Term[] {new Term("field", "c")}, 1);
+    multiPhraseQueryBuilder.add(
+        new QueryTerm[] {new QueryTerm("field", "a", 0), new QueryTerm("field", "1", 0)}, -1);
+    multiPhraseQueryBuilder.add(
+        new QueryTerm[] {new QueryTerm("field", "b", 0), new QueryTerm("field", "1", 0)}, 0);
+    multiPhraseQueryBuilder.add(new QueryTerm[] {new QueryTerm("field", "c", 0)}, 1);
 
     assertEquals(multiPhraseQueryBuilder.build(), q);
   }

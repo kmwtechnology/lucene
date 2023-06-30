@@ -116,7 +116,7 @@ public class TestDocumentsWriterDeleteQueue extends LuceneTestCase {
     assertFalse(queue.anyChanges());
     final int size = 200 + random().nextInt(500) * RANDOM_MULTIPLIER;
     for (int i = 0; i < size; i++) {
-      Term term = new Term("id", "" + i);
+      QueryTerm term = new QueryTerm("id", "" + i, 0);
       if (random().nextInt(10) == 0) {
         queue.addDelete(new TermQuery(term));
       } else {
@@ -137,7 +137,7 @@ public class TestDocumentsWriterDeleteQueue extends LuceneTestCase {
     int termsSinceFreeze = 0;
     int queriesSinceFreeze = 0;
     for (int i = 0; i < size; i++) {
-      Term term = new Term("id", "" + i);
+      QueryTerm term = new QueryTerm("id", "" + i, 0);
       if (random().nextInt(10) == 0) {
         queue.addDelete(new TermQuery(term));
         queriesSinceFreeze++;

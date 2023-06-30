@@ -40,6 +40,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.charstream.FastCharStream;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -356,15 +357,15 @@ public class TestQPHelper extends LuceneTestCase {
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
     BooleanQuery.Builder expected = new BooleanQuery.Builder();
-    expected.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.SHOULD);
-    expected.add(new TermQuery(new Term("field", "国")), BooleanClause.Occur.SHOULD);
+    expected.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.SHOULD);
+    expected.add(new TermQuery(new QueryTerm("field", "国", 0)), BooleanClause.Occur.SHOULD);
     assertEquals(expected.build(), getQuery("中国", analyzer));
 
     expected = new BooleanQuery.Builder();
-    expected.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.MUST);
+    expected.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.MUST);
     BooleanQuery.Builder inner = new BooleanQuery.Builder();
-    inner.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.SHOULD);
-    inner.add(new TermQuery(new Term("field", "国")), BooleanClause.Occur.SHOULD);
+    inner.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.SHOULD);
+    inner.add(new TermQuery(new QueryTerm("field", "国", 0)), BooleanClause.Occur.SHOULD);
     expected.add(inner.build(), BooleanClause.Occur.MUST);
     assertEquals(expected.build(), getQuery("中 AND 中国", new SimpleCJKAnalyzer()));
   }
@@ -374,8 +375,8 @@ public class TestQPHelper extends LuceneTestCase {
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.SHOULD);
-    expectedB.add(new TermQuery(new Term("field", "国")), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm("field", "国", 0)), BooleanClause.Occur.SHOULD);
     Query expected = expectedB.build();
     expected = new BoostQuery(expected, 0.5f);
     assertEquals(expected, getQuery("中国^0.5", analyzer));
@@ -385,7 +386,7 @@ public class TestQPHelper extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    PhraseQuery expected = new PhraseQuery("field", "中", "国");
+    PhraseQuery expected = new PhraseQuery("field", new int[] {0, 0}, "中", "国");
 
     assertEquals(expected, getQuery("\"中国\"", analyzer));
   }
@@ -394,7 +395,7 @@ public class TestQPHelper extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    Query expected = new PhraseQuery("field", "中", "国");
+    Query expected = new PhraseQuery("field", new int[] {0, 0}, "中", "国");
     expected = new BoostQuery(expected, 0.5f);
 
     assertEquals(expected, getQuery("\"中国\"^0.5", analyzer));
@@ -404,7 +405,7 @@ public class TestQPHelper extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    PhraseQuery expected = new PhraseQuery(3, "field", "中", "国");
+    PhraseQuery expected = new PhraseQuery(3, "field", new int[] {0, 0}, "中", "国");
 
     assertEquals(expected, getQuery("\"中国\"~3", analyzer));
   }
@@ -928,7 +929,7 @@ public class TestQPHelper extends LuceneTestCase {
     StandardQueryParser qp = new StandardQueryParser();
     qp.setAnalyzer(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false));
 
-    WildcardQuery q = new WildcardQuery(new Term("field", "foo\\?ba?r"));
+    WildcardQuery q = new WildcardQuery(new QueryTerm("field", "foo\\?ba?r", 0));
     assertEquals(q, qp.parse("foo\\?ba?r", "field"));
   }
 
@@ -1148,53 +1149,53 @@ public class TestQPHelper extends LuceneTestCase {
     StandardQueryParser qp = new StandardQueryParser();
     qp.setAnalyzer(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true));
     final String df = "field";
-    RegexpQuery q = new RegexpQuery(new Term("field", "[a-z][123]"));
+    RegexpQuery q = new RegexpQuery(new QueryTerm("field", "[a-z][123]", 0));
     assertEquals(q, qp.parse("/[a-z][123]/", df));
     assertEquals(q, qp.parse("/[A-Z][123]/", df));
     assertEquals(new BoostQuery(q, 0.5f), qp.parse("/[A-Z][123]/^0.5", df));
 
-    Query escaped = new RegexpQuery(new Term("field", "[a-z]\\/[123]"));
+    Query escaped = new RegexpQuery(new QueryTerm("field", "[a-z]\\/[123]", 0));
     assertEquals(escaped, qp.parse("/[a-z]\\/[123]/", df));
-    Query escaped2 = new RegexpQuery(new Term("field", "[a-z]\\*[123]"));
+    Query escaped2 = new RegexpQuery(new QueryTerm("field", "[a-z]\\*[123]", 0));
     assertEquals(escaped2, qp.parse("/[a-z]\\*[123]/", df));
 
     BooleanQuery.Builder complex = new BooleanQuery.Builder();
-    complex.add(new RegexpQuery(new Term("field", "[a-z]\\/[123]")), Occur.MUST);
-    complex.add(new TermQuery(new Term("path", "/etc/init.d/")), Occur.MUST);
-    complex.add(new TermQuery(new Term("field", "/etc/init[.]d/lucene/")), Occur.SHOULD);
+    complex.add(new RegexpQuery(new QueryTerm("field", "[a-z]\\/[123]", 0)), Occur.MUST);
+    complex.add(new TermQuery(new QueryTerm("path", "/etc/init.d/", 0)), Occur.MUST);
+    complex.add(new TermQuery(new QueryTerm("field", "/etc/init[.]d/lucene/", 0)), Occur.SHOULD);
     assertEquals(
         complex.build(),
         qp.parse(
             "/[a-z]\\/[123]/ AND path:\"/etc/init.d/\" OR \"/etc\\/init\\[.\\]d/lucene/\" ", df));
 
-    Query re = new RegexpQuery(new Term("field", "http.*"));
+    Query re = new RegexpQuery(new QueryTerm("field", "http.*", 0));
     assertEquals(re, qp.parse("field:/http.*/", df));
     assertEquals(re, qp.parse("/http.*/", df));
 
-    re = new RegexpQuery(new Term("field", "http~0.5"));
+    re = new RegexpQuery(new QueryTerm("field", "http~0.5", 0));
     assertEquals(re, qp.parse("field:/http~0.5/", df));
     assertEquals(re, qp.parse("/http~0.5/", df));
 
     // fuzzy op doesn't apply to regexps.
     assertQueryNodeException("/http/~2");
 
-    re = new RegexpQuery(new Term("field", "boo"));
+    re = new RegexpQuery(new QueryTerm("field", "boo", 0));
     assertEquals(re, qp.parse("field:/boo/", df));
     assertEquals(re, qp.parse("/boo/", df));
 
-    assertEquals(new TermQuery(new Term("field", "/boo/")), qp.parse("\"/boo/\"", df));
-    assertEquals(new TermQuery(new Term("field", "/boo/")), qp.parse("\\/boo\\/", df));
+    assertEquals(new TermQuery(new QueryTerm("field", "/boo/", 0)), qp.parse("\"/boo/\"", df));
+    assertEquals(new TermQuery(new QueryTerm("field", "/boo/", 0)), qp.parse("\\/boo\\/", df));
 
     BooleanQuery.Builder two = new BooleanQuery.Builder();
-    two.add(new RegexpQuery(new Term("field", "foo")), Occur.SHOULD);
-    two.add(new RegexpQuery(new Term("field", "bar")), Occur.SHOULD);
+    two.add(new RegexpQuery(new QueryTerm("field", "foo", 0)), Occur.SHOULD);
+    two.add(new RegexpQuery(new QueryTerm("field", "bar", 0)), Occur.SHOULD);
     assertEquals(two.build(), qp.parse("field:/foo/ field:/bar/", df));
     assertEquals(two.build(), qp.parse("/foo/ /bar/", df));
 
     qp.setMultiTermRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_REWRITE);
     q =
         new RegexpQuery(
-            new Term("field", "[a-z][123]"),
+            new QueryTerm("field", "[a-z][123]", 0),
             RegExp.ALL,
             0,
             name -> null,
@@ -1222,8 +1223,8 @@ public class TestQPHelper extends LuceneTestCase {
     result = qp.parse("(fieldX:xxxxx OR fieldy:xxxxxxxx)^2 AND (fieldx:the OR fieldy:foo)", "a");
     Query expected =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("fieldX", "xxxxx")), Occur.SHOULD)
-            .add(new TermQuery(new Term("fieldy", "xxxxxxxx")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("fieldX", "xxxxx", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("fieldy", "xxxxxxxx", 0)), Occur.SHOULD)
             .build();
     expected = new BoostQuery(expected, 2f);
     assertEquals(expected, result);
@@ -1344,16 +1345,16 @@ public class TestQPHelper extends LuceneTestCase {
     BooleanQuery.Builder exp = new BooleanQuery.Builder();
     exp.add(
         new BooleanClause(
-            new RegexpQuery(new Term("b", "ab.+")),
+            new RegexpQuery(new QueryTerm("b", "ab.+", 0)),
             BooleanClause.Occur.SHOULD)); // TODO spezification? was "MUST"
     exp.add(
         new BooleanClause(
-            new RegexpQuery(new Term("t", "ab.+")),
+            new RegexpQuery(new QueryTerm("t", "ab.+", 0)),
             BooleanClause.Occur.SHOULD)); // TODO spezification? was "MUST"
 
     assertEquals(exp.build(), parser.parse("/ab.+/", null));
 
-    RegexpQuery regexpQueryexp = new RegexpQuery(new Term("test", "[abc]?[0-9]"));
+    RegexpQuery regexpQueryexp = new RegexpQuery(new QueryTerm("test", "[abc]?[0-9]", 0));
 
     assertEquals(regexpQueryexp, parser.parse("test:/[abc]?[0-9]/", null));
   }

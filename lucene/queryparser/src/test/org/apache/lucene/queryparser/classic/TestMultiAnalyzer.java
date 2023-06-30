@@ -241,11 +241,12 @@ public class TestMultiAnalyzer extends BaseTokenStreamTestCase {
 
     /** expose super's version */
     public Query getSuperFieldQuery(String f, String t, boolean quoted) throws ParseException {
-      return super.getFieldQuery(f, t, quoted);
+      return super.getFieldQuery(f, t, quoted, 0); // todo: not zero begin col
     }
     /** wrap super's version */
     @Override
-    protected Query getFieldQuery(String f, String t, boolean quoted) throws ParseException {
+    protected Query getFieldQuery(String f, String t, boolean quoted, int beginColumn)
+        throws ParseException {
       return new DumbQueryWrapper(getSuperFieldQuery(f, t, quoted));
     }
   }

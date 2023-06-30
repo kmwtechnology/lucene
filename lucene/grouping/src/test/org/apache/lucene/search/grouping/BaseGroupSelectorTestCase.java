@@ -26,7 +26,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldDoc;
@@ -54,7 +54,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     indexRandomDocs(shard.writer);
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     IndexSearcher searcher = shard.getIndexSearcher();
     GroupingSearch grouper = new GroupingSearch(getGroupSelector());
@@ -87,7 +87,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     IndexSearcher searcher = shard.getIndexSearcher();
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     GroupingSearch grouper = new GroupingSearch(getGroupSelector());
     grouper.setGroupDocsLimit(10);
@@ -130,7 +130,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     IndexSearcher searcher = shard.getIndexSearcher();
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     GroupingSearch grouper = new GroupingSearch(getGroupSelector());
     grouper.setGroupDocsLimit(10);
@@ -173,7 +173,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     IndexSearcher searcher = shard.getIndexSearcher();
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     GroupSelector<T> groupSelector = getGroupSelector();
     GroupingSearch grouping = new GroupingSearch(groupSelector);
@@ -229,7 +229,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     IndexSearcher searcher = shard.getIndexSearcher();
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     Sort sort =
         new Sort(
@@ -299,7 +299,7 @@ public abstract class BaseGroupSelectorTestCase<T> extends AbstractGroupingTestC
     }
 
     String[] query = new String[] {"foo", "bar", "baz"};
-    Query topLevel = new TermQuery(new Term("text", query[random().nextInt(query.length)]));
+    Query topLevel = new TermQuery(new QueryTerm("text", query[random().nextInt(query.length)], 0));
 
     Sort sort =
         new Sort(

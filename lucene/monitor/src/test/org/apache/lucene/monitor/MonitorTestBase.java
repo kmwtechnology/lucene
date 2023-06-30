@@ -35,9 +35,14 @@ public abstract class MonitorTestBase extends LuceneTestCase {
   public static final Analyzer ANALYZER = new StandardAnalyzer();
 
   public static Query parse(String query) {
+    return parse(query, 0);
+  }
+
+  // Note: this method really only exists to support QueryDecomposerTest
+  public static Query parse(String query, int offset) {
     QueryParser parser = new QueryParser(FIELD, ANALYZER);
     try {
-      return parser.parse(query);
+      return parser.parse(query, offset);
     } catch (ParseException e) {
       throw new IllegalArgumentException(e);
     }

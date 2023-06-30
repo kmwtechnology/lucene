@@ -32,6 +32,7 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
@@ -274,7 +275,7 @@ public final class CombinedFieldQuery extends Query implements Accountable {
     // rewrite to a simple disjunction if the score is not needed.
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (Term term : fieldTerms) {
-      bq.add(new TermQuery(term), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(QueryTerm.asQueryTerm(term)), BooleanClause.Occur.SHOULD);
     }
     return bq.build();
   }

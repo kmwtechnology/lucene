@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -36,7 +37,7 @@ abstract class TermCollectingRewrite<B> extends MultiTermQuery.RewriteMethod {
   protected abstract Query build(B builder);
 
   /** Add a MultiTermQuery term to the top-level query builder. */
-  protected final void addClause(B topLevel, Term term, int docCount, float boost)
+  protected final void addClause(B topLevel, QueryTerm term, int docCount, float boost)
       throws IOException {
     addClause(topLevel, term, docCount, boost, null);
   }

@@ -206,7 +206,7 @@ public class TestIndexWriterOnDiskFull extends LuceneTestCase {
     writer.close();
 
     // Make sure starting index seems to be working properly:
-    Term searchTerm = new Term("content", "aaa");
+    QueryTerm searchTerm = new QueryTerm("content", "aaa", 0);
     IndexReader reader = DirectoryReader.open(startDir);
     assertEquals("first docFreq", 57, reader.docFreq(searchTerm));
 
@@ -574,7 +574,7 @@ public class TestIndexWriterOnDiskFull extends LuceneTestCase {
     w.addDocument(doc);
     w.commit();
 
-    w.deleteDocuments(new Term("f", "who"));
+    w.deleteDocuments(new QueryTerm("f", "who", 0));
     w.addDocument(doc);
 
     // disk fills up!

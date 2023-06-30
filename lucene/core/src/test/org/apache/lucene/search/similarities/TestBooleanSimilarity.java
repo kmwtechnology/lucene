@@ -25,7 +25,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
@@ -55,16 +55,16 @@ public class TestBooleanSimilarity extends BaseSimilarityTestCase {
     w.close();
     IndexSearcher searcher = newSearcher(reader);
     searcher.setSimilarity(new BooleanSimilarity());
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("foo", "bar")), 2);
+    TopDocs topDocs = searcher.search(new TermQuery(new QueryTerm("foo", "bar", 0)), 2);
     assertEquals(2, topDocs.totalHits.value);
     assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
     assertEquals(1f, topDocs.scoreDocs[1].score, 0f);
 
-    topDocs = searcher.search(new TermQuery(new Term("foo", "baz")), 1);
+    topDocs = searcher.search(new TermQuery(new QueryTerm("foo", "baz", 0)), 1);
     assertEquals(1, topDocs.totalHits.value);
     assertEquals(1f, topDocs.scoreDocs[0].score, 0f);
 
-    topDocs = searcher.search(new BoostQuery(new TermQuery(new Term("foo", "baz")), 3f), 1);
+    topDocs = searcher.search(new BoostQuery(new TermQuery(new QueryTerm("foo", "baz", 0)), 3f), 1);
     assertEquals(1, topDocs.totalHits.value);
     assertEquals(3f, topDocs.scoreDocs[0].score, 0f);
 
@@ -86,7 +86,7 @@ public class TestBooleanSimilarity extends BaseSimilarityTestCase {
     IndexSearcher searcher = newSearcher(reader);
     searcher.setSimilarity(new BooleanSimilarity());
 
-    PhraseQuery query = new PhraseQuery(2, "foo", "bar", "quux");
+    PhraseQuery query = new PhraseQuery(2, "foo", new int[] {0, 0}, "bar", "quux");
 
     TopDocs topDocs = searcher.search(query, 2);
     assertEquals(1, topDocs.totalHits.value);

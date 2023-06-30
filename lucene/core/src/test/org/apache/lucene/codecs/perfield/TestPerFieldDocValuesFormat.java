@@ -41,10 +41,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergeState;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -116,8 +116,8 @@ public class TestPerFieldDocValuesFormat extends BaseDocValuesFormatTestCase {
     IndexReader ireader = DirectoryReader.open(directory); // read-only=true
     IndexSearcher isearcher = newSearcher(ireader);
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     StoredFields storedFields = isearcher.storedFields();

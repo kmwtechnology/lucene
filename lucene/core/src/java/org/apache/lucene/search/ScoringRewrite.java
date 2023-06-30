@@ -18,6 +18,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
@@ -66,7 +67,9 @@ public abstract class ScoringRewrite<B> extends TermCollectingRewrite<B> {
             int docCount,
             float boost,
             TermStates states) {
-          final TermQuery tq = new TermQuery(term, states);
+          //
+          QueryTerm t = term instanceof QueryTerm ? (QueryTerm) term : new QueryTerm(term);
+          final TermQuery tq = new TermQuery(t, states);
           topLevel.add(new BoostQuery(tq, boost), BooleanClause.Occur.SHOULD);
         }
 

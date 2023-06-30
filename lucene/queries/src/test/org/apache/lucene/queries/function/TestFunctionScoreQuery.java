@@ -31,7 +31,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -71,16 +71,16 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     Query q1 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(1));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)), DoubleValuesSource.constant(1));
     Query q2 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(1));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)), DoubleValuesSource.constant(1));
     Query q3 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)), DoubleValuesSource.constant(2));
     Query q4 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(2));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)), DoubleValuesSource.constant(2));
 
     QueryUtils.check(q1);
     QueryUtils.checkUnequal(q1, q3);
@@ -90,53 +90,53 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     Query bq1 =
         FunctionScoreQuery.boostByValue(
-            new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(2));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)), DoubleValuesSource.constant(2));
     QueryUtils.check(bq1);
     Query bq2 =
         FunctionScoreQuery.boostByValue(
-            new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(4));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)), DoubleValuesSource.constant(4));
     QueryUtils.checkUnequal(bq1, bq2);
     Query bq3 =
         FunctionScoreQuery.boostByValue(
-            new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)), DoubleValuesSource.constant(4));
     QueryUtils.checkUnequal(bq1, bq3);
     QueryUtils.checkUnequal(bq2, bq3);
     Query bq4 =
         FunctionScoreQuery.boostByValue(
-            new TermQuery(new Term(TEXT_FIELD, "b")), DoubleValuesSource.constant(4));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)), DoubleValuesSource.constant(4));
     QueryUtils.checkEqual(bq3, bq4);
 
     Query qq1 =
         FunctionScoreQuery.boostByQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")),
-            new TermQuery(new Term(TEXT_FIELD, "z")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "z", 0)),
             0.1f);
     QueryUtils.check(qq1);
     Query qq2 =
         FunctionScoreQuery.boostByQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")),
-            new TermQuery(new Term(TEXT_FIELD, "z")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "z", 0)),
             0.2f);
     QueryUtils.checkUnequal(qq1, qq2);
     Query qq3 =
         FunctionScoreQuery.boostByQuery(
-            new TermQuery(new Term(TEXT_FIELD, "b")),
-            new TermQuery(new Term(TEXT_FIELD, "z")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "b", 0)),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "z", 0)),
             0.1f);
     QueryUtils.checkUnequal(qq1, qq3);
     QueryUtils.checkUnequal(qq2, qq3);
     Query qq4 =
         FunctionScoreQuery.boostByQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")),
-            new TermQuery(new Term(TEXT_FIELD, "zz")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "zz", 0)),
             0.1f);
     QueryUtils.checkUnequal(qq1, qq4);
     QueryUtils.checkUnequal(qq2, qq4);
     QueryUtils.checkUnequal(qq3, qq4);
     Query qq5 =
         FunctionScoreQuery.boostByQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")),
-            new TermQuery(new Term(TEXT_FIELD, "z")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "z", 0)),
             0.1f);
     QueryUtils.checkEqual(qq1, qq5);
   }
@@ -146,7 +146,7 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     FunctionScoreQuery q =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "first")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "first", 0)),
             DoubleValuesSource.fromIntField(INT_FIELD));
 
     QueryUtils.check(random(), q, searcher, rarely());
@@ -164,8 +164,8 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(TEXT_FIELD, "first")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(TEXT_FIELD, "text")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(TEXT_FIELD, "first", 0)), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(TEXT_FIELD, "text", 0)), BooleanClause.Occur.SHOULD)
             .build();
     TopDocs plain = searcher.search(bq, 1);
 
@@ -189,11 +189,12 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
   // BoostingQuery equivalent
   public void testCombiningMultipleQueryScores() throws Exception {
 
-    TermQuery q = new TermQuery(new Term(TEXT_FIELD, "text"));
+    TermQuery q = new TermQuery(new QueryTerm(TEXT_FIELD, "text", 0));
     TopDocs plain = searcher.search(q, 1);
 
     FunctionScoreQuery fq =
-        FunctionScoreQuery.boostByQuery(q, new TermQuery(new Term(TEXT_FIELD, "rechecking")), 100f);
+        FunctionScoreQuery.boostByQuery(
+            q, new TermQuery(new QueryTerm(TEXT_FIELD, "rechecking", 0)), 100f);
 
     QueryUtils.check(random(), fq, searcher, rarely());
 
@@ -218,7 +219,8 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     Query q1 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "text")), expr.getDoubleValuesSource(bindings));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "text", 0)),
+            expr.getDoubleValuesSource(bindings));
     TopDocs plain = searcher.search(q1, 5);
 
     Query boosted = new BoostQuery(q1, 2);
@@ -274,14 +276,14 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
     FunctionScoreQuery q1 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "a")), DoubleValuesSource.constant(31));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)), DoubleValuesSource.constant(31));
     Query q2 = new FunctionScoreQuery(q1.getWrappedQuery(), q1.getSource());
     QueryUtils.check(q2);
     QueryUtils.checkEqual(q2, q1);
 
     FunctionScoreQuery q3 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "first")),
+            new TermQuery(new QueryTerm(TEXT_FIELD, "first", 0)),
             DoubleValuesSource.fromIntField(INT_FIELD));
     Query q4 = new FunctionScoreQuery(q3.getWrappedQuery(), q3.getSource());
     QueryUtils.checkEqual(q3, q4);
@@ -291,7 +293,8 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
     Expression expr = JavascriptCompiler.compile("ln(score + 4)");
     FunctionScoreQuery q5 =
         new FunctionScoreQuery(
-            new TermQuery(new Term(TEXT_FIELD, "text")), expr.getDoubleValuesSource(bindings));
+            new TermQuery(new QueryTerm(TEXT_FIELD, "text", 0)),
+            expr.getDoubleValuesSource(bindings));
     Query q6 = new FunctionScoreQuery(q5.getWrappedQuery(), q5.getSource());
     QueryUtils.checkEqual(q5, q6);
   }
@@ -323,7 +326,7 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
       throws IOException {
     final AtomicReference<ScoreMode> scoreModeInWeight = new AtomicReference<ScoreMode>();
     Query innerQ =
-        new TermQuery(new Term(TEXT_FIELD, "a")) {
+        new TermQuery(new QueryTerm(TEXT_FIELD, "a", 0)) {
 
           @Override
           public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost)
@@ -351,11 +354,11 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
       indexWriter.close();
 
       try (DirectoryReader reader = DirectoryReader.open(dir)) {
-        Query q = new TermQuery(new Term("ExampleText", "function"));
+        Query q = new TermQuery(new QueryTerm("ExampleText", "function", 0));
 
         q =
             FunctionScoreQuery.boostByQuery(
-                q, new PhraseQuery(1, "ExampleText", "function", "plot"), 2);
+                q, new PhraseQuery(1, "ExampleText", new int[] {0, 0}, "function", "plot"), 2);
         q = FunctionScoreQuery.boostByValue(q, DoubleValuesSource.SCORES);
 
         assertEquals(1, new IndexSearcher(reader).search(q, 10).totalHits.value);
@@ -365,7 +368,7 @@ public class TestFunctionScoreQuery extends FunctionTestSetup {
 
   // Weight#count is delegated to the inner weight
   public void testQueryMatchesCount() throws Exception {
-    TermQuery query = new TermQuery(new Term(TEXT_FIELD, "first"));
+    TermQuery query = new TermQuery(new QueryTerm(TEXT_FIELD, "first", 0));
     FunctionScoreQuery fq =
         FunctionScoreQuery.boostByValue(query, DoubleValuesSource.fromIntField("iii"));
 

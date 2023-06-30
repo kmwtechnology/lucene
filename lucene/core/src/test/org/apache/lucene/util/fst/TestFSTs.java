@@ -49,7 +49,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.IndexSearcher;
@@ -958,7 +958,7 @@ public class TestFSTs extends LuceneTestCase {
         assertEquals(
             (exists ? "" : "non-exist ") + "id=" + id,
             exists ? 1 : 0,
-            s.count(new TermQuery(new Term("id", id))));
+            s.count(new TermQuery(new QueryTerm("id", id, 0))));
       }
 
       // Verify w/ MultiTermsEnum
@@ -1067,7 +1067,7 @@ public class TestFSTs extends LuceneTestCase {
       if (VERBOSE) {
         System.out.println("TEST: term=" + term);
       }
-      assertEquals("term=" + term, 1, s.count(new TermQuery(new Term("field", term))));
+      assertEquals("term=" + term, 1, s.count(new TermQuery(new QueryTerm("field", term, 0))));
     }
 
     r.close();

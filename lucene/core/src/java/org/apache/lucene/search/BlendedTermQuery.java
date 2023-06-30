@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
@@ -257,7 +258,8 @@ public final class BlendedTermQuery extends Query {
       if (i != 0) {
         builder.append(" ");
       }
-      Query termQuery = new TermQuery(terms[i]);
+      QueryTerm t = QueryTerm.asQueryTerm(terms[i]);
+      Query termQuery = new TermQuery(t);
       if (boosts[i] != 1f) {
         termQuery = new BoostQuery(termQuery, boosts[i]);
       }
@@ -292,7 +294,8 @@ public final class BlendedTermQuery extends Query {
 
     Query[] termQueries = new Query[terms.length];
     for (int i = 0; i < terms.length; ++i) {
-      termQueries[i] = new TermQuery(terms[i], contexts[i]);
+      QueryTerm t = QueryTerm.asQueryTerm(terms[i]);
+      termQueries[i] = new TermQuery(t, contexts[i]);
       if (boosts[i] != 1f) {
         termQueries[i] = new BoostQuery(termQueries[i], boosts[i]);
       }

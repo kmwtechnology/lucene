@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RegexpQuery;
@@ -81,7 +82,7 @@ public class TestRegexpQueryHandler extends BaseTokenStreamTestCase {
             Collections.singletonList(new RegexpQueryHandler("XX", 30, "WILDCARD", null)));
     QueryTree tree = builder.buildTree(q, TermWeightor.DEFAULT);
     Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+    tree.collectTerms((f, b) -> terms.add(new QueryTerm(f, b, 0)));
     return terms;
   }
 
@@ -89,16 +90,23 @@ public class TestRegexpQueryHandler extends BaseTokenStreamTestCase {
 
     Set<Term> expected =
         new HashSet<>(
-            Arrays.asList(new Term("field", "califragilisticXX"), new Term("field", "WILDCARD")));
+            Arrays.asList(
+                new QueryTerm("field", "califragilisticXX", 0),
+                new QueryTerm("field", "WILDCARD", 0)));
     assertEquals(
-        expected, collectTerms(new RegexpQuery(new Term("field", "super.*califragilistic"))));
+        expected,
+        collectTerms(new RegexpQuery(new QueryTerm("field", "super.*califragilistic", 0))));
 
     expected =
-        new HashSet<>(Arrays.asList(new Term("field", "hellXX"), new Term("field", "WILDCARD")));
-    assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hell."))));
+        new HashSet<>(
+            Arrays.asList(
+                new QueryTerm("field", "hellXX", 0), new QueryTerm("field", "WILDCARD", 0)));
+    assertEquals(expected, collectTerms(new RegexpQuery(new QueryTerm("field", "hell.", 0))));
 
     expected =
-        new HashSet<>(Arrays.asList(new Term("field", "heXX"), new Term("field", "WILDCARD")));
-    assertEquals(expected, collectTerms(new RegexpQuery(new Term("field", "hel?o"))));
+        new HashSet<>(
+            Arrays.asList(
+                new QueryTerm("field", "heXX", 0), new QueryTerm("field", "WILDCARD", 0)));
+    assertEquals(expected, collectTerms(new RegexpQuery(new QueryTerm("field", "hel?o", 0))));
   }
 }

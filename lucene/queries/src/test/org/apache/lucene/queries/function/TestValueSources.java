@@ -32,7 +32,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.docvalues.FloatDocValues;
 import org.apache.lucene.queries.function.valuesource.BytesRefFieldSource;
 import org.apache.lucene.queries.function.valuesource.ConstValueSource;
@@ -508,7 +508,7 @@ public class TestValueSources extends LuceneTestCase {
     try {
       searcher.setSimilarity(new ClassicSimilarity());
 
-      ValueSource vs = new QueryValueSource(new TermQuery(new Term("string", "bar")), 42F);
+      ValueSource vs = new QueryValueSource(new TermQuery(new QueryTerm("string", "bar", 0)), 42F);
       assertHits(new FunctionQuery(vs), new float[] {42F, 1.4054651F});
 
       // valuesource should exist only for things matching the term query
@@ -539,11 +539,11 @@ public class TestValueSources extends LuceneTestCase {
       assertExists(expected, vs);
 
       // Query matches all docs, func exists for all docs
-      vs = new QueryValueSource(new TermQuery(new Term("text", "test")), 0F);
+      vs = new QueryValueSource(new TermQuery(new QueryTerm("text", "test", 0)), 0F);
       assertAllExist(vs);
 
       // Query matches no docs, func exists for no docs
-      vs = new QueryValueSource(new TermQuery(new Term("bogus", "does not exist")), 0F);
+      vs = new QueryValueSource(new TermQuery(new QueryTerm("bogus", "does not exist", 0)), 0F);
       assertNoneExist(vs);
 
       // doc doesn't match the query, so default value should be returned
@@ -553,7 +553,7 @@ public class TestValueSources extends LuceneTestCase {
       assertEquals(5.0f, fv.objectVal(1));
 
       // test with def value but doc matches the query, so def value shouldn't be returned
-      vs = new QueryValueSource(new TermQuery(new Term("text", "test")), 2F);
+      vs = new QueryValueSource(new TermQuery(new QueryTerm("text", "test", 0)), 2F);
       fv = vs.getValues(ValueSource.newContext(searcher), leaf);
       assertNotEquals(2f, fv.objectVal(1));
     } finally {
@@ -804,7 +804,7 @@ public class TestValueSources extends LuceneTestCase {
 
     FunctionScoreQuery q =
         FunctionScoreQuery.boostByValue(
-            new AssertScoreComputedOnceQuery(new TermQuery(new Term("text", "test"))),
+            new AssertScoreComputedOnceQuery(new TermQuery(new QueryTerm("text", "test", 0))),
             new DoubleFieldSource("double").asDoubleValuesSource());
 
     var topFieldDocs = searcher.search(q, 1);
@@ -852,7 +852,7 @@ public class TestValueSources extends LuceneTestCase {
       }
     }
 
-    var plainQ = new TermQuery(new Term("text", "test"));
+    var plainQ = new TermQuery(new QueryTerm("text", "test", 0));
     float origScore = searcher.search(plainQ, 1).scoreDocs[0].score;
 
     // boosts the score by the value source (which is the score), thus score^2

@@ -31,7 +31,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -112,7 +112,7 @@ public class TestShingleAnalyzerWrapper extends BaseTokenStreamTestCase {
       while (ts.incrementToken()) {
         j += posIncrAtt.getPositionIncrement();
         String termText = termAtt.toString();
-        builder.add(new Term("content", termText), j);
+        builder.add(new QueryTerm("content", termText, 0), j);
       }
       ts.end();
     }
@@ -137,7 +137,7 @@ public class TestShingleAnalyzerWrapper extends BaseTokenStreamTestCase {
       ts.reset();
       while (ts.incrementToken()) {
         String termText = termAtt.toString();
-        q.add(new TermQuery(new Term("content", termText)), BooleanClause.Occur.SHOULD);
+        q.add(new TermQuery(new QueryTerm("content", termText, 0)), BooleanClause.Occur.SHOULD);
       }
       ts.end();
     }

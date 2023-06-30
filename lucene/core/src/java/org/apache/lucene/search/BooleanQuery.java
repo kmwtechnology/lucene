@@ -671,7 +671,6 @@ public class BooleanQuery extends Query implements Iterable<BooleanClause> {
       hashCode = computeHashCode();
       assert hashCode != 0;
     }
-    assert hashCode == computeHashCode();
     return hashCode;
   }
 }

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -179,7 +179,7 @@ final class MultiTermQueryConstantScoreWrapper<Q extends MultiTermQuery> extends
           for (TermAndState t : collectedTerms) {
             final TermStates termStates = new TermStates(searcher.getTopReaderContext());
             termStates.register(t.state, context.ord, t.docFreq, t.totalTermFreq);
-            bq.add(new TermQuery(new Term(query.field, t.term), termStates), Occur.SHOULD);
+            bq.add(new TermQuery(new QueryTerm(query.field, t.term, 0), termStates), Occur.SHOULD);
           }
           Query q = new ConstantScoreQuery(bq.build());
           final Weight weight = searcher.rewrite(q).createWeight(searcher, scoreMode, score());
@@ -209,7 +209,7 @@ final class MultiTermQueryConstantScoreWrapper<Q extends MultiTermQuery> extends
                 termsEnum.termState(), context.ord, docFreq, termsEnum.totalTermFreq());
             Query q =
                 new ConstantScoreQuery(
-                    new TermQuery(new Term(query.field, termsEnum.term()), termStates));
+                    new TermQuery(new QueryTerm(query.field, termsEnum.term(), 0), termStates));
             Weight weight = searcher.rewrite(q).createWeight(searcher, scoreMode, score());
             return new WeightOrDocIdSet(weight);
           }

@@ -43,6 +43,7 @@ import org.apache.lucene.facet.FacetsCollectorManager;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -1400,7 +1401,7 @@ public class TestSortedSetDocValuesFacets extends FacetTestCase {
               }
               FacetsCollector fc = new FacetsCollector();
               FacetsCollector.search(
-                  searcher, new TermQuery(new Term("content", searchToken)), 10, fc);
+                  searcher, new TermQuery(new QueryTerm("content", searchToken, 0)), 10, fc);
               Facets facets;
               if (exec != null) {
                 facets = new ConcurrentSortedSetDocValuesFacetCounts(state, fc, exec);
@@ -1548,7 +1549,7 @@ public class TestSortedSetDocValuesFacets extends FacetTestCase {
               }
               FacetsCollector fc = new FacetsCollector();
               FacetsCollector.search(
-                  searcher, new TermQuery(new Term("content", searchToken)), 10, fc);
+                  searcher, new TermQuery(new QueryTerm("content", searchToken, 0)), 10, fc);
               Facets facets;
               if (exec != null) {
                 facets = new ConcurrentSortedSetDocValuesFacetCounts(state, fc, exec);

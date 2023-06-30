@@ -25,7 +25,7 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
 import org.apache.lucene.queries.spans.SpanWeight;
@@ -156,7 +156,7 @@ public class TestPayloadTermQuery extends LuceneTestCase {
   public void test() throws IOException {
     SpanQuery query =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term("field", "seventy")),
+            new SpanTermQuery(new QueryTerm("field", "seventy", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     TopDocs hits = searcher.search(query, 100);
@@ -188,19 +188,20 @@ public class TestPayloadTermQuery extends LuceneTestCase {
   public void testQuery() {
     SpanQuery boostingFuncTermQuery =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.MULTI_FIELD, "seventy", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     QueryUtils.check(boostingFuncTermQuery);
 
-    SpanTermQuery spanTermQuery = new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy"));
+    SpanTermQuery spanTermQuery =
+        new SpanTermQuery(new QueryTerm(PayloadHelper.MULTI_FIELD, "seventy", 0));
 
     assertTrue(
         boostingFuncTermQuery.equals(spanTermQuery) == spanTermQuery.equals(boostingFuncTermQuery));
 
     SpanQuery boostingFuncTermQuery2 =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.MULTI_FIELD, "seventy", 0)),
             new AveragePayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
 
@@ -210,7 +211,7 @@ public class TestPayloadTermQuery extends LuceneTestCase {
   public void testMultipleMatchesPerDoc() throws Exception {
     SpanQuery query =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.MULTI_FIELD, "seventy")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.MULTI_FIELD, "seventy", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     TopDocs hits = searcher.search(query, 100);
@@ -255,7 +256,7 @@ public class TestPayloadTermQuery extends LuceneTestCase {
   public void testNoMatch() throws Exception {
     SpanQuery query =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.FIELD, "junk")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "junk", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     TopDocs hits = searcher.search(query, 100);
@@ -266,12 +267,12 @@ public class TestPayloadTermQuery extends LuceneTestCase {
   public void testNoPayload() throws Exception {
     SpanQuery q1 =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "zero")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.NO_PAYLOAD_FIELD, "zero", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     SpanQuery q2 =
         new PayloadScoreQuery(
-            new SpanTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "foo")),
+            new SpanTermQuery(new QueryTerm(PayloadHelper.NO_PAYLOAD_FIELD, "foo", 0)),
             new MaxPayloadFunction(),
             PayloadDecoder.FLOAT_DECODER);
     BooleanClause c1 = new BooleanClause(q1, BooleanClause.Occur.MUST);

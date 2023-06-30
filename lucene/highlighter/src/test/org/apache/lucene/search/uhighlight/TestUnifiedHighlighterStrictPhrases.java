@@ -28,7 +28,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanOrQuery;
@@ -158,7 +158,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
 
   private PhraseQuery setSlop(PhraseQuery query, int slop) {
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    Term[] terms = query.getTerms();
+    QueryTerm[] terms = query.getTerms();
     int[] positions = query.getPositions();
     for (int i = 0; i < terms.length; i++) {
       builder.add(terms[i], positions[i]);
@@ -176,7 +176,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     // query:  -filter +"yin yang"
     BooleanQuery query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "filter")), BooleanClause.Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm("body", "filter", 0)), BooleanClause.Occur.MUST_NOT)
             .add(newPhraseQuery("body", "yin yang"), BooleanClause.Occur.MUST)
             .build();
 
@@ -195,10 +195,10 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
 
     BooleanQuery query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "yin")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("body", "yin", 0)), BooleanClause.Occur.MUST)
             .add(newPhraseQuery("body", "yin yang"), BooleanClause.Occur.MUST)
             // add queries for other fields; we shouldn't highlight these because of that.
-            .add(new TermQuery(new Term("title", "yang")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("title", "yang", 0)), BooleanClause.Occur.SHOULD)
             .build();
 
     TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
@@ -221,7 +221,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     BooleanQuery query =
         new BooleanQuery.Builder()
             // MUST:
-            .add(new TermQuery(new Term("body", "whatever")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("body", "whatever", 0)), BooleanClause.Occur.MUST)
             // SHOULD: (yet won't)
             .add(newPhraseQuery("body", "nextdoc yin"), BooleanClause.Occur.SHOULD)
             .add(newPhraseQuery("body", "nonexistent yin"), BooleanClause.Occur.SHOULD)
@@ -263,8 +263,14 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
 
     MultiPhraseQuery query =
         new MultiPhraseQuery.Builder()
-            .add(new Term[] {new Term("body", "mom"), new Term("body", "mother")})
-            .add(new Term[] {new Term("body", "dad"), new Term("body", "father")})
+            .add(
+                new QueryTerm[] {
+                  new QueryTerm("body", "mom", 0), new QueryTerm("body", "mother", 0)
+                })
+            .add(
+                new QueryTerm[] {
+                  new QueryTerm("body", "dad", 0), new QueryTerm("body", "father", 0)
+                })
             .build();
 
     TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
@@ -288,8 +294,8 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     SpanNearQuery snq =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term("body", "bravo")),
-              new SpanMultiTermQueryWrapper<>(new PrefixQuery(new Term("body", "ch")))
+              new SpanTermQuery(new QueryTerm("body", "bravo", 0)),
+              new SpanMultiTermQueryWrapper<>(new PrefixQuery(new QueryTerm("body", "ch", 0)))
             }, // REWRITES
             0,
             true);
@@ -297,7 +303,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     BooleanQuery query =
         new BooleanQuery.Builder()
             .add(snq, BooleanClause.Occur.MUST)
-            .add(new PrefixQuery(new Term("body", "al")), BooleanClause.Occur.MUST) // MTQ
+            .add(new PrefixQuery(new QueryTerm("body", "al", 0)), BooleanClause.Occur.MUST) // MTQ
             .add(newPhraseQuery("body", "alpha bravo"), BooleanClause.Occur.MUST)
             // add queries for other fields; we shouldn't highlight these because of that.
             .add(newPhraseQuery("title", "bravo alpha"), BooleanClause.Occur.SHOULD)
@@ -337,15 +343,16 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     SpanNearQuery snq =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term("body", "bravo")),
-              new SpanMultiTermQueryWrapper<>(new PrefixQuery(new Term("body", "ch")))
+              new SpanTermQuery(new QueryTerm("body", "bravo", 0)),
+              new SpanMultiTermQueryWrapper<>(new PrefixQuery(new QueryTerm("body", "ch", 0)))
             }, // REWRITES
             0,
             true);
     BooleanQuery query =
         new BooleanQuery.Builder()
             .add(snq, BooleanClause.Occur.MUST)
-            //          .add(new PrefixQuery(new Term("body", "al")), BooleanClause.Occur.MUST) //
+            //          .add(new PrefixQuery(new QueryTerm("body", "al", 0)),
+            // BooleanClause.Occur.MUST) //
             // MTQ
             .add(newPhraseQuery("body", "alpha bravo"), BooleanClause.Occur.MUST)
             // add queries for other fields; we shouldn't highlight these because of that.
@@ -385,8 +392,8 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     SpanNearQuery snq =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term("body", "bravo")),
-              new SpanTermQuery(new Term("body", "charlie"))
+              new SpanTermQuery(new QueryTerm("body", "bravo", 0)),
+              new SpanTermQuery(new QueryTerm("body", "charlie", 0))
             }, // does NOT rewrite
             0,
             true);
@@ -394,7 +401,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     BooleanQuery query =
         new BooleanQuery.Builder()
             .add(snq, BooleanClause.Occur.MUST)
-            .add(new PrefixQuery(new Term("body", "al")), BooleanClause.Occur.MUST) // MTQ
+            .add(new PrefixQuery(new QueryTerm("body", "al", 0)), BooleanClause.Occur.MUST) // MTQ
             .add(newPhraseQuery("body", "alpha bravo"), BooleanClause.Occur.MUST)
             // add queries for other fields; we shouldn't highlight these because of that.
             .add(newPhraseQuery("title", "bravo alpha"), BooleanClause.Occur.SHOULD)
@@ -435,7 +442,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
         new BooleanQuery.Builder()
             .add(newPhraseQuery("body", "one bravo"), BooleanClause.Occur.MUST)
             .add(newPhraseQuery("body", "four bravo"), BooleanClause.Occur.MUST)
-            .add(new PrefixQuery(new Term("body", "br")), BooleanClause.Occur.MUST)
+            .add(new PrefixQuery(new QueryTerm("body", "br", 0)), BooleanClause.Occur.MUST)
             .build();
 
     TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
@@ -457,7 +464,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "bravo")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("body", "bravo", 0)), BooleanClause.Occur.MUST)
             .add(phraseQuery, BooleanClause.Occur.SHOULD)
             .build();
 
@@ -471,7 +478,7 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
         setSlop(phraseQuery, indexAnalyzer.getPositionIncrementGap("body")); // just enough to span
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "bravo")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("body", "bravo", 0)), BooleanClause.Occur.MUST)
             .add(phraseQuery, BooleanClause.Occur.MUST) // must match and it will
             .build();
     topDocs = searcher.search(query, 10);
@@ -517,10 +524,10 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
     indexWriter.addDocument(newDoc("freezing cold stuff like stuff freedom of speech"));
     initReaderSearcherHighlighter();
 
-    WildcardQuery wildcardQuery = new WildcardQuery(new Term("body", "free*"));
+    WildcardQuery wildcardQuery = new WildcardQuery(new QueryTerm("body", "free*", 0));
     SpanMultiTermQueryWrapper<WildcardQuery> wildcardSpanQuery =
         new SpanMultiTermQueryWrapper<>(wildcardQuery);
-    SpanTermQuery termQuery = new SpanTermQuery(new Term("body", "speech"));
+    SpanTermQuery termQuery = new SpanTermQuery(new QueryTerm("body", "speech", 0));
     SpanQuery spanQuery =
         new SpanNearQuery(new SpanQuery[] {wildcardSpanQuery, termQuery}, 3, false);
 
@@ -578,13 +585,17 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
 
     BooleanQuery.Builder bqBuilder = new BooleanQuery.Builder();
     Query phraseQuery =
-        new BoostQuery(new PhraseQuery("body", "accord", "and", "satisfaction"), 2.0f);
+        new BoostQuery(
+            new PhraseQuery("body", new int[] {0, 0, 0}, "accord", "and", "satisfaction"), 2.0f);
     Query oredTerms =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(2)
-            .add(new TermQuery(new Term("body", "accord")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("body", "satisfaction")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("body", "consideration")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("body", "accord", 0)), BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm("body", "satisfaction", 0)), BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm("body", "consideration", 0)),
+                BooleanClause.Occur.SHOULD)
             .build();
     Query proximityBoostingQuery = new MyQuery(oredTerms);
     Query totalQuery =
@@ -616,15 +627,15 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
             new SpanQuery[] {
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term("body", "alpha")),
-                    new SpanTermQuery(new Term("body", "bravo"))
+                    new SpanTermQuery(new QueryTerm("body", "alpha", 0)),
+                    new SpanTermQuery(new QueryTerm("body", "bravo", 0))
                   },
                   0,
                   true),
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term("body", "alpha")),
-                    new SpanTermQuery(new Term("body", "charlie"))
+                    new SpanTermQuery(new QueryTerm("body", "alpha", 0)),
+                    new SpanTermQuery(new QueryTerm("body", "charlie", 0))
                   },
                   0,
                   true)
@@ -710,13 +721,13 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
             new SpanQuery[] {
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term(FIELD_NAME, "x")),
-                    new SpanTermQuery(new Term(FIELD_NAME, "y")),
-                    new SpanTermQuery(new Term(FIELD_NAME, "z"))
+                    new SpanTermQuery(new QueryTerm(FIELD_NAME, "x", 0)),
+                    new SpanTermQuery(new QueryTerm(FIELD_NAME, "y", 0)),
+                    new SpanTermQuery(new QueryTerm(FIELD_NAME, "z", 0))
                   },
                   0,
                   true),
-              new SpanTermQuery(new Term(FIELD_NAME, "a"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "a", 0))
             },
             10,
             false);
@@ -731,21 +742,21 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
               new SpanOrQuery(
                   new SpanNearQuery(
                       new SpanQuery[] {
-                        new SpanTermQuery(new Term(FIELD_NAME, "x")),
-                        new SpanTermQuery(new Term(FIELD_NAME, "z"))
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "x", 0)),
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "z", 0))
                       },
                       0,
                       true),
                   new SpanNearQuery(
                       new SpanQuery[] {
-                        new SpanTermQuery(new Term(FIELD_NAME, "y")),
-                        new SpanTermQuery(new Term(FIELD_NAME, "z"))
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "y", 0)),
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "z", 0))
                       },
                       0,
                       true)),
               new SpanOrQuery(
-                  new SpanTermQuery(new Term(FIELD_NAME, "a")),
-                  new SpanTermQuery(new Term(FIELD_NAME, "b")))
+                  new SpanTermQuery(new QueryTerm(FIELD_NAME, "a", 0)),
+                  new SpanTermQuery(new QueryTerm(FIELD_NAME, "b", 0)))
             },
             10,
             false);
@@ -760,12 +771,13 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
             new SpanQuery[] {
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term(FIELD_NAME, "*"))),
-                    new SpanTermQuery(new Term(FIELD_NAME, "z"))
+                    new SpanMultiTermQueryWrapper<>(
+                        new WildcardQuery(new QueryTerm(FIELD_NAME, "*", 0))),
+                    new SpanTermQuery(new QueryTerm(FIELD_NAME, "z", 0))
                   },
                   0,
                   true),
-              new SpanTermQuery(new Term(FIELD_NAME, "a"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "a", 0))
             },
             10,
             false);
@@ -781,19 +793,19 @@ public class TestUnifiedHighlighterStrictPhrases extends LuceneTestCase {
               new SpanOrQuery(
                   new SpanNearQuery(
                       new SpanQuery[] {
-                        new SpanTermQuery(new Term(FIELD_NAME, "x")),
-                        new SpanTermQuery(new Term(FIELD_NAME, "y"))
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "x", 0)),
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "y", 0))
                       },
                       0,
                       true),
                   new SpanNearQuery(
                       new SpanQuery[] { // No hit span query
-                        new SpanTermQuery(new Term(FIELD_NAME, "z")),
-                        new SpanTermQuery(new Term(FIELD_NAME, "a"))
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "z", 0)),
+                        new SpanTermQuery(new QueryTerm(FIELD_NAME, "a", 0))
                       },
                       0,
                       true)),
-              new SpanTermQuery(new Term(FIELD_NAME, "a"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "a", 0))
             },
             10,
             false);

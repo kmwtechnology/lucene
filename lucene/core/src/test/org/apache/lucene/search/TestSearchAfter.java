@@ -30,8 +30,8 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.English;
@@ -185,10 +185,10 @@ public class TestSearchAfter extends LuceneTestCase {
     int n = atLeast(20);
     for (int i = 0; i < n; i++) {
       assertQuery(new MatchAllDocsQuery(), null);
-      assertQuery(new TermQuery(new Term("english", "one")), null);
+      assertQuery(new TermQuery(new QueryTerm("english", "one", 0)), null);
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
-      bq.add(new TermQuery(new Term("english", "one")), BooleanClause.Occur.SHOULD);
-      bq.add(new TermQuery(new Term("oddeven", "even")), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("english", "one", 0)), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("oddeven", "even", 0)), BooleanClause.Occur.SHOULD);
       assertQuery(bq.build(), null);
     }
   }

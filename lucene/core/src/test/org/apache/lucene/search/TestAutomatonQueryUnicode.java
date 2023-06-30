@@ -20,7 +20,7 @@ import java.io.IOException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -89,8 +89,8 @@ public class TestAutomatonQueryUnicode extends LuceneTestCase {
     super.tearDown();
   }
 
-  private Term newTerm(String value) {
-    return new Term(FN, value);
+  private QueryTerm newTerm(String value) {
+    return new QueryTerm(FN, value, 0);
   }
 
   private long automatonQueryNrHits(AutomatonQuery query) throws IOException {

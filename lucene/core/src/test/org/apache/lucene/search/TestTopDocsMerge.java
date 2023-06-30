@@ -31,8 +31,8 @@ import org.apache.lucene.index.CompositeReaderContext;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -244,7 +244,8 @@ public class TestTopDocsMerge extends LuceneTestCase {
     for (int iter = 0; iter < numIters; iter++) {
 
       // TODO: custom FieldComp...
-      final Query query = new TermQuery(new Term("text", tokens[random().nextInt(tokens.length)]));
+      final Query query =
+          new TermQuery(new QueryTerm("text", tokens[random().nextInt(tokens.length)], 0));
 
       final Sort sort;
       if (random().nextInt(10) == 4) {

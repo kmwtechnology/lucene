@@ -87,7 +87,7 @@ public class TestLazyDocument extends LuceneTestCase {
     final int id = random().nextInt(NUM_DOCS);
     IndexReader reader = DirectoryReader.open(dir);
     try {
-      Query q = new TermQuery(new Term("docid", "" + id));
+      Query q = new TermQuery(new QueryTerm("docid", "" + id, 0));
       IndexSearcher searcher = newSearcher(reader);
       ScoreDoc[] hits = searcher.search(q, 100).scoreDocs;
       assertEquals("Too many docs", 1, hits.length);

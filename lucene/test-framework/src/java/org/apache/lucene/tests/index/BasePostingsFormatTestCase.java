@@ -50,6 +50,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.index.Term;
@@ -403,7 +404,7 @@ public abstract class BasePostingsFormatTestCase extends BaseIndexFileFormatTest
     DirectoryReader reader = DirectoryReader.open(iw);
     IndexSearcher indexSearcher = new IndexSearcher(reader);
 
-    assertEquals(1, indexSearcher.count(new TermQuery(new Term("id", "1"))));
+    assertEquals(1, indexSearcher.count(new TermQuery(new QueryTerm("id", "1", 0))));
 
     reader.close();
     iw.close();

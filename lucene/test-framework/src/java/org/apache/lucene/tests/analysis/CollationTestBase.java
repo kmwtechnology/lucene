@@ -30,7 +30,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -68,7 +68,7 @@ public abstract class CollationTestBase extends LuceneTestCase {
     writer.close();
     IndexReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = new IndexSearcher(reader);
-    Query query = new TermQuery(new Term("body", "body"));
+    Query query = new TermQuery(new QueryTerm("body", "body", 0));
 
     // Unicode order would include U+0633 in [ U+062F - U+0698 ], but Farsi
     // orders the U+0698 character before the U+0633 character, so the single

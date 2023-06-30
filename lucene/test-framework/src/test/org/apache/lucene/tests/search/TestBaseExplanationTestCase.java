@@ -18,6 +18,7 @@ package org.apache.lucene.tests.search;
 
 import java.io.IOException;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BulkScorer;
 import org.apache.lucene.search.Explanation;
@@ -37,7 +38,7 @@ public class TestBaseExplanationTestCase extends BaseExplanationTestCase {
     expectThrows(
         AssertionError.class,
         () -> {
-          qtest(new TermQuery(new Term(FIELD, "BOGUS")), new int[] {3 /* none */});
+          qtest(new TermQuery(new QueryTerm(FIELD, "BOGUS", 0)), new int[] {3 /* none */});
         });
   }
 
@@ -45,32 +46,34 @@ public class TestBaseExplanationTestCase extends BaseExplanationTestCase {
     expectThrows(
         AssertionError.class,
         () -> {
-          qtest(new TermQuery(new Term(FIELD, "w1")), new int[] {0, 1 /*, 2, 3 */});
+          qtest(new TermQuery(new QueryTerm(FIELD, "w1", 0)), new int[] {0, 1 /*, 2, 3 */});
         });
   }
 
   public void testIncorrectExplainScores() throws Exception {
     // sanity check what a real TermQuery matches
-    qtest(new TermQuery(new Term(FIELD, "zz")), new int[] {1, 3});
+    qtest(new TermQuery(new QueryTerm(FIELD, "zz", 0)), new int[] {1, 3});
 
     // ensure when the Explanations are broken, we get an error about those matches
     expectThrows(
         AssertionError.class,
         () -> {
-          qtest(new BrokenExplainTermQuery(new Term(FIELD, "zz"), false, true), new int[] {1, 3});
+          qtest(
+              new BrokenExplainTermQuery(new QueryTerm(FIELD, "zz", 0), false, true),
+              new int[] {1, 3});
         });
   }
 
   public void testIncorrectExplainMatches() throws Exception {
     // sanity check what a real TermQuery matches
-    qtest(new TermQuery(new Term(FIELD, "zz")), new int[] {1, 3});
+    qtest(new TermQuery(new QueryTerm(FIELD, "zz", 0)), new int[] {1, 3});
 
     // ensure when the Explanations are broken, we get an error about the non matches
     expectThrows(
         AssertionError.class,
         () -> {
           CheckHits.checkNoMatchExplanations(
-              new BrokenExplainTermQuery(new Term(FIELD, "zz"), true, false),
+              new BrokenExplainTermQuery(new QueryTerm(FIELD, "zz", 0), true, false),
               FIELD,
               searcher,
               new int[] {1, 3});
@@ -82,7 +85,7 @@ public class TestBaseExplanationTestCase extends BaseExplanationTestCase {
     public final boolean breakExplainScores;
 
     public BrokenExplainTermQuery(Term t, boolean toggleExplainMatch, boolean breakExplainScores) {
-      super(t);
+      super(QueryTerm.asQueryTerm(t));
       this.toggleExplainMatch = toggleExplainMatch;
       this.breakExplainScores = breakExplainScores;
     }

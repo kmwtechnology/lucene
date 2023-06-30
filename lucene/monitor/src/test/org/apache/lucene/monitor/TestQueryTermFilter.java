@@ -20,7 +20,7 @@ package org.apache.lucene.monitor;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.function.BiPredicate;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.tests.util.LuceneTestCase;
 import org.apache.lucene.util.BytesRef;
@@ -34,7 +34,8 @@ public class TestQueryTermFilter extends LuceneTestCase {
     try (WritableQueryIndex qi =
         new WritableQueryIndex(new MonitorConfiguration(), new TermFilteredPresearcher())) {
       qi.commit(
-          Collections.singletonList(new MonitorQuery("1", new TermQuery(new Term(FIELD, "term")))));
+          Collections.singletonList(
+              new MonitorQuery("1", new TermQuery(new QueryTerm(FIELD, "term", 0)))));
       assertEquals(1, qi.termFilters.size());
       BiPredicate<String, BytesRef> filter = qi.termFilters.values().iterator().next();
       assertTrue(filter.test(FIELD, new BytesRef("term")));
@@ -42,7 +43,7 @@ public class TestQueryTermFilter extends LuceneTestCase {
 
       qi.commit(
           Collections.singletonList(
-              new MonitorQuery("2", new TermQuery(new Term(FIELD, "term2")))));
+              new MonitorQuery("2", new TermQuery(new QueryTerm(FIELD, "term2", 0)))));
       assertEquals(1, qi.termFilters.size());
 
       filter = qi.termFilters.values().iterator().next();

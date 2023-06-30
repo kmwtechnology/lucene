@@ -34,6 +34,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanCollector;
 import org.apache.lucene.queries.spans.SpanFirstQuery;
@@ -72,7 +73,7 @@ public class TestPayloadSpans extends LuceneTestCase {
   public void testSpanTermQuery() throws Exception {
     SpanTermQuery stq;
     Spans spans;
-    stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "seventy"));
+    stq = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "seventy", 0));
 
     spans =
         stq.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
@@ -80,7 +81,7 @@ public class TestPayloadSpans extends LuceneTestCase {
     assertTrue("spans is null and it shouldn't be", spans != null);
     checkSpans(spans, 100, 1, 1, 1);
 
-    stq = new SpanTermQuery(new Term(PayloadHelper.NO_PAYLOAD_FIELD, "seventy"));
+    stq = new SpanTermQuery(new QueryTerm(PayloadHelper.NO_PAYLOAD_FIELD, "seventy", 0));
     spans =
         stq.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
             .getSpans(searcher.getIndexReader().leaves().get(0), SpanWeight.Postings.PAYLOADS);
@@ -92,7 +93,7 @@ public class TestPayloadSpans extends LuceneTestCase {
 
     SpanQuery match;
     SpanFirstQuery sfq;
-    match = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
+    match = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "one", 0));
     sfq = new SpanFirstQuery(match, 2);
     Spans spans =
         sfq.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
@@ -100,8 +101,8 @@ public class TestPayloadSpans extends LuceneTestCase {
     checkSpans(spans, 109, 1, 1, 1);
     // Test more complicated subclause
     SpanQuery[] clauses = new SpanQuery[2];
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "hundred"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "one", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "hundred", 0));
     match = new SpanNearQuery(clauses, 0, true);
     sfq = new SpanFirstQuery(match, 2);
     checkSpans(
@@ -125,11 +126,11 @@ public class TestPayloadSpans extends LuceneTestCase {
 
   public void testSpanNot() throws Exception {
     SpanQuery[] clauses = new SpanQuery[2];
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "three"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "one", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "three", 0));
     SpanQuery spq = new SpanNearQuery(clauses, 5, true);
     SpanNotQuery snq =
-        new SpanNotQuery(spq, new SpanTermQuery(new Term(PayloadHelper.FIELD, "two")));
+        new SpanNotQuery(spq, new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "two", 0)));
 
     Directory directory = newDirectory();
     RandomIndexWriter writer =
@@ -158,16 +159,16 @@ public class TestPayloadSpans extends LuceneTestCase {
     Spans spans;
     IndexSearcher searcher = getSearcher();
 
-    stq = new SpanTermQuery(new Term(PayloadHelper.FIELD, "mark"));
+    stq = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "mark", 0));
     spans =
         stq.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
             .getSpans(searcher.getIndexReader().leaves().get(0), SpanWeight.Postings.PAYLOADS);
     assertNull(spans);
 
     SpanQuery[] clauses = new SpanQuery[3];
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
-    clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "rr", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "yy", 0));
+    clauses[2] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "xx", 0));
     SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 12, false);
 
     spans =
@@ -177,9 +178,9 @@ public class TestPayloadSpans extends LuceneTestCase {
     assertTrue("spans is null and it shouldn't be", spans != null);
     checkSpans(spans, 2, new int[] {3, 3});
 
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
-    clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "xx", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "rr", 0));
+    clauses[2] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "yy", 0));
 
     spanNearQuery = new SpanNearQuery(clauses, 6, true);
 
@@ -193,8 +194,8 @@ public class TestPayloadSpans extends LuceneTestCase {
 
     clauses = new SpanQuery[2];
 
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "xx"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "rr"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "xx", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "rr", 0));
 
     spanNearQuery = new SpanNearQuery(clauses, 6, true);
 
@@ -202,7 +203,7 @@ public class TestPayloadSpans extends LuceneTestCase {
 
     SpanQuery[] clauses2 = new SpanQuery[2];
 
-    clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "yy"));
+    clauses2[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "yy", 0));
     clauses2[1] = spanNearQuery;
 
     SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses2, 6, false);
@@ -223,22 +224,22 @@ public class TestPayloadSpans extends LuceneTestCase {
     IndexSearcher searcher = getSearcher();
 
     SpanQuery[] clauses = new SpanQuery[3];
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "nopayload"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "qq"));
-    clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "ss"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "nopayload", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "qq", 0));
+    clauses[2] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "ss", 0));
 
     SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 6, true);
 
     SpanQuery[] clauses2 = new SpanQuery[2];
 
-    clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "pp"));
+    clauses2[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "pp", 0));
     clauses2[1] = spanNearQuery;
 
     SpanNearQuery snq = new SpanNearQuery(clauses2, 6, false);
 
     SpanQuery[] clauses3 = new SpanQuery[2];
 
-    clauses3[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "np"));
+    clauses3[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "np", 0));
     clauses3[1] = snq;
 
     SpanNearQuery nestedSpanNearQuery = new SpanNearQuery(clauses3, 6, false);
@@ -258,26 +259,26 @@ public class TestPayloadSpans extends LuceneTestCase {
     IndexSearcher searcher = getSearcher();
 
     SpanQuery[] clauses = new SpanQuery[3];
-    clauses[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "one"));
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "two"));
-    clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "three"));
+    clauses[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "one", 0));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "two", 0));
+    clauses[2] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "three", 0));
 
     SpanNearQuery spanNearQuery = new SpanNearQuery(clauses, 5, true);
 
     clauses = new SpanQuery[3];
     clauses[0] = spanNearQuery;
-    clauses[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "five"));
-    clauses[2] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "six"));
+    clauses[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "five", 0));
+    clauses[2] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "six", 0));
 
     SpanNearQuery spanNearQuery2 = new SpanNearQuery(clauses, 6, true);
 
     SpanQuery[] clauses2 = new SpanQuery[2];
-    clauses2[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "eleven"));
-    clauses2[1] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "ten"));
+    clauses2[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "eleven", 0));
+    clauses2[1] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "ten", 0));
     SpanNearQuery spanNearQuery3 = new SpanNearQuery(clauses2, 2, false);
 
     SpanQuery[] clauses3 = new SpanQuery[3];
-    clauses3[0] = new SpanTermQuery(new Term(PayloadHelper.FIELD, "nine"));
+    clauses3[0] = new SpanTermQuery(new QueryTerm(PayloadHelper.FIELD, "nine", 0));
     clauses3[1] = spanNearQuery2;
     clauses3[2] = spanNearQuery3;
 
@@ -306,8 +307,8 @@ public class TestPayloadSpans extends LuceneTestCase {
     IndexSearcher is = newSearcher(getOnlyLeafReader(reader), false);
     writer.close();
 
-    SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-    SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+    SpanTermQuery stq1 = new SpanTermQuery(new QueryTerm("content", "a", 0));
+    SpanTermQuery stq2 = new SpanTermQuery(new QueryTerm("content", "k", 0));
     SpanQuery[] sqs = {stq1, stq2};
     SpanNearQuery snq = new SpanNearQuery(sqs, 1, true);
     VerifyingCollector collector = new VerifyingCollector();
@@ -347,8 +348,8 @@ public class TestPayloadSpans extends LuceneTestCase {
     IndexSearcher is = newSearcher(getOnlyLeafReader(reader), false);
     writer.close();
 
-    SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-    SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+    SpanTermQuery stq1 = new SpanTermQuery(new QueryTerm("content", "a", 0));
+    SpanTermQuery stq2 = new SpanTermQuery(new QueryTerm("content", "k", 0));
     SpanQuery[] sqs = {stq1, stq2};
     SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
     VerifyingCollector collector = new VerifyingCollector();
@@ -388,8 +389,8 @@ public class TestPayloadSpans extends LuceneTestCase {
     IndexSearcher is = newSearcher(getOnlyLeafReader(reader), false);
     writer.close();
 
-    SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-    SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+    SpanTermQuery stq1 = new SpanTermQuery(new QueryTerm("content", "a", 0));
+    SpanTermQuery stq2 = new SpanTermQuery(new QueryTerm("content", "k", 0));
     SpanQuery[] sqs = {stq1, stq2};
     SpanNearQuery snq = new SpanNearQuery(sqs, 0, true);
     Spans spans =

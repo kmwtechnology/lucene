@@ -28,8 +28,8 @@ import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -66,7 +66,7 @@ abstract class QueryIndex implements Closeable {
     }
     BytesRef[] bytesHolder = new BytesRef[1];
     search(
-        new TermQuery(new Term(FIELDS.query_id, queryId)),
+        new TermQuery(new QueryTerm(FIELDS.query_id, queryId, 0)),
         (id, query, dataValues) -> bytesHolder[0] = dataValues.mq.binaryValue());
     return serializer.deserialize(bytesHolder[0]);
   }

@@ -662,7 +662,7 @@ public class TestDeletionPolicy extends LuceneTestCase {
       KeepLastNDeletionPolicy policy =
           (KeepLastNDeletionPolicy) writer.getConfig().getIndexDeletionPolicy();
       writer.close();
-      Term searchTerm = new Term("content", "aaa");
+      QueryTerm searchTerm = new QueryTerm("content", "aaa", 0);
       Query query = new TermQuery(searchTerm);
 
       for (int i = 0; i < N + 1; i++) {

@@ -24,7 +24,7 @@ import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ConstantScoreQuery;
@@ -606,7 +606,7 @@ public class BBoxStrategy extends SpatialStrategy {
    */
   private Query makeXDL(boolean crossedDateLine) {
     // The 'T' and 'F' values match solr fields
-    return new TermQuery(new Term(field_xdl, crossedDateLine ? "T" : "F"));
+    return new TermQuery(new QueryTerm(field_xdl, crossedDateLine ? "T" : "F", 0));
   }
 
   /**

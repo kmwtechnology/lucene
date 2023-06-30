@@ -44,6 +44,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -1017,7 +1018,7 @@ public class TestTaxonomyFacetCounts extends FacetTestCase {
     IndexSearcher indexSearcher = newSearcher(indexReader);
 
     // search for "f:a", only segments 1 and 3 should match results
-    Query q = new TermQuery(new Term("f", "a"));
+    Query q = new TermQuery(new QueryTerm("f", "a", 0));
     FacetsCollector sfc = indexSearcher.search(q, new FacetsCollectorManager());
     Facets facets = getTaxonomyFacetCounts(taxoReader, config, sfc);
     FacetResult result = facets.getTopChildren(10, "A");
@@ -1069,7 +1070,8 @@ public class TestTaxonomyFacetCounts extends FacetTestCase {
         System.out.println("\nTEST: iter content=" + searchToken);
       }
       FacetsCollector fc = new FacetsCollector();
-      FacetsCollector.search(searcher, new TermQuery(new Term("content", searchToken)), 10, fc);
+      FacetsCollector.search(
+          searcher, new TermQuery(new QueryTerm("content", searchToken, 0)), 10, fc);
       Facets facets = getTaxonomyFacetCounts(tr, config, fc);
 
       // Slow, yet hopefully bug-free, faceting:

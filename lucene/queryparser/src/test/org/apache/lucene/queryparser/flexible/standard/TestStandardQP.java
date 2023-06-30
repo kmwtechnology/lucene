@@ -18,7 +18,7 @@ package org.apache.lucene.queryparser.flexible.standard;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.DateTools.Resolution;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler.Operator;
@@ -136,7 +136,8 @@ public class TestStandardQP extends QueryParserTestBase {
   public void testEscapedWildcard() throws Exception {
     CommonQueryParserConfiguration qp =
         getParserConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false));
-    WildcardQuery q = new WildcardQuery(new Term("field", "foo?ba?r")); // TODO not correct!!
+    WildcardQuery q =
+        new WildcardQuery(new QueryTerm("field", "foo?ba?r", 0)); // TODO not correct!!
     assertEquals(q, getQuery("foo\\?ba?r", qp));
   }
 
@@ -169,8 +170,8 @@ public class TestStandardQP extends QueryParserTestBase {
     /** ordinary behavior, synonyms form uncoordinated boolean query */
     StandardQueryParser dumb = getParser(new Analyzer1());
     BooleanQuery.Builder expanded = new BooleanQuery.Builder();
-    expanded.add(new TermQuery(new Term("field", "dogs")), BooleanClause.Occur.SHOULD);
-    expanded.add(new TermQuery(new Term("field", "dog")), BooleanClause.Occur.SHOULD);
+    expanded.add(new TermQuery(new QueryTerm("field", "dogs", 0)), BooleanClause.Occur.SHOULD);
+    expanded.add(new TermQuery(new QueryTerm("field", "dog", 0)), BooleanClause.Occur.SHOULD);
     assertEquals(expanded.build(), dumb.parse("\"dogs\"", "field"));
     /** even with the phrase operator the behavior is the same */
     assertEquals(expanded.build(), dumb.parse("dogs", "field"));

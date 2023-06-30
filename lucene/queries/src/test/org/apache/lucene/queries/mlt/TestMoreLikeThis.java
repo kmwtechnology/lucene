@@ -36,6 +36,7 @@ import org.apache.lucene.analysis.tokenattributes.TermFrequencyAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -264,7 +265,8 @@ public class TestMoreLikeThis extends LuceneTestCase {
     for (BooleanClause clause : clauses) {
       Term term = ((TermQuery) clause.getQuery()).getTerm();
       assertTrue(
-          Arrays.asList(new Term("text", "lucene"), new Term("text", "apache")).contains(term));
+          Arrays.asList(new QueryTerm("text", "lucene", 0), new QueryTerm("text", "apache", 0))
+              .contains(term));
     }
   }
 
@@ -287,7 +289,7 @@ public class TestMoreLikeThis extends LuceneTestCase {
     assertEquals("Expected 1 clauses only!", 1, clauses.size());
     for (BooleanClause clause : clauses) {
       Term term = ((TermQuery) clause.getQuery()).getTerm();
-      assertThat(term, is(new Term(mltField1, "lucene")));
+      assertThat(term, is(new QueryTerm(mltField1, "lucene", 0)));
     }
     analyzer.close();
   }
@@ -312,12 +314,12 @@ public class TestMoreLikeThis extends LuceneTestCase {
 
     HashSet<Term> unexpectedTerms = new HashSet<>();
     unexpectedTerms.add(
-        new Term(mltField, "apache")); // Term Frequency < Minimum Accepted Term Frequency
+        new QueryTerm(mltField, "apache", 0)); // Term Frequency < Minimum Accepted Term Frequency
     unexpectedTerms.add(
-        new Term(mltField, "lucene")); // Term Frequency < Minimum Accepted Term Frequency
+        new QueryTerm(mltField, "lucene", 0)); // Term Frequency < Minimum Accepted Term Frequency
     unexpectedTerms.add(
-        new Term(mltField, "apache2")); // Term Frequency < Minimum Accepted Term Frequency
-    unexpectedTerms.add(new Term(mltField, "lucene2")); // Wrong Field
+        new QueryTerm(mltField, "apache2", 0)); // Term Frequency < Minimum Accepted Term Frequency
+    unexpectedTerms.add(new QueryTerm(mltField, "lucene2", 0)); // Wrong Field
 
     // None of the Not Expected terms is in the query
     for (BooleanClause clause : clauses) {
@@ -347,20 +349,20 @@ public class TestMoreLikeThis extends LuceneTestCase {
     seedDocument.put(notMltField, Arrays.asList(textValue2));
 
     HashSet<Term> expectedTerms = new HashSet<>();
-    expectedTerms.add(new Term(mltField, "apache"));
-    expectedTerms.add(new Term(mltField, "lucene"));
+    expectedTerms.add(new QueryTerm(mltField, "apache", 0));
+    expectedTerms.add(new QueryTerm(mltField, "lucene", 0));
 
     HashSet<Term> unexpectedTerms = new HashSet<>();
-    unexpectedTerms.add(new Term(mltField, "apache2"));
-    unexpectedTerms.add(new Term(mltField, "lucene2"));
-    unexpectedTerms.add(new Term(notMltField, "apache2"));
-    unexpectedTerms.add(new Term(notMltField, "lucene2"));
+    unexpectedTerms.add(new QueryTerm(mltField, "apache2", 0));
+    unexpectedTerms.add(new QueryTerm(mltField, "lucene2", 0));
+    unexpectedTerms.add(new QueryTerm(notMltField, "apache2", 0));
+    unexpectedTerms.add(new QueryTerm(notMltField, "lucene2", 0));
 
     BooleanQuery query = (BooleanQuery) mlt.like(seedDocument);
     Collection<BooleanClause> clauses = query.clauses();
-    HashSet<Term> clausesTerms = new HashSet<>();
+    HashSet<QueryTerm> clausesTerms = new HashSet<>();
     for (BooleanClause clause : clauses) {
-      Term term = ((TermQuery) clause.getQuery()).getTerm();
+      QueryTerm term = ((TermQuery) clause.getQuery()).getTerm();
       clausesTerms.add(term);
     }
 
@@ -421,7 +423,7 @@ public class TestMoreLikeThis extends LuceneTestCase {
     Term[] expectedTerms = new Term[topN];
     int idx = 0;
     for (String text : generateStrSeq(numDocs - topN, topN)) {
-      expectedTerms[idx++] = new Term("text", text);
+      expectedTerms[idx++] = new QueryTerm("text", text, 0);
     }
     for (BooleanClause clause : clauses) {
       Term term = ((TermQuery) clause.getQuery()).getTerm();
@@ -521,13 +523,14 @@ public class TestMoreLikeThis extends LuceneTestCase {
       for (String itemForSale : clothesShopItemForSale) {
         BooleanClause booleanClause =
             new BooleanClause(
-                new TermQuery(new Term(FOR_SALE, itemForSale)), BooleanClause.Occur.SHOULD);
+                new TermQuery(new QueryTerm(FOR_SALE, itemForSale, 0)), BooleanClause.Occur.SHOULD);
         expectedClothesShopClauses.add(booleanClause);
       }
       for (String itemNotForSale : clothesShopItemNotForSale) {
         BooleanClause booleanClause =
             new BooleanClause(
-                new TermQuery(new Term(NOT_FOR_SALE, itemNotForSale)), BooleanClause.Occur.SHOULD);
+                new TermQuery(new QueryTerm(NOT_FOR_SALE, itemNotForSale, 0)),
+                BooleanClause.Occur.SHOULD);
         expectedClothesShopClauses.add(booleanClause);
       }
 

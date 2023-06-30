@@ -22,7 +22,7 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.expressions.js.JavascriptCompiler;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -82,7 +82,7 @@ public class TestExpressionRescorer extends LuceneTestCase {
   public void testBasic() throws Exception {
 
     // create a sort field and sort by it (reverse order)
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     IndexReader r = searcher.getIndexReader();
 
     // Just first pass query

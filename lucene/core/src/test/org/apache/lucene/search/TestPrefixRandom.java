@@ -21,6 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.FilteredTermsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -131,8 +132,8 @@ public class TestPrefixRandom extends LuceneTestCase {
 
   /** check that the # of hits is the same as from a very simple prefixquery implementation. */
   private void assertSame(String prefix) throws IOException {
-    PrefixQuery smart = new PrefixQuery(new Term("field", prefix));
-    DumbPrefixQuery dumb = new DumbPrefixQuery(new Term("field", prefix));
+    PrefixQuery smart = new PrefixQuery(new QueryTerm("field", prefix, 0));
+    DumbPrefixQuery dumb = new DumbPrefixQuery(new QueryTerm("field", prefix, 0));
 
     TopDocs smartDocs = searcher.search(smart, 25);
     TopDocs dumbDocs = searcher.search(dumb, 25);

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.tests.util.LuceneTestCase;
 
@@ -36,30 +37,30 @@ public class TestQueryVisitor extends LuceneTestCase {
 
   private static final Query query =
       new BooleanQuery.Builder()
-          .add(new TermQuery(new Term("field1", "t1")), BooleanClause.Occur.MUST)
+          .add(new TermQuery(new QueryTerm("field1", "t1", 0)), BooleanClause.Occur.MUST)
           .add(
               new BooleanQuery.Builder()
-                  .add(new TermQuery(new Term("field1", "tm2")), BooleanClause.Occur.SHOULD)
+                  .add(new TermQuery(new QueryTerm("field1", "tm2", 0)), BooleanClause.Occur.SHOULD)
                   .add(
-                      new BoostQuery(new TermQuery(new Term("field1", "tm3")), 2),
+                      new BoostQuery(new TermQuery(new QueryTerm("field1", "tm3", 0)), 2),
                       BooleanClause.Occur.SHOULD)
                   .build(),
               BooleanClause.Occur.MUST)
           .add(
               new BoostQuery(
                   new PhraseQuery.Builder()
-                      .add(new Term("field1", "term4"))
-                      .add(new Term("field1", "term5"))
+                      .add(new QueryTerm("field1", "term4", 0))
+                      .add(new QueryTerm("field1", "term5", 0))
                       .build(),
                   3),
               BooleanClause.Occur.MUST)
-          .add(new TermQuery(new Term("field1", "term8")), BooleanClause.Occur.MUST_NOT)
-          .add(new PrefixQuery(new Term("field1", "term9")), BooleanClause.Occur.SHOULD)
+          .add(new TermQuery(new QueryTerm("field1", "term8", 0)), BooleanClause.Occur.MUST_NOT)
+          .add(new PrefixQuery(new QueryTerm("field1", "term9", 0)), BooleanClause.Occur.SHOULD)
           .add(
               new BoostQuery(
                   new BooleanQuery.Builder()
                       .add(
-                          new BoostQuery(new TermQuery(new Term("field2", "term10")), 3),
+                          new BoostQuery(new TermQuery(new QueryTerm("field2", "term10", 0)), 3),
                           BooleanClause.Occur.MUST)
                       .build(),
                   2),
@@ -71,9 +72,9 @@ public class TestQueryVisitor extends LuceneTestCase {
     Set<Term> expected =
         new HashSet<>(
             Arrays.asList(
-                new Term("field1", "t1"), new Term("field1", "tm2"),
-                new Term("field1", "tm3"), new Term("field1", "term4"),
-                new Term("field1", "term5"), new Term("field2", "term10")));
+                new QueryTerm("field1", "t1", 0), new QueryTerm("field1", "tm2", 0),
+                new QueryTerm("field1", "tm3", 0), new QueryTerm("field1", "term4", 0),
+                new QueryTerm("field1", "term5", 0), new QueryTerm("field2", "term10", 0)));
     query.visit(QueryVisitor.termCollector(terms));
     assertThat(terms, equalTo(expected));
   }
@@ -95,20 +96,20 @@ public class TestQueryVisitor extends LuceneTestCase {
     Set<Term> expected =
         new HashSet<>(
             Arrays.asList(
-                new Term("field1", "t1"),
-                new Term("field1", "tm2"),
-                new Term("field1", "tm3"),
-                new Term("field1", "term4"),
-                new Term("field1", "term5"),
-                new Term("field1", "term8"),
-                new Term("field2", "term10")));
+                new QueryTerm("field1", "t1", 0),
+                new QueryTerm("field1", "tm2", 0),
+                new QueryTerm("field1", "tm3", 0),
+                new QueryTerm("field1", "term4", 0),
+                new QueryTerm("field1", "term5", 0),
+                new QueryTerm("field1", "term8", 0),
+                new QueryTerm("field2", "term10", 0)));
     query.visit(visitor);
     assertThat(terms, equalTo(expected));
   }
 
   public void extractTermsFromField() {
     final Set<Term> actual = new HashSet<>();
-    Set<Term> expected = new HashSet<>(Arrays.asList(new Term("field2", "term10")));
+    Set<Term> expected = new HashSet<>(Arrays.asList(new QueryTerm("field2", "term10", 0)));
     query.visit(
         new QueryVisitor() {
           @Override
@@ -154,12 +155,12 @@ public class TestQueryVisitor extends LuceneTestCase {
     Map<Term, Float> termsToBoosts = new HashMap<>();
     query.visit(new BoostedTermExtractor(1, termsToBoosts));
     Map<Term, Float> expected = new HashMap<>();
-    expected.put(new Term("field1", "t1"), 1f);
-    expected.put(new Term("field1", "tm2"), 1f);
-    expected.put(new Term("field1", "tm3"), 2f);
-    expected.put(new Term("field1", "term4"), 3f);
-    expected.put(new Term("field1", "term5"), 3f);
-    expected.put(new Term("field2", "term10"), 6f);
+    expected.put(new QueryTerm("field1", "t1", 0), 1f);
+    expected.put(new QueryTerm("field1", "tm2", 0), 1f);
+    expected.put(new QueryTerm("field1", "tm3", 0), 2f);
+    expected.put(new QueryTerm("field1", "term4", 0), 3f);
+    expected.put(new QueryTerm("field1", "term5", 0), 3f);
+    expected.put(new QueryTerm("field2", "term10", 0), 6f);
     assertThat(termsToBoosts, equalTo(expected));
   }
 
@@ -342,11 +343,13 @@ public class TestQueryVisitor extends LuceneTestCase {
     Set<Term> minimumTermSet = new HashSet<>();
     extractor.collectTerms(minimumTermSet);
 
-    Set<Term> expected1 = new HashSet<>(Collections.singletonList(new Term("field1", "t1")));
+    Set<Term> expected1 =
+        new HashSet<>(Collections.singletonList(new QueryTerm("field1", "t1", 0)));
     assertThat(minimumTermSet, equalTo(expected1));
     assertTrue(extractor.nextTermSet());
     Set<Term> expected2 =
-        new HashSet<>(Arrays.asList(new Term("field1", "tm2"), new Term("field1", "tm3")));
+        new HashSet<>(
+            Arrays.asList(new QueryTerm("field1", "tm2", 0), new QueryTerm("field1", "tm3", 0)));
     minimumTermSet.clear();
     extractor.collectTerms(minimumTermSet);
     assertThat(minimumTermSet, equalTo(expected2));
@@ -355,17 +358,19 @@ public class TestQueryVisitor extends LuceneTestCase {
         new BooleanQuery.Builder()
             .add(
                 new BooleanQuery.Builder()
-                    .add(new TermQuery(new Term("f", "1")), BooleanClause.Occur.MUST)
-                    .add(new TermQuery(new Term("f", "61")), BooleanClause.Occur.MUST)
-                    .add(new TermQuery(new Term("f", "211")), BooleanClause.Occur.FILTER)
-                    .add(new TermQuery(new Term("f", "5")), BooleanClause.Occur.SHOULD)
+                    .add(new TermQuery(new QueryTerm("f", "1", 0)), BooleanClause.Occur.MUST)
+                    .add(new TermQuery(new QueryTerm("f", "61", 0)), BooleanClause.Occur.MUST)
+                    .add(new TermQuery(new QueryTerm("f", "211", 0)), BooleanClause.Occur.FILTER)
+                    .add(new TermQuery(new QueryTerm("f", "5", 0)), BooleanClause.Occur.SHOULD)
                     .build(),
                 BooleanClause.Occur.SHOULD)
-            .add(new PhraseQuery("f", "3333", "44444"), BooleanClause.Occur.SHOULD)
+            .add(
+                new PhraseQuery("f", new int[] {0, 0}, "3333", "44444"), BooleanClause.Occur.SHOULD)
             .build();
     QueryNode ex2 = new ConjunctionNode();
     bq.visit(ex2);
-    Set<Term> expected3 = new HashSet<>(Arrays.asList(new Term("f", "1"), new Term("f", "3333")));
+    Set<Term> expected3 =
+        new HashSet<>(Arrays.asList(new QueryTerm("f", "1", 0), new QueryTerm("f", "3333", 0)));
     minimumTermSet.clear();
     ex2.collectTerms(minimumTermSet);
     assertThat(minimumTermSet, equalTo(expected3));
@@ -373,6 +378,6 @@ public class TestQueryVisitor extends LuceneTestCase {
     assertThat(
         ex2.toString(),
         equalTo(
-            "AND(AND(OR(AND(TERM(f:3333),TERM(f:44444)),AND(TERM(f:1),TERM(f:61),AND(TERM(f:211))))))"));
+            "AND(AND(OR(AND(TERM(f:3333[0]),TERM(f:44444[0])),AND(TERM(f:1[0]),TERM(f:61[0]),AND(TERM(f:211[0]))))))"));
   }
 }

@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -105,7 +105,7 @@ public class SrndTruncQuery extends SimpleTerm {
             String textString = text.utf8ToString();
             matcher.reset(textString.substring(prefixLength));
             if (matcher.matches()) {
-              mtv.visitMatchingTerm(new Term(fieldName, textString));
+              mtv.visitMatchingTerm(new QueryTerm(fieldName, textString, 0));
             }
           } else {
             break;

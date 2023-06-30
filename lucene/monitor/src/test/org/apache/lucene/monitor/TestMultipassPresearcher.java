@@ -24,7 +24,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.memory.MemoryIndex;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermInSetQuery;
@@ -132,7 +132,7 @@ public class TestMultipassPresearcher extends PresearcherTestBase {
                                             should(new TermInSetQuery("f_3", new BytesRef("test"))))
                                         .build()))
                             .build()))
-                .add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
+                .add(should(new TermQuery(new QueryTerm("__anytokenfield", "__ANYTOKEN__", 0))))
                 .build();
 
         assertEquals(expected, q);

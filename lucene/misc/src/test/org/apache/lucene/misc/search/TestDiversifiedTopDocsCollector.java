@@ -29,8 +29,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -385,10 +385,10 @@ public class TestDiversifiedTopDocsCollector extends LuceneTestCase {
 
   private Query getTestQuery() {
     BooleanQuery.Builder testQuery = new BooleanQuery.Builder();
-    testQuery.add(new BooleanClause(new TermQuery(new Term("year", "1966")), Occur.SHOULD));
-    testQuery.add(new BooleanClause(new TermQuery(new Term("year", "1967")), Occur.SHOULD));
-    testQuery.add(new BooleanClause(new TermQuery(new Term("year", "1968")), Occur.SHOULD));
-    testQuery.add(new BooleanClause(new TermQuery(new Term("year", "1969")), Occur.SHOULD));
+    testQuery.add(new BooleanClause(new TermQuery(new QueryTerm("year", "1966", 0)), Occur.SHOULD));
+    testQuery.add(new BooleanClause(new TermQuery(new QueryTerm("year", "1967", 0)), Occur.SHOULD));
+    testQuery.add(new BooleanClause(new TermQuery(new QueryTerm("year", "1968", 0)), Occur.SHOULD));
+    testQuery.add(new BooleanClause(new TermQuery(new QueryTerm("year", "1969", 0)), Occur.SHOULD));
     return new DocValueScoreQuery(testQuery.build(), "weeksAtNumberOne");
   }
 

@@ -18,7 +18,7 @@ package org.apache.lucene.search.highlight;
 
 import java.io.IOException;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -34,7 +34,7 @@ import org.apache.lucene.tests.util.LuceneTestCase;
 public class TestMisses extends LuceneTestCase {
   public void testTermQuery() throws IOException, InvalidTokenOffsetsException {
     try (Analyzer analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)) {
-      final Query query = new TermQuery(new Term("test", "foo"));
+      final Query query = new TermQuery(new QueryTerm("test", "foo", 0));
       final Highlighter highlighter =
           new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query));
       assertEquals(
@@ -47,8 +47,8 @@ public class TestMisses extends LuceneTestCase {
   public void testBooleanQuery() throws IOException, InvalidTokenOffsetsException {
     try (Analyzer analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)) {
       final BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("test", "foo")), Occur.MUST);
-      query.add(new TermQuery(new Term("test", "bar")), Occur.MUST);
+      query.add(new TermQuery(new QueryTerm("test", "foo", 0)), Occur.MUST);
+      query.add(new TermQuery(new QueryTerm("test", "bar", 0)), Occur.MUST);
       final Highlighter highlighter =
           new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query.build()));
       assertEquals(
@@ -60,7 +60,7 @@ public class TestMisses extends LuceneTestCase {
 
   public void testPhraseQuery() throws IOException, InvalidTokenOffsetsException {
     try (Analyzer analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)) {
-      final PhraseQuery query = new PhraseQuery("test", "foo", "bar");
+      final PhraseQuery query = new PhraseQuery("test", new int[] {0, 0}, "foo", "bar");
       final Highlighter highlighter =
           new Highlighter(new SimpleHTMLFormatter(), new QueryScorer(query));
       assertEquals(
@@ -75,8 +75,8 @@ public class TestMisses extends LuceneTestCase {
       final Query query =
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term("test", "foo")),
-                new SpanTermQuery(new Term("test", "bar"))
+                new SpanTermQuery(new QueryTerm("test", "foo", 0)),
+                new SpanTermQuery(new QueryTerm("test", "bar", 0))
               },
               0,
               true);

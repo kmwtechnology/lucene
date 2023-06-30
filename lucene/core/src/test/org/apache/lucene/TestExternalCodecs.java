@@ -22,7 +22,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -91,20 +91,20 @@ public class TestExternalCodecs extends LuceneTestCase {
     if (VERBOSE) {
       System.out.println("TEST: now delete id=77");
     }
-    w.deleteDocuments(new Term("id", "77"));
+    w.deleteDocuments(new QueryTerm("id", "77", 0));
 
     IndexReader r = DirectoryReader.open(w);
 
     assertEquals(NUM_DOCS - 1, r.numDocs());
     IndexSearcher s = newSearcher(r);
-    assertEquals(NUM_DOCS - 1, s.count(new TermQuery(new Term("field1", "standard"))));
-    assertEquals(NUM_DOCS - 1, s.count(new TermQuery(new Term("field2", "memory"))));
+    assertEquals(NUM_DOCS - 1, s.count(new TermQuery(new QueryTerm("field1", "standard", 0))));
+    assertEquals(NUM_DOCS - 1, s.count(new TermQuery(new QueryTerm("field2", "memory", 0))));
     r.close();
 
     if (VERBOSE) {
       System.out.println("\nTEST: now delete 2nd doc");
     }
-    w.deleteDocuments(new Term("id", "44"));
+    w.deleteDocuments(new QueryTerm("id", "44", 0));
 
     if (VERBOSE) {
       System.out.println("\nTEST: now force merge");
@@ -117,11 +117,11 @@ public class TestExternalCodecs extends LuceneTestCase {
     assertEquals(NUM_DOCS - 2, r.maxDoc());
     assertEquals(NUM_DOCS - 2, r.numDocs());
     s = newSearcher(r);
-    assertEquals(NUM_DOCS - 2, s.count(new TermQuery(new Term("field1", "standard"))));
-    assertEquals(NUM_DOCS - 2, s.count(new TermQuery(new Term("field2", "memory"))));
-    assertEquals(1, s.count(new TermQuery(new Term("id", "76"))));
-    assertEquals(0, s.count(new TermQuery(new Term("id", "77"))));
-    assertEquals(0, s.count(new TermQuery(new Term("id", "44"))));
+    assertEquals(NUM_DOCS - 2, s.count(new TermQuery(new QueryTerm("field1", "standard", 0))));
+    assertEquals(NUM_DOCS - 2, s.count(new TermQuery(new QueryTerm("field2", "memory", 0))));
+    assertEquals(1, s.count(new TermQuery(new QueryTerm("id", "76", 0))));
+    assertEquals(0, s.count(new TermQuery(new QueryTerm("id", "77", 0))));
+    assertEquals(0, s.count(new TermQuery(new QueryTerm("id", "44", 0))));
 
     if (VERBOSE) {
       System.out.println("\nTEST: now close NRT reader");

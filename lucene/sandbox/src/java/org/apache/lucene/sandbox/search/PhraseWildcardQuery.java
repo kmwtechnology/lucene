@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SlowImpactsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -614,11 +615,16 @@ public class PhraseWildcardQuery extends Query {
 
     /** Adds a single term at the next position in the phrase. */
     public Builder addTerm(BytesRef termBytes) {
-      return addTerm(new Term(field, termBytes));
+      return addTerm(termBytes, 0);
     }
 
     /** Adds a single term at the next position in the phrase. */
-    public Builder addTerm(Term term) {
+    public Builder addTerm(BytesRef termBytes, int offset) {
+      return addTerm(new QueryTerm(field, termBytes, offset));
+    }
+
+    /** Adds a single term at the next position in the phrase. */
+    public Builder addTerm(QueryTerm term) {
       if (!term.field().equals(field)) {
         throw new IllegalArgumentException(
             term.getClass().getSimpleName()
@@ -730,9 +736,9 @@ public class PhraseWildcardQuery extends Query {
   /** Phrase term with no expansion. */
   protected static class SingleTerm extends PhraseTerm {
 
-    protected final Term term;
+    protected final QueryTerm term;
 
-    protected SingleTerm(Term term, int termPosition) {
+    protected SingleTerm(QueryTerm term, int termPosition) {
       super(termPosition);
       this.term = term;
     }

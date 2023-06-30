@@ -134,9 +134,9 @@ public class TestSpanQueryParser extends LuceneTestCase {
   }
 
   public void testUniqueField() throws Exception {
-    assertEquals(getSpanQuery("field", "term").toString(), "field:term");
-    assertEquals(getSpanQuery("field", "field:term").toString(), "field:term");
-    assertEquals(getSpanQuery("field", "anotherField:term").toString(), "field:term");
+    assertEquals(getSpanQuery("field", "term").toString(), "field:term[0]");
+    assertEquals(getSpanQuery("field", "field:term").toString(), "field:term[0]");
+    assertEquals(getSpanQuery("field", "anotherField:term").toString(), "field:term[0]");
   }
 
   public void testOrSpans() throws Exception {

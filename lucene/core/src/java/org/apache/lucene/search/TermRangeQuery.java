@@ -16,6 +16,7 @@
  */
 package org.apache.lucene.search;
 
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.automaton.Automata;
@@ -86,7 +87,7 @@ public class TermRangeQuery extends AutomatonQuery {
       boolean includeUpper,
       RewriteMethod rewriteMethod) {
     super(
-        new Term(field, lowerTerm),
+        new QueryTerm(field, lowerTerm, lowerTerm == null ? 0 : lowerTerm.offset),
         toAutomaton(lowerTerm, upperTerm, includeLower, includeUpper),
         Integer.MAX_VALUE,
         true,

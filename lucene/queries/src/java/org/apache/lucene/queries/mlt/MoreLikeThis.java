@@ -33,6 +33,7 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermVectors;
 import org.apache.lucene.index.Terms;
@@ -595,7 +596,7 @@ public final class MoreLikeThis {
     float bestScore = -1;
 
     while ((scoreTerm = q.pop()) != null) {
-      Query tq = new TermQuery(new Term(scoreTerm.topField, scoreTerm.word));
+      Query tq = new TermQuery(new QueryTerm(scoreTerm.topField, scoreTerm.word, 0));
 
       if (boost) {
         if (bestScore == -1) {

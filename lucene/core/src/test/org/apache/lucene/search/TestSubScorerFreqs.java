@@ -28,7 +28,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.ByteBuffersDirectory;
@@ -163,7 +163,7 @@ public class TestSubScorerFreqs extends LuceneTestCase {
 
   @Test
   public void testTermQuery() throws Exception {
-    TermQuery q = new TermQuery(new Term("f", "d"));
+    TermQuery q = new TermQuery(new QueryTerm("f", "d", 0));
     Map<Integer, Map<Query, Float>> docCounts = s.search(q, new CountingCollectorManager(null));
     final int maxDocs = s.getIndexReader().maxDoc();
     assertEquals(maxDocs, docCounts.size());
@@ -180,10 +180,10 @@ public class TestSubScorerFreqs extends LuceneTestCase {
 
   @Test
   public void testBooleanQuery() throws Exception {
-    TermQuery aQuery = new TermQuery(new Term("f", "a"));
-    TermQuery dQuery = new TermQuery(new Term("f", "d"));
-    TermQuery cQuery = new TermQuery(new Term("f", "c"));
-    TermQuery yQuery = new TermQuery(new Term("f", "y"));
+    TermQuery aQuery = new TermQuery(new QueryTerm("f", "a", 0));
+    TermQuery dQuery = new TermQuery(new QueryTerm("f", "d", 0));
+    TermQuery cQuery = new TermQuery(new QueryTerm("f", "c", 0));
+    TermQuery yQuery = new TermQuery(new QueryTerm("f", "y", 0));
 
     BooleanQuery.Builder query = new BooleanQuery.Builder();
     BooleanQuery.Builder inner = new BooleanQuery.Builder();
@@ -231,7 +231,7 @@ public class TestSubScorerFreqs extends LuceneTestCase {
 
   @Test
   public void testPhraseQuery() throws Exception {
-    PhraseQuery q = new PhraseQuery("f", "b", "c");
+    PhraseQuery q = new PhraseQuery("f", new int[] {0, 0}, "b", "c");
     Map<Integer, Map<Query, Float>> docCounts = s.search(q, new CountingCollectorManager(null));
     final int maxDocs = s.getIndexReader().maxDoc();
     assertEquals(maxDocs, docCounts.size());

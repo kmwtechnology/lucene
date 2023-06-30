@@ -366,7 +366,7 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
       LeafReader reader = (LeafReader) memory.createSearcher().getIndexReader();
       TestUtil.checkReader(reader);
       assertEquals(1, reader.terms("foo").getSumTotalTermFreq());
-      PostingsEnum disi = reader.postings(new Term("foo", "bar"), PostingsEnum.ALL);
+      PostingsEnum disi = reader.postings(new QueryTerm("foo", "bar", 0), PostingsEnum.ALL);
       int docid = disi.docID();
       assertEquals(-1, docid);
       assertTrue(disi.nextDoc() != DocIdSetIterator.NO_MORE_DOCS);
@@ -388,7 +388,7 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
 
   // LUCENE-3831
   public void testNullPointerException() throws IOException {
-    RegexpQuery regex = new RegexpQuery(new Term("field", "worl."));
+    RegexpQuery regex = new RegexpQuery(new QueryTerm("field", "worl.", 0));
     SpanQuery wrappedquery = new SpanMultiTermQueryWrapper<>(regex);
 
     MemoryIndex mindex = randomMemoryIndex();
@@ -401,7 +401,7 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
 
   // LUCENE-3831
   public void testPassesIfWrapped() throws IOException {
-    RegexpQuery regex = new RegexpQuery(new Term("field", "worl."));
+    RegexpQuery regex = new RegexpQuery(new QueryTerm("field", "worl.", 0));
     SpanQuery wrappedquery = new SpanOrQuery(new SpanMultiTermQueryWrapper<>(regex));
 
     MemoryIndex mindex = randomMemoryIndex();
@@ -420,14 +420,14 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
     LeafReader reader = (LeafReader) mindex.createSearcher().getIndexReader();
     TestUtil.checkReader(reader);
     assertEquals(7, reader.terms("field").getSumTotalTermFreq());
-    PhraseQuery query = new PhraseQuery("field", "fox", "jumps");
+    PhraseQuery query = new PhraseQuery("field", new int[] {0, 0}, "fox", "jumps");
     assertTrue(mindex.search(query) > 0.1);
     mindex.reset();
     mockAnalyzer.setPositionIncrementGap(1 + random().nextInt(10));
     mindex.addField("field", "the quick brown fox", mockAnalyzer);
     mindex.addField("field", "jumps over the", mockAnalyzer);
     assertEquals(0, mindex.search(query), 0.00001f);
-    query = new PhraseQuery(10, "field", "fox", "jumps");
+    query = new PhraseQuery(10, "field", new int[] {0, 0}, "fox", "jumps");
     assertTrue(
         "posGap" + mockAnalyzer.getPositionIncrementGap("field"), mindex.search(query) > 0.0001);
     TestUtil.checkReader(mindex.createSearcher().getIndexReader());
@@ -669,7 +669,7 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
     MemoryIndex memory = new MemoryIndex();
     memory.addField("foo", new CannedTokenStream(new Token("", 0, 5)));
     IndexSearcher searcher = memory.createSearcher();
-    TopDocs docs = searcher.search(new TermQuery(new Term("foo", "")), 10);
+    TopDocs docs = searcher.search(new TermQuery(new QueryTerm("foo", "", 0)), 10);
     assertEquals(1, docs.totalHits.value);
     TestUtil.checkReader(searcher.getIndexReader());
   }
@@ -695,7 +695,7 @@ public class TestMemoryIndexAgainstDirectory extends BaseTokenStreamTestCase {
 
     Directory dir = newDirectory();
     IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(random(), mockAnalyzer));
-    writer.updateDocument(new Term("id", "1"), doc);
+    writer.updateDocument(new QueryTerm("id", "1", 0), doc);
     writer.commit();
     writer.close();
     DirectoryReader reader = DirectoryReader.open(dir);

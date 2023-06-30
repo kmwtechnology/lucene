@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.classification.document;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,6 +35,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -118,7 +121,7 @@ public class SimpleNaiveBayesDocumentClassifier extends SimpleNaiveBayesClassifi
       int docsWithClassSize = countDocsWithClass();
       while ((c = classesEnum.next()) != null) {
         double classScore = 0;
-        Term term = new Term(this.classFieldName, c);
+        Term term = new QueryTerm(this.classFieldName, c, 0);
         for (String fieldName : textFieldNames) {
           List<String[]> tokensArrays = fieldName2tokensArray.get(fieldName);
           double fieldScore = 0;
@@ -256,9 +259,10 @@ public class SimpleNaiveBayesDocumentClassifier extends SimpleNaiveBayesClassifi
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
     BooleanQuery.Builder subQuery = new BooleanQuery.Builder();
     subQuery.add(
-        new BooleanClause(new TermQuery(new Term(fieldName, word)), BooleanClause.Occur.SHOULD));
+        new BooleanClause(
+            new TermQuery(new QueryTerm(fieldName, word, 0)), BooleanClause.Occur.SHOULD));
     booleanQuery.add(new BooleanClause(subQuery.build(), BooleanClause.Occur.MUST));
-    booleanQuery.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.MUST));
+    booleanQuery.add(new BooleanClause(new TermQuery(asQueryTerm(term)), BooleanClause.Occur.MUST));
     if (query != null) {
       booleanQuery.add(query, BooleanClause.Occur.MUST);
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.classification;
 
+import static org.apache.lucene.index.QueryTerm.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +29,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -146,7 +149,7 @@ public class SimpleNaiveBayesClassifier implements Classifier<BytesRef> {
       int docsWithClassSize = countDocsWithClass();
       while ((next = classesEnum.next()) != null) {
         if (next.length > 0) {
-          Term term = new Term(this.classFieldName, next);
+          Term term = new QueryTerm(this.classFieldName, next, 0);
           double clVal =
               calculateLogPrior(term, docsWithClassSize)
                   + calculateLogLikelihood(tokenizedText, term, docsWithClassSize);
@@ -172,7 +175,7 @@ public class SimpleNaiveBayesClassifier implements Classifier<BytesRef> {
       q.add(
           new BooleanClause(
               new WildcardQuery(
-                  new Term(classFieldName, String.valueOf(WildcardQuery.WILDCARD_STRING))),
+                  new QueryTerm(classFieldName, String.valueOf(WildcardQuery.WILDCARD_STRING), 0)),
               BooleanClause.Occur.MUST));
       if (query != null) {
         q.add(query, BooleanClause.Occur.MUST);
@@ -266,10 +269,10 @@ public class SimpleNaiveBayesClassifier implements Classifier<BytesRef> {
     for (String textFieldName : textFieldNames) {
       subQuery.add(
           new BooleanClause(
-              new TermQuery(new Term(textFieldName, word)), BooleanClause.Occur.SHOULD));
+              new TermQuery(new QueryTerm(textFieldName, word, 0)), BooleanClause.Occur.SHOULD));
     }
     booleanQuery.add(new BooleanClause(subQuery.build(), BooleanClause.Occur.MUST));
-    booleanQuery.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.MUST));
+    booleanQuery.add(new BooleanClause(new TermQuery(asQueryTerm(term)), BooleanClause.Occur.MUST));
     if (query != null) {
       booleanQuery.add(query, BooleanClause.Occur.MUST);
     }

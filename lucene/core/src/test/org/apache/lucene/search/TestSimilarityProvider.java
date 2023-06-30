@@ -23,7 +23,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.similarities.PerFieldSimilarityWrapper;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
@@ -80,9 +80,9 @@ public class TestSimilarityProvider extends LuceneTestCase {
     }
 
     // sanity check of searching
-    TopDocs foodocs = searcher.search(new TermQuery(new Term("foo", "brown")), 10);
+    TopDocs foodocs = searcher.search(new TermQuery(new QueryTerm("foo", "brown", 0)), 10);
     assertTrue(foodocs.totalHits.value > 0);
-    TopDocs bardocs = searcher.search(new TermQuery(new Term("bar", "brown")), 10);
+    TopDocs bardocs = searcher.search(new TermQuery(new QueryTerm("bar", "brown", 0)), 10);
     assertTrue(bardocs.totalHits.value > 0);
     assertTrue(foodocs.scoreDocs[0].score < bardocs.scoreDocs[0].score);
   }

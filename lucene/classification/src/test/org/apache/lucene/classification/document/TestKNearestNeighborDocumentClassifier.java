@@ -17,7 +17,7 @@
 package org.apache.lucene.classification.document;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
 import org.junit.Test;
@@ -180,7 +180,7 @@ public class TestKNearestNeighborDocumentClassifier
   @Test
   public void testBasicDocumentClassificationWithQuery() throws Exception {
     try {
-      TermQuery query = new TermQuery(new Term(authorFieldName, "ign"));
+      TermQuery query = new TermQuery(new QueryTerm(authorFieldName, "ign", 0));
       checkCorrectDocumentClassification(
           new KNearestNeighborDocumentClassifier(
               indexReader,

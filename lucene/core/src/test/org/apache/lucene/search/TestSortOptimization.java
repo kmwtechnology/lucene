@@ -48,8 +48,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.PointValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.VectorEncoding;
 import org.apache.lucene.index.VectorSimilarityFunction;
@@ -596,7 +596,7 @@ public class TestSortOptimization extends LuceneTestCase {
       int lowerRange = 40;
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(LongPoint.newRangeQuery("lf", lowerRange, Long.MAX_VALUE), BooleanClause.Occur.MUST);
-      bq.add(new TermQuery(new Term("tf", "seg1")), BooleanClause.Occur.MUST);
+      bq.add(new TermQuery(new QueryTerm("tf", "seg1", 0)), BooleanClause.Occur.MUST);
       TopDocs topDocs = searcher.search(bq.build(), manager);
 
       assertEquals(numHits, topDocs.scoreDocs.length);
@@ -647,7 +647,7 @@ public class TestSortOptimization extends LuceneTestCase {
           TopFieldCollector.createSharedManager(sort, numHits, null, totalHitsThreshold);
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(LongPoint.newExactQuery("lf", 1), BooleanClause.Occur.MUST);
-      bq.add(new TermQuery(new Term("id", "id3")), BooleanClause.Occur.MUST_NOT);
+      bq.add(new TermQuery(new QueryTerm("id", "id3", 0)), BooleanClause.Occur.MUST_NOT);
       TopDocs topDocs = searcher.search(bq.build(), manager);
       assertEquals(2, topDocs.scoreDocs.length);
     }

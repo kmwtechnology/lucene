@@ -26,7 +26,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanContainingQuery;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.queries.spans.SpanNearQuery;
@@ -97,7 +97,7 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
   @Test
   public void testTermQuery() throws IOException {
 
-    SpanTermQuery q = new SpanTermQuery(new Term("field", "eighteen"));
+    SpanTermQuery q = new SpanTermQuery(new QueryTerm("field", "eighteen", 0));
     for (PayloadFunction fn :
         new PayloadFunction[] {
           new AveragePayloadFunction(), new MaxPayloadFunction(), new MinPayloadFunction()
@@ -111,8 +111,8 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
 
     SpanOrQuery q =
         new SpanOrQuery(
-            new SpanTermQuery(new Term("field", "eighteen")),
-            new SpanTermQuery(new Term("field", "nineteen")));
+            new SpanTermQuery(new QueryTerm("field", "eighteen", 0)),
+            new SpanTermQuery(new QueryTerm("field", "nineteen", 0)));
     for (PayloadFunction fn :
         new PayloadFunction[] {
           new AveragePayloadFunction(), new MaxPayloadFunction(), new MinPayloadFunction()
@@ -136,8 +136,8 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term("field", "twenty")),
-              new SpanTermQuery(new Term("field", "two"))
+              new SpanTermQuery(new QueryTerm("field", "twenty", 0)),
+              new SpanTermQuery(new QueryTerm("field", "two", 0))
             },
             0,
             true);
@@ -162,12 +162,12 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
         new SpanNearQuery(
             new SpanQuery[] {
               new SpanOrQuery(
-                  new SpanTermQuery(new Term("field", "one")),
-                  new SpanTermQuery(new Term("field", "hundred"))),
+                  new SpanTermQuery(new QueryTerm("field", "one", 0)),
+                  new SpanTermQuery(new QueryTerm("field", "hundred", 0))),
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term("field", "twenty")),
-                    new SpanTermQuery(new Term("field", "two"))
+                    new SpanTermQuery(new QueryTerm("field", "twenty", 0)),
+                    new SpanTermQuery(new QueryTerm("field", "two", 0))
                   },
                   0,
                   true)
@@ -217,13 +217,13 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
             new SpanNearQuery(
                 new SpanQuery[] {
                   new SpanOrQuery(
-                      new SpanTermQuery(new Term("field", "one")),
-                      new SpanTermQuery(new Term("field", "hundred"))),
-                  new SpanTermQuery(new Term("field", "two"))
+                      new SpanTermQuery(new QueryTerm("field", "one", 0)),
+                      new SpanTermQuery(new QueryTerm("field", "hundred", 0))),
+                  new SpanTermQuery(new QueryTerm("field", "two", 0))
                 },
                 2,
                 true),
-            new SpanTermQuery(new Term("field", "twenty")));
+            new SpanTermQuery(new QueryTerm("field", "twenty", 0)));
 
     checkQuery(
         q, new AveragePayloadFunction(), new int[] {222, 122}, new float[] {4.0f, 3.666666f});
@@ -233,8 +233,8 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
 
   @Test
   public void testEquality() {
-    SpanQuery sq1 = new SpanTermQuery(new Term("field", "one"));
-    SpanQuery sq2 = new SpanTermQuery(new Term("field", "two"));
+    SpanQuery sq1 = new SpanTermQuery(new QueryTerm("field", "one", 0));
+    SpanQuery sq2 = new SpanTermQuery(new QueryTerm("field", "two", 0));
     PayloadFunction minFunc = new MinPayloadFunction();
     PayloadFunction maxFunc = new MaxPayloadFunction();
     PayloadScoreQuery query1 =
@@ -258,7 +258,7 @@ public class TestPayloadScoreQuery extends LuceneTestCase {
 
   public void testRewrite() throws IOException {
     SpanMultiTermQueryWrapper<WildcardQuery> xyz =
-        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term("field", "xyz*")));
+        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm("field", "xyz*", 0)));
     PayloadScoreQuery psq =
         new PayloadScoreQuery(
             xyz, new AveragePayloadFunction(), PayloadDecoder.FLOAT_DECODER, false);

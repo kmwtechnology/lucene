@@ -29,7 +29,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -68,7 +68,7 @@ public class TestCustomSearcherSort extends LuceneTestCase {
     }
     reader = writer.getReader();
     writer.close();
-    query = new TermQuery(new Term("content", "test"));
+    query = new TermQuery(new QueryTerm("content", "test", 0));
   }
 
   @Override
@@ -185,7 +185,8 @@ public class TestCustomSearcherSort extends LuceneTestCase {
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(query, BooleanClause.Occur.MUST);
       bq.add(
-          new TermQuery(new Term("mandant", Integer.toString(switcher))), BooleanClause.Occur.MUST);
+          new TermQuery(new QueryTerm("mandant", Integer.toString(switcher), 0)),
+          BooleanClause.Occur.MUST);
       return super.search(bq.build(), nDocs, sort);
     }
 
@@ -194,7 +195,8 @@ public class TestCustomSearcherSort extends LuceneTestCase {
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(query, BooleanClause.Occur.MUST);
       bq.add(
-          new TermQuery(new Term("mandant", Integer.toString(switcher))), BooleanClause.Occur.MUST);
+          new TermQuery(new QueryTerm("mandant", Integer.toString(switcher), 0)),
+          BooleanClause.Occur.MUST);
       return super.search(bq.build(), nDocs);
     }
   }

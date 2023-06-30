@@ -24,7 +24,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreMode;
@@ -84,9 +84,9 @@ public class TestNearSpansOrdered extends LuceneTestCase {
   protected SpanNearQuery makeQuery(String s1, String s2, String s3, int slop, boolean inOrder) {
     return new SpanNearQuery(
         new SpanQuery[] {
-          new SpanTermQuery(new Term(FIELD, s1)),
-          new SpanTermQuery(new Term(FIELD, s2)),
-          new SpanTermQuery(new Term(FIELD, s3))
+          new SpanTermQuery(new QueryTerm(FIELD, s1, 0)),
+          new SpanTermQuery(new QueryTerm(FIELD, s2, 0)),
+          new SpanTermQuery(new QueryTerm(FIELD, s3, 0))
         },
         slop,
         inOrder);
@@ -102,11 +102,12 @@ public class TestNearSpansOrdered extends LuceneTestCase {
         new SpanQuery[] {
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term(FIELD, sqt1)), new SpanTermQuery(new Term(FIELD, sqt2))
+                new SpanTermQuery(new QueryTerm(FIELD, sqt1, 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, sqt2, 0))
               },
               1,
               sqOrdered),
-          new SpanTermQuery(new Term(FIELD, t3))
+          new SpanTermQuery(new QueryTerm(FIELD, t3, 0))
         },
         0,
         ordered);
@@ -236,9 +237,9 @@ public class TestNearSpansOrdered extends LuceneTestCase {
         new SpanNearQuery(
             new SpanQuery[] {
               new SpanOrQuery(
-                  new SpanTermQuery(new Term(FIELD, "w1")),
-                  new SpanTermQuery(new Term(FIELD, "w2"))),
-              new SpanTermQuery(new Term(FIELD, "w4"))
+                  new SpanTermQuery(new QueryTerm(FIELD, "w1", 0)),
+                  new SpanTermQuery(new QueryTerm(FIELD, "w2", 0))),
+              new SpanTermQuery(new QueryTerm(FIELD, "w4", 0))
             },
             10,
             true);
@@ -254,7 +255,8 @@ public class TestNearSpansOrdered extends LuceneTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD, "t1")), new SpanTermQuery(new Term(FIELD, "t2"))
+              new SpanTermQuery(new QueryTerm(FIELD, "t1", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD, "t2", 0))
             },
             1,
             true);
@@ -269,7 +271,8 @@ public class TestNearSpansOrdered extends LuceneTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD, "t2")), new SpanTermQuery(new Term(FIELD, "t1"))
+              new SpanTermQuery(new QueryTerm(FIELD, "t2", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD, "t1", 0))
             },
             1,
             true);
@@ -293,9 +296,9 @@ public class TestNearSpansOrdered extends LuceneTestCase {
   public void testGaps() throws Exception {
     SpanNearQuery q =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanTermQuery(new Term(FIELD, "w1")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "w1", 0)))
             .addGap(1)
-            .addClause(new SpanTermQuery(new Term(FIELD, "w2")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "w2", 0)))
             .build();
     Spans spans =
         q.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
@@ -306,11 +309,11 @@ public class TestNearSpansOrdered extends LuceneTestCase {
 
     q =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanTermQuery(new Term(FIELD, "w1")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "w1", 0)))
             .addGap(1)
-            .addClause(new SpanTermQuery(new Term(FIELD, "w2")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "w2", 0)))
             .addGap(1)
-            .addClause(new SpanTermQuery(new Term(FIELD, "w3")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "w3", 0)))
             .setSlop(1)
             .build();
     spans =
@@ -324,9 +327,9 @@ public class TestNearSpansOrdered extends LuceneTestCase {
   public void testMultipleGaps() throws Exception {
     SpanQuery q =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanTermQuery(new Term(FIELD, "g")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "g", 0)))
             .addGap(2)
-            .addClause(new SpanTermQuery(new Term(FIELD, "g")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "g", 0)))
             .build();
     Spans spans =
         q.createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, 1f)
@@ -341,12 +344,12 @@ public class TestNearSpansOrdered extends LuceneTestCase {
         SpanNearQuery.newOrderedNearQuery(FIELD)
             .addClause(
                 new SpanOrQuery(
-                    new SpanTermQuery(new Term(FIELD, "open")),
+                    new SpanTermQuery(new QueryTerm(FIELD, "open", 0)),
                     SpanNearQuery.newOrderedNearQuery(FIELD)
-                        .addClause(new SpanTermQuery(new Term(FIELD, "go")))
+                        .addClause(new SpanTermQuery(new QueryTerm(FIELD, "go", 0)))
                         .addGap(1)
                         .build()))
-            .addClause(new SpanTermQuery(new Term(FIELD, "webpage")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "webpage", 0)))
             .build();
 
     TopDocs topDocs = searcher.search(q, 1);

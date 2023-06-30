@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.reverse.ReverseStringFilter;
 import org.apache.lucene.classification.utils.ConfusionMatrixGenerator;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.TermQuery;
@@ -59,7 +59,7 @@ public class TestSimpleNaiveBayesClassifier extends ClassificationTestBase<Bytes
     try {
       MockAnalyzer analyzer = new MockAnalyzer(random());
       leafReader = getSampleIndex(analyzer);
-      TermQuery query = new TermQuery(new Term(textFieldName, "a"));
+      TermQuery query = new TermQuery(new QueryTerm(textFieldName, "a", 0));
       SimpleNaiveBayesClassifier classifier =
           new SimpleNaiveBayesClassifier(
               leafReader, analyzer, query, categoryFieldName, textFieldName);

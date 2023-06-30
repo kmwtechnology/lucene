@@ -19,7 +19,7 @@ package org.apache.lucene.benchmark.byTask.feeds;
 import java.util.ArrayList;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.benchmark.byTask.tasks.NewAnalyzerTask;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -48,9 +48,9 @@ public class SimpleQueryMaker extends AbstractQueryMaker {
 
     QueryParser qp = new QueryParser(DocMaker.BODY_FIELD, anlzr);
     ArrayList<Query> qq = new ArrayList<>();
-    Query q1 = new TermQuery(new Term(DocMaker.ID_FIELD, "doc2"));
+    Query q1 = new TermQuery(new QueryTerm(DocMaker.ID_FIELD, "doc2", 0));
     qq.add(q1);
-    Query q2 = new TermQuery(new Term(DocMaker.BODY_FIELD, "simple"));
+    Query q2 = new TermQuery(new QueryTerm(DocMaker.BODY_FIELD, "simple", 0));
     qq.add(q2);
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(q1, Occur.MUST);

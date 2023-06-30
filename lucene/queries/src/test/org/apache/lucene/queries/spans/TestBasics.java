@@ -34,7 +34,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.CollectorManager;
@@ -103,7 +103,7 @@ public class TestBasics extends LuceneTestCase {
   }
 
   public void testTerm() throws Exception {
-    Query query = new TermQuery(new Term("field", "seventy"));
+    Query query = new TermQuery(new QueryTerm("field", "seventy", 0));
     checkHits(
         query,
         new int[] {
@@ -124,12 +124,12 @@ public class TestBasics extends LuceneTestCase {
   }
 
   public void testTerm2() throws Exception {
-    Query query = new TermQuery(new Term("field", "seventish"));
+    Query query = new TermQuery(new QueryTerm("field", "seventish", 0));
     checkHits(query, new int[] {});
   }
 
   public void testPhrase() throws Exception {
-    PhraseQuery query = new PhraseQuery("field", "seventy", "seven");
+    PhraseQuery query = new PhraseQuery("field", new int[] {0, 0}, "seventy", "seven");
     checkHits(
         query,
         new int[] {
@@ -139,14 +139,14 @@ public class TestBasics extends LuceneTestCase {
   }
 
   public void testPhrase2() throws Exception {
-    PhraseQuery query = new PhraseQuery("field", "seventish", "sevenon");
+    PhraseQuery query = new PhraseQuery("field", new int[] {0, 0}, "seventish", "sevenon");
     checkHits(query, new int[] {});
   }
 
   public void testBoolean() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term("field", "seventy")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term("field", "seven")), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("field", "seventy", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("field", "seven", 0)), BooleanClause.Occur.MUST);
     checkHits(
         query.build(),
         new int[] {
@@ -158,8 +158,8 @@ public class TestBasics extends LuceneTestCase {
 
   public void testBoolean2() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term("field", "sevento")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term("field", "sevenly")), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("field", "sevento", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("field", "sevenly", 0)), BooleanClause.Occur.MUST);
     checkHits(query.build(), new int[] {});
   }
 
@@ -514,8 +514,8 @@ public class TestBasics extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(indexReader);
 
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    SpanQuery sq1 = new SpanTermQuery(new Term(FIELD, "clockwork"));
-    SpanQuery sq2 = new SpanTermQuery(new Term(FIELD, "clckwork"));
+    SpanQuery sq1 = new SpanTermQuery(new QueryTerm(FIELD, "clockwork", 0));
+    SpanQuery sq2 = new SpanTermQuery(new QueryTerm(FIELD, "clckwork", 0));
     query.add(sq1, BooleanClause.Occur.SHOULD);
     query.add(sq2, BooleanClause.Occur.SHOULD);
     CollectorManager<TopScoreDocCollector, TopDocs> manager =
@@ -551,8 +551,8 @@ public class TestBasics extends LuceneTestCase {
     DisjunctionMaxQuery query =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new SpanTermQuery(new Term(FIELD, "clockwork")),
-                new SpanTermQuery(new Term(FIELD, "clckwork"))),
+                new SpanTermQuery(new QueryTerm(FIELD, "clockwork", 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, "clckwork", 0))),
             1.0f);
     CollectorManager<TopScoreDocCollector, TopDocs> manager =
         TopScoreDocCollector.createSharedManager(1000, null, Integer.MAX_VALUE);

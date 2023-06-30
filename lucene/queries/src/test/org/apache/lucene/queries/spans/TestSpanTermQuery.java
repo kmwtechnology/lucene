@@ -21,7 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -32,8 +32,8 @@ import org.apache.lucene.tests.util.LuceneTestCase;
 public class TestSpanTermQuery extends LuceneTestCase {
 
   public void testHashcodeEquals() {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field", "bar"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm("field", "foo", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm("field", "bar", 0));
     QueryUtils.check(q1);
     QueryUtils.check(q2);
     QueryUtils.checkUnequal(q1, q2);
@@ -50,7 +50,7 @@ public class TestSpanTermQuery extends LuceneTestCase {
     iw.close();
 
     IndexSearcher is = new IndexSearcher(ir);
-    SpanTermQuery query = new SpanTermQuery(new Term("foo", "bar"));
+    SpanTermQuery query = new SpanTermQuery(new QueryTerm("foo", "bar", 0));
     IllegalStateException expected =
         expectThrows(
             IllegalStateException.class,

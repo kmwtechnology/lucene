@@ -28,7 +28,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.search.AssertingQuery;
@@ -114,11 +114,15 @@ public class TestWANDScorer extends LuceneTestCase {
         new WANDScorerQuery(
             new BooleanQuery.Builder()
                 .add(
-                    new BoostQuery(new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                    new BoostQuery(
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                     Occur.SHOULD)
-                .add(new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))), Occur.SHOULD)
                 .add(
-                    new BoostQuery(new ConstantScoreQuery(new TermQuery(new Term("foo", "C"))), 3),
+                    new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
+                    Occur.SHOULD)
+                .add(
+                    new BoostQuery(
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "C", 0))), 3),
                     Occur.SHOULD)
                 .build());
 
@@ -178,14 +182,15 @@ public class TestWANDScorer extends LuceneTestCase {
                     new BooleanQuery.Builder()
                         .add(
                             new BoostQuery(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))),
+                                2),
                             Occur.SHOULD)
                         .add(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                             Occur.SHOULD)
                         .build()),
                 Occur.MUST)
-            .add(new TermQuery(new Term("foo", "C")), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.FILTER)
             .build();
 
     scorer =
@@ -221,14 +226,15 @@ public class TestWANDScorer extends LuceneTestCase {
                     new BooleanQuery.Builder()
                         .add(
                             new BoostQuery(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))),
+                                2),
                             Occur.SHOULD)
                         .add(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                             Occur.SHOULD)
                         .build()),
                 Occur.MUST)
-            .add(new TermQuery(new Term("foo", "C")), Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.MUST_NOT)
             .build();
 
     scorer =
@@ -294,12 +300,14 @@ public class TestWANDScorer extends LuceneTestCase {
                 new BooleanQuery.Builder()
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                         Occur.SHOULD)
-                    .add(new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))), Occur.SHOULD)
+                    .add(
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
+                        Occur.SHOULD)
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "C"))), 3),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "C", 0))), 3),
                         Occur.SHOULD)
                     .setMinimumNumberShouldMatch(2)
                     .build());
@@ -380,9 +388,9 @@ public class TestWANDScorer extends LuceneTestCase {
         Query query =
             new WANDScorerQuery(
                 new BooleanQuery.Builder()
-                    .add(new TermQuery(new Term("foo", "A")), Occur.SHOULD)
-                    .add(new TermQuery(new Term("foo", "B")), Occur.SHOULD)
-                    .add(new TermQuery(new Term("foo", "C")), Occur.SHOULD)
+                    .add(new TermQuery(new QueryTerm("foo", "A", 0)), Occur.SHOULD)
+                    .add(new TermQuery(new QueryTerm("foo", "B", 0)), Occur.SHOULD)
+                    .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.SHOULD)
                     .setMinimumNumberShouldMatch(2)
                     .build());
 
@@ -430,12 +438,14 @@ public class TestWANDScorer extends LuceneTestCase {
                 new BooleanQuery.Builder()
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                         Occur.SHOULD)
-                    .add(new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))), Occur.SHOULD)
+                    .add(
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
+                        Occur.SHOULD)
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "C"))), 3),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "C", 0))), 3),
                         Occur.SHOULD)
                     .setMinimumNumberShouldMatch(2)
                     .build());
@@ -486,19 +496,23 @@ public class TestWANDScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 Occur.SHOULD)
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "D"))), 4),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "D", 0))),
+                                    4),
                                 Occur.SHOULD)
                             .setMinimumNumberShouldMatch(2)
                             .build()),
                     Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), Occur.FILTER)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.FILTER)
                 .build();
 
         Scorer scorer =
@@ -563,19 +577,23 @@ public class TestWANDScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 Occur.SHOULD)
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "D"))), 4),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "D", 0))),
+                                    4),
                                 Occur.SHOULD)
                             .setMinimumNumberShouldMatch(2)
                             .build()),
                     Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), Occur.FILTER)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.FILTER)
                 .build();
 
         Scorer scorer =
@@ -623,19 +641,23 @@ public class TestWANDScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 Occur.SHOULD)
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "D"))), 4),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "D", 0))),
+                                    4),
                                 Occur.SHOULD)
                             .setMinimumNumberShouldMatch(2)
                             .build()),
                     Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), Occur.MUST_NOT)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.MUST_NOT)
                 .build();
 
         Scorer scorer =
@@ -700,19 +722,23 @@ public class TestWANDScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 Occur.SHOULD)
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "D"))), 4),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "D", 0))),
+                                    4),
                                 Occur.SHOULD)
                             .setMinimumNumberShouldMatch(2)
                             .build()),
                     Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), Occur.MUST_NOT)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), Occur.MUST_NOT)
                 .build();
 
         Scorer scorer =
@@ -753,7 +779,8 @@ public class TestWANDScorer extends LuceneTestCase {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (int i = 0; i < numClauses; ++i) {
         builder.add(
-            maybeWrap(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.SHOULD);
+            maybeWrap(new TermQuery(new QueryTerm("foo", Integer.toString(start + i), 0))),
+            Occur.SHOULD);
       }
       Query query = new WANDScorerQuery(builder.build());
 
@@ -763,7 +790,9 @@ public class TestWANDScorer extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       CheckHits.checkTopScores(random(), filteredQuery, searcher);
@@ -802,7 +831,7 @@ public class TestWANDScorer extends LuceneTestCase {
             maybeWrap(
                 new BoostQuery(
                     new ConstantScoreQuery(
-                        new TermQuery(new Term("foo", Integer.toString(start + i)))),
+                        new TermQuery(new QueryTerm("foo", Integer.toString(start + i), 0))),
                     0f)),
             Occur.SHOULD);
       }
@@ -814,7 +843,9 @@ public class TestWANDScorer extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       CheckHits.checkTopScores(random(), filteredQuery, searcher);
@@ -858,7 +889,7 @@ public class TestWANDScorer extends LuceneTestCase {
       int numClauses = random().nextInt(1 << random().nextInt(5));
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (int i = 0; i < numClauses; ++i) {
-        Query query = new TermQuery(new Term("foo", Integer.toString(start + i)));
+        Query query = new TermQuery(new QueryTerm("foo", Integer.toString(start + i), 0));
         if (random().nextBoolean()) {
           query =
               new MaxScoreWrapperQuery(
@@ -874,7 +905,9 @@ public class TestWANDScorer extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       CheckHits.checkTopScores(random(), filteredQuery, searcher);

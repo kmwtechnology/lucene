@@ -18,6 +18,7 @@ package org.apache.lucene.search;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
@@ -46,7 +47,7 @@ public class WildcardQuery extends AutomatonQuery {
   public static final char WILDCARD_ESCAPE = '\\';
 
   /** Constructs a query for terms matching <code>term</code>. */
-  public WildcardQuery(Term term) {
+  public WildcardQuery(QueryTerm term) {
     super(term, toAutomaton(term));
   }
 
@@ -58,7 +59,7 @@ public class WildcardQuery extends AutomatonQuery {
    *     Use {@link Operations#DEFAULT_DETERMINIZE_WORK_LIMIT} as a decent default if you don't
    *     otherwise know what to specify.
    */
-  public WildcardQuery(Term term, int determinizeWorkLimit) {
+  public WildcardQuery(QueryTerm term, int determinizeWorkLimit) {
     this(term, determinizeWorkLimit, CONSTANT_SCORE_REWRITE);
   }
 
@@ -71,7 +72,7 @@ public class WildcardQuery extends AutomatonQuery {
    *     otherwise know what to specify.
    * @param rewriteMethod the rewrite method to use when building the final query
    */
-  public WildcardQuery(Term term, int determinizeWorkLimit, RewriteMethod rewriteMethod) {
+  public WildcardQuery(QueryTerm term, int determinizeWorkLimit, RewriteMethod rewriteMethod) {
     super(term, toAutomaton(term), determinizeWorkLimit, false, rewriteMethod);
   }
 

@@ -794,7 +794,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
                 assertEquals(
                     1,
                     new IndexSearcher(reader)
-                        .search(new TermQuery(new Term("id", "1")), 10)
+                        .search(new TermQuery(new QueryTerm("id", "1", 0)), 10)
                         .totalHits
                         .value);
               }
@@ -808,7 +808,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
                 assertEquals(
                     1,
                     new IndexSearcher(open)
-                        .search(new TermQuery(new Term("id", "1")), 10)
+                        .search(new TermQuery(new QueryTerm("id", "1", 0)), 10)
                         .totalHits
                         .value);
               }

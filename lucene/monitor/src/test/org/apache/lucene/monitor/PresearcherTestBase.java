@@ -26,7 +26,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -84,7 +84,7 @@ public abstract class PresearcherTestBase extends MonitorTestBase {
     Query q =
         new BooleanQuery.Builder()
             .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("f", "foo")), BooleanClause.Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm("f", "foo", 0)), BooleanClause.Occur.MUST_NOT)
             .build();
     try (Monitor monitor = newMonitor()) {
       monitor.register(new MonitorQuery("1", q));
@@ -152,7 +152,8 @@ public abstract class PresearcherTestBase extends MonitorTestBase {
     ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
 
     try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("1", new TermQuery(new Term("f", NON_STRING_TERM))));
+      monitor.register(
+          new MonitorQuery("1", new TermQuery(new QueryTerm("f", NON_STRING_TERM, 0))));
 
       Document doc = new Document();
       doc.add(new Field("f", new NonStringTokenStream(), ft));

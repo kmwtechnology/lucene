@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queries.spans;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.tests.search.QueryUtils;
 import org.apache.lucene.tests.util.LuceneTestCase;
 
@@ -24,9 +24,9 @@ import org.apache.lucene.tests.util.LuceneTestCase;
 public class TestSpanOrQuery extends LuceneTestCase {
 
   public void testHashcodeEquals() {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field", "bar"));
-    SpanTermQuery q3 = new SpanTermQuery(new Term("field", "baz"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm("field", "foo", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm("field", "bar", 0));
+    SpanTermQuery q3 = new SpanTermQuery(new QueryTerm("field", "baz", 0));
 
     SpanOrQuery or1 = new SpanOrQuery(q1, q2);
     SpanOrQuery or2 = new SpanOrQuery(q2, q3);
@@ -42,8 +42,8 @@ public class TestSpanOrQuery extends LuceneTestCase {
   }
 
   public void testDifferentField() throws Exception {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field1", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field2", "bar"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm("field1", "foo", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm("field2", "bar", 0));
     IllegalArgumentException expected =
         expectThrows(
             IllegalArgumentException.class,

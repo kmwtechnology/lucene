@@ -29,7 +29,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.charstream.CharStream;
 import org.apache.lucene.queryparser.classic.QueryParser.Operator;
 import org.apache.lucene.queryparser.flexible.standard.CommonQueryParserConfiguration;
@@ -65,13 +65,14 @@ public class TestQueryParser extends QueryParserTestBase {
     }
 
     @Override
-    protected Query getFuzzyQuery(String field, String termStr, float minSimilarity)
-        throws ParseException {
+    protected Query getFuzzyQuery(
+        String field, String termStr, float minSimilarity, int beginColumn) throws ParseException {
       throw new ParseException("Fuzzy queries not allowed");
     }
 
     @Override
-    protected Query getWildcardQuery(String field, String termStr) throws ParseException {
+    protected Query getWildcardQuery(String field, String termStr, int beginColumn)
+        throws ParseException {
       throw new ParseException("Wildcard queries not allowed");
     }
   }
@@ -171,7 +172,7 @@ public class TestQueryParser extends QueryParserTestBase {
         new QueryParser("a", new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)) {
 
           @Override
-          Query handleBareFuzzy(String qfield, Token fuzzySlop, String termImage)
+          Query handleBareFuzzy(String qfield, Token fuzzySlop, String termImage, int beginColumn)
               throws ParseException {
 
             if (fuzzySlop.image.endsWith("€")) {
@@ -190,7 +191,7 @@ public class TestQueryParser extends QueryParserTestBase {
                   true,
                   true);
             }
-            return super.handleBareFuzzy(qfield, fuzzySlop, termImage);
+            return super.handleBareFuzzy(qfield, fuzzySlop, termImage, beginColumn);
           }
         };
     assertEquals(qp.parse("a:[11.95 TO 12.95]"), qp.parse("12.45~1€"));
@@ -230,24 +231,25 @@ public class TestQueryParser extends QueryParserTestBase {
     QueryParser qp =
         new QueryParser(FIELD, new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false)) {
           @Override
-          protected Query getWildcardQuery(String field, String termStr) {
+          protected Query getWildcardQuery(String field, String termStr, int beginColumn) {
             // override error checking of superclass
             type[0] = 1;
-            return new TermQuery(new Term(field, termStr));
+            return new TermQuery(new QueryTerm(field, termStr, 0));
           }
 
           @Override
-          protected Query getPrefixQuery(String field, String termStr) {
+          protected Query getPrefixQuery(String field, String termStr, int beginColumn) {
             // override error checking of superclass
             type[0] = 2;
-            return new TermQuery(new Term(field, termStr));
+            return new TermQuery(new QueryTerm(field, termStr, 0));
           }
 
           @Override
-          protected Query getFieldQuery(String field, String queryText, boolean quoted)
+          protected Query getFieldQuery(
+              String field, String queryText, boolean quoted, int beginColumn)
               throws ParseException {
             type[0] = 3;
-            return super.getFieldQuery(field, queryText, quoted);
+            return super.getFieldQuery(field, queryText, quoted, beginColumn);
           }
         };
 
@@ -319,10 +321,10 @@ public class TestQueryParser extends QueryParserTestBase {
     }
 
     @Override
-    protected Query getFieldQuery(String field, String queryText, boolean quoted)
+    protected Query getFieldQuery(String field, String queryText, boolean quoted, int beginColumn)
         throws ParseException {
-      if (quoted) return newFieldQuery(morePrecise, field, queryText, quoted);
-      else return super.getFieldQuery(field, queryText, quoted);
+      if (quoted) return newFieldQuery(morePrecise, field, queryText, quoted, beginColumn);
+      else return super.getFieldQuery(field, queryText, quoted, beginColumn);
     }
   }
 
@@ -332,8 +334,8 @@ public class TestQueryParser extends QueryParserTestBase {
     QueryParser dumb = new QueryParser(FIELD, new Analyzer1());
     Query expanded =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "dogs"))
-            .addTerm(new Term(FIELD, "dog"))
+            .addTerm(new QueryTerm(FIELD, "dogs", 0))
+            .addTerm(new QueryTerm(FIELD, "dog", 0))
             .build();
     assertEquals(expanded, dumb.parse("\"dogs\""));
     /** even with the phrase operator the behavior is the same */
@@ -343,7 +345,7 @@ public class TestQueryParser extends QueryParserTestBase {
     QueryParser smart = new SmartQueryParser();
     assertEquals(expanded, smart.parse("dogs"));
 
-    Query unexpanded = new TermQuery(new Term(FIELD, "dogs"));
+    Query unexpanded = new TermQuery(new QueryTerm(FIELD, "dogs", 0));
     assertEquals(unexpanded, smart.parse("\"dogs\""));
   }
 
@@ -351,8 +353,8 @@ public class TestQueryParser extends QueryParserTestBase {
   public void testSynonyms() throws Exception {
     Query expected =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "dogs"))
-            .addTerm(new Term(FIELD, "dog"))
+            .addTerm(new QueryTerm(FIELD, "dogs", 0))
+            .addTerm(new QueryTerm(FIELD, "dog", 0))
             .build();
     QueryParser qp = new QueryParser(FIELD, new MockSynonymAnalyzer());
     assertEquals(expected, qp.parse("dogs"));
@@ -368,10 +370,14 @@ public class TestQueryParser extends QueryParserTestBase {
   /** forms multiphrase query */
   public void testSynonymsPhrase() throws Exception {
     MultiPhraseQuery.Builder expectedQBuilder = new MultiPhraseQuery.Builder();
-    expectedQBuilder.add(new Term(FIELD, "old"));
-    expectedQBuilder.add(new Term[] {new Term(FIELD, "dogs"), new Term(FIELD, "dog")});
+    // The parser doesn't seem to count the " character at the start? (0,4 here instead of 1,5?)
+    expectedQBuilder.add(new QueryTerm(FIELD, "old", 0));
+    expectedQBuilder.add(
+        new QueryTerm[] {new QueryTerm(FIELD, "dogs", 4), new QueryTerm(FIELD, "dog", 4)});
     QueryParser qp = new QueryParser(FIELD, new MockSynonymAnalyzer());
-    assertEquals(expectedQBuilder.build(), qp.parse("\"old dogs\""));
+    MultiPhraseQuery build = expectedQBuilder.build();
+    Query parse = qp.parse("\"old dogs\""); // " not included in offset?
+    assertEquals(build, parse);
     qp.setDefaultOperator(Operator.AND);
     assertEquals(expectedQBuilder.build(), qp.parse("\"old dogs\""));
     BoostQuery expected = new BoostQuery(expectedQBuilder.build(), 2f);
@@ -422,8 +428,8 @@ public class TestQueryParser extends QueryParserTestBase {
   public void testCJKSynonym() throws Exception {
     Query expected =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     QueryParser qp = new QueryParser(FIELD, new MockCJKSynonymAnalyzer());
     assertEquals(expected, qp.parse("国"));
@@ -436,11 +442,11 @@ public class TestQueryParser extends QueryParserTestBase {
   /** synonyms with default OR operator */
   public void testCJKSynonymsOR() throws Exception {
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term(FIELD, "中")), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm(FIELD, "中", 0)), BooleanClause.Occur.SHOULD);
     Query inner =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner, BooleanClause.Occur.SHOULD);
     Query expected = expectedB.build();
@@ -453,17 +459,17 @@ public class TestQueryParser extends QueryParserTestBase {
   /** more complex synonyms with default OR operator */
   public void testCJKSynonymsOR2() throws Exception {
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term(FIELD, "中")), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm(FIELD, "中", 0)), BooleanClause.Occur.SHOULD);
     SynonymQuery inner =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner, BooleanClause.Occur.SHOULD);
     SynonymQuery inner2 =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner2, BooleanClause.Occur.SHOULD);
     Query expected = expectedB.build();
@@ -476,11 +482,11 @@ public class TestQueryParser extends QueryParserTestBase {
   /** synonyms with default AND operator */
   public void testCJKSynonymsAND() throws Exception {
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term(FIELD, "中")), BooleanClause.Occur.MUST);
+    expectedB.add(new TermQuery(new QueryTerm(FIELD, "中", 0)), BooleanClause.Occur.MUST);
     Query inner =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner, BooleanClause.Occur.MUST);
     Query expected = expectedB.build();
@@ -494,17 +500,17 @@ public class TestQueryParser extends QueryParserTestBase {
   /** more complex synonyms with default AND operator */
   public void testCJKSynonymsAND2() throws Exception {
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term(FIELD, "中")), BooleanClause.Occur.MUST);
+    expectedB.add(new TermQuery(new QueryTerm(FIELD, "中", 0)), BooleanClause.Occur.MUST);
     Query inner =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner, BooleanClause.Occur.MUST);
     Query inner2 =
         new SynonymQuery.Builder(FIELD)
-            .addTerm(new Term(FIELD, "国"))
-            .addTerm(new Term(FIELD, "國"))
+            .addTerm(new QueryTerm(FIELD, "国", 0))
+            .addTerm(new QueryTerm(FIELD, "國", 0))
             .build();
     expectedB.add(inner2, BooleanClause.Occur.MUST);
     Query expected = expectedB.build();
@@ -518,8 +524,9 @@ public class TestQueryParser extends QueryParserTestBase {
   /** forms multiphrase query */
   public void testCJKSynonymsPhrase() throws Exception {
     MultiPhraseQuery.Builder expectedQBuilder = new MultiPhraseQuery.Builder();
-    expectedQBuilder.add(new Term(FIELD, "中"));
-    expectedQBuilder.add(new Term[] {new Term(FIELD, "国"), new Term(FIELD, "國")});
+    expectedQBuilder.add(new QueryTerm(FIELD, "中", 0));
+    expectedQBuilder.add(
+        new QueryTerm[] {new QueryTerm(FIELD, "国", 0), new QueryTerm(FIELD, "國", 0)});
     QueryParser qp = new QueryParser(FIELD, new MockCJKSynonymAnalyzer());
     qp.setDefaultOperator(Operator.AND);
     assertEquals(expectedQBuilder.build(), qp.parse("\"中国\""));
@@ -562,9 +569,10 @@ public class TestQueryParser extends QueryParserTestBase {
     QueryParser dumb = new QueryParser("field", new Analyzer1());
     dumb.setSplitOnWhitespace(false);
 
-    TermQuery guinea = new TermQuery(new Term("field", "guinea"));
-    TermQuery pig = new TermQuery(new Term("field", "pig"));
-    TermQuery cavy = new TermQuery(new Term("field", "cavy"));
+    TermQuery guinea = new TermQuery(new QueryTerm("field", "guinea", 0));
+    TermQuery pig = new TermQuery(new QueryTerm("field", "pig", 7));
+    TermQuery cavy = new TermQuery(new QueryTerm("field", "cavy", 0));
+    TermQuery cavyParsed = new TermQuery(new QueryTerm("field", "cavy", 11));
 
     // A multi-word synonym source will form a graph query for synonyms that formed the graph token
     // stream
@@ -575,8 +583,8 @@ public class TestQueryParser extends QueryParserTestBase {
 
     PhraseQuery phraseGuineaPig =
         new PhraseQuery.Builder()
-            .add(new Term("field", "guinea"))
-            .add(new Term("field", "pig"))
+            .add(new QueryTerm("field", "guinea", 0))
+            .add(new QueryTerm("field", "pig", 7))
             .build();
 
     BooleanQuery graphQuery =
@@ -592,8 +600,10 @@ public class TestQueryParser extends QueryParserTestBase {
 
     Query synonyms =
         new BooleanQuery.Builder()
-            .add(new PhraseQuery("field", "guinea", "pig"), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("field", "cavy")), BooleanClause.Occur.SHOULD)
+            .add(
+                new PhraseQuery("field", new int[] {0, 7}, "guinea", "pig"),
+                BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("field", "cavy", 0)), BooleanClause.Occur.SHOULD)
             .build();
     assertEquals(synonyms, dumb.parse("\"guinea pig\""));
 
@@ -633,9 +643,10 @@ public class TestQueryParser extends QueryParserTestBase {
                     .add(cavy, BooleanClause.Occur.SHOULD)
                     .build(),
                 BooleanClause.Occur.MUST)
-            .add(cavy, BooleanClause.Occur.MUST)
+            .add(cavyParsed, BooleanClause.Occur.MUST)
             .build();
-    assertEquals(graphAndQuery, dumb.parse("guinea pig cavy"));
+    Query guineaPigCavy = dumb.parse("guinea pig cavy");
+    assertEquals(graphAndQuery, guineaPigCavy);
   }
 
   public void testEnableGraphQueries() throws Exception {
@@ -643,13 +654,13 @@ public class TestQueryParser extends QueryParserTestBase {
     dumb.setSplitOnWhitespace(false);
     dumb.setEnableGraphQueries(false);
 
-    TermQuery pig = new TermQuery(new Term("field", "pig"));
+    TermQuery pig = new TermQuery(new QueryTerm("field", "pig", 7));
 
     // A multi-word synonym source will just form a boolean query when graph queries are disabled:
     Query inner =
         new SynonymQuery.Builder("field")
-            .addTerm(new Term("field", "cavy"))
-            .addTerm(new Term("field", "guinea"))
+            .addTerm(new QueryTerm("field", "cavy", 0))
+            .addTerm(new QueryTerm("field", "guinea", 0))
             .build();
     BooleanQuery.Builder b = new BooleanQuery.Builder();
     b.add(inner, BooleanClause.Occur.SHOULD);
@@ -825,9 +836,9 @@ public class TestQueryParser extends QueryParserTestBase {
     assertFalse(parser.getSplitOnWhitespace()); // default is false
 
     // A multi-word synonym source will form a synonym query for the same-starting-position tokens
-    TermQuery guinea = new TermQuery(new Term("field", "guinea"));
-    TermQuery pig = new TermQuery(new Term("field", "pig"));
-    TermQuery cavy = new TermQuery(new Term("field", "cavy"));
+    TermQuery guinea = new TermQuery(new QueryTerm("field", "guinea", 0));
+    TermQuery pig = new TermQuery(new QueryTerm("field", "pig", 7));
+    TermQuery cavy = new TermQuery(new QueryTerm("field", "cavy", 0));
 
     // A multi-word synonym source will form a graph query for synonyms that formed the graph token
     // stream
@@ -845,7 +856,8 @@ public class TestQueryParser extends QueryParserTestBase {
                     .build(),
                 BooleanClause.Occur.SHOULD)
             .build();
-    assertEquals(graphQuery, parser.parse("guinea pig"));
+    Query guineaPig1 = parser.parse("guinea pig");
+    assertEquals(graphQuery, guineaPig1);
 
     boolean oldSplitOnWhitespace = splitOnWhitespace;
     splitOnWhitespace = QueryParser.DEFAULT_SPLIT_ON_WHITESPACE;

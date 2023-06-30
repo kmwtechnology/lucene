@@ -69,16 +69,16 @@ public class TestStressDeletes extends LuceneTestCase {
                     } else {
                       if (deleteMode == 0) {
                         // Always delete by term
-                        w.deleteDocuments(new Term("id", "" + id));
+                        w.deleteDocuments(new QueryTerm("id", "" + id, 0));
                       } else if (deleteMode == 1) {
                         // Always delete by query
-                        w.deleteDocuments(new TermQuery(new Term("id", "" + id)));
+                        w.deleteDocuments(new TermQuery(new QueryTerm("id", "" + id, 0)));
                       } else {
                         // Mixed
                         if (random().nextBoolean()) {
-                          w.deleteDocuments(new Term("id", "" + id));
+                          w.deleteDocuments(new QueryTerm("id", "" + id, 0));
                         } else {
-                          w.deleteDocuments(new TermQuery(new Term("id", "" + id)));
+                          w.deleteDocuments(new TermQuery(new QueryTerm("id", "" + id, 0)));
                         }
                       }
                       exists.put(id, false);
@@ -108,7 +108,7 @@ public class TestStressDeletes extends LuceneTestCase {
     IndexSearcher s = newSearcher(r);
     for (Map.Entry<Integer, Boolean> ent : exists.entrySet()) {
       int id = ent.getKey();
-      TopDocs hits = s.search(new TermQuery(new Term("id", "" + id)), 1);
+      TopDocs hits = s.search(new TermQuery(new QueryTerm("id", "" + id, 0)), 1);
       if (ent.getValue()) {
         assertEquals(1, hits.totalHits.value);
       } else {

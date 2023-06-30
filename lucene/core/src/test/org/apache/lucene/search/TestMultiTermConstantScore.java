@@ -22,7 +22,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.analysis.MockTokenizer;
@@ -113,12 +113,12 @@ public class TestMultiTermConstantScore extends TestBaseRangeFilter {
   }
 
   /** macro for readability */
-  public static Query cspq(Term prefix) {
+  public static Query cspq(QueryTerm prefix) {
     return new PrefixQuery(prefix, MultiTermQuery.CONSTANT_SCORE_REWRITE);
   }
 
   /** macro for readability */
-  public static Query cswcq(Term wild) {
+  public static Query cswcq(QueryTerm wild) {
     return new WildcardQuery(
         wild, Operations.DEFAULT_DETERMINIZE_WORK_LIMIT, MultiTermQuery.CONSTANT_SCORE_REWRITE);
   }
@@ -129,11 +129,13 @@ public class TestMultiTermConstantScore extends TestBaseRangeFilter {
     QueryUtils.check(csrq("data", "A", "Z", T, T));
     QueryUtils.checkUnequal(csrq("data", "1", "6", T, T), csrq("data", "A", "Z", T, T));
 
-    QueryUtils.check(cspq(new Term("data", "p*u?")));
-    QueryUtils.checkUnequal(cspq(new Term("data", "pre*")), cspq(new Term("data", "pres*")));
+    QueryUtils.check(cspq(new QueryTerm("data", "p*u?", 0)));
+    QueryUtils.checkUnequal(
+        cspq(new QueryTerm("data", "pre*", 0)), cspq(new QueryTerm("data", "pres*", 0)));
 
-    QueryUtils.check(cswcq(new Term("data", "p")));
-    QueryUtils.checkUnequal(cswcq(new Term("data", "pre*n?t")), cswcq(new Term("data", "pr*t?j")));
+    QueryUtils.check(cswcq(new QueryTerm("data", "p", 0)));
+    QueryUtils.checkUnequal(
+        cswcq(new QueryTerm("data", "pre*n?t", 0)), cswcq(new QueryTerm("data", "pr*t?j", 0)));
   }
 
   @Test
@@ -186,7 +188,7 @@ public class TestMultiTermConstantScore extends TestBaseRangeFilter {
 
     ScoreDoc[] result;
 
-    TermQuery dummyTerm = new TermQuery(new Term("data", "1"));
+    TermQuery dummyTerm = new TermQuery(new QueryTerm("data", "1", 0));
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(dummyTerm, BooleanClause.Occur.SHOULD); // hits one doc

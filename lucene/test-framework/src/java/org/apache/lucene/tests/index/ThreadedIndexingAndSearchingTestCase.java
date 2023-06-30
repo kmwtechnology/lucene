@@ -38,6 +38,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
@@ -226,7 +227,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                       }
                       addCount.addAndGet(docsList.size());
 
-                      final Term packIDTerm = new Term("packID", packID);
+                      final Term packIDTerm = new QueryTerm("packID", packID, 0);
 
                       if (delSubDocs != null) {
                         delSubDocs.deleted = true;
@@ -273,7 +274,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                         System.out.println(
                             Thread.currentThread().getName() + ": add doc docid:" + docid);
                       }
-                      addDocument(new Term("docid", docid), doc);
+                      addDocument(new QueryTerm("docid", docid, 0), doc);
                       addCount.getAndIncrement();
 
                       if (random().nextInt(5) == 3) {
@@ -296,7 +297,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                           Thread.currentThread().getName() + ": update doc id:" + doc.get("docid"));
                     }
                     final String docid = doc.get("docid");
-                    updateDocument(new Term("docid", docid), doc);
+                    updateDocument(new QueryTerm("docid", docid, 0), doc);
                     addCount.getAndIncrement();
 
                     if (random().nextInt(5) == 3) {
@@ -323,7 +324,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                         System.out.println(
                             Thread.currentThread().getName() + ": del term=id:" + id);
                       }
-                      deleteDocuments(new Term("docid", id));
+                      deleteDocuments(new QueryTerm("docid", id, 0));
                     }
                     final int count = delCount.addAndGet(toDeleteIDs.size());
                     if (VERBOSE) {
@@ -336,7 +337,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                     for (SubDocs subDocs : toDeleteSubDocs) {
                       assert !subDocs.deleted;
                       delPackIDs.add(subDocs.packID);
-                      deleteDocuments(new Term("packID", subDocs.packID));
+                      deleteDocuments(new QueryTerm("packID", subDocs.packID, 0));
                       subDocs.deleted = true;
                       if (VERBOSE) {
                         System.out.println(
@@ -453,7 +454,9 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
                           // }
                           totHits.addAndGet(
                               runQuery(
-                                  s, new TermQuery(new Term("body", BytesRef.deepCopyOf(term)))));
+                                  s,
+                                  new TermQuery(
+                                      new QueryTerm("body", BytesRef.deepCopyOf(term), 0))));
                         }
                       }
                       // if (VERBOSE) {
@@ -539,7 +542,10 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
           }
 
           IndexSearcher searcher = newSearcher(reader, false);
-          sum += searcher.search(new TermQuery(new Term("body", "united")), 10).totalHits.value;
+          sum +=
+              searcher.search(new TermQuery(new QueryTerm("body", "united", 0)), 10)
+                  .totalHits
+                  .value;
 
           if (VERBOSE) {
             System.out.println("TEST: warm visited " + sum + " fields");
@@ -626,7 +632,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
 
     // Verify: make sure delIDs are in fact deleted:
     for (String id : delIDs) {
-      final TopDocs hits = s.search(new TermQuery(new Term("docid", id)), 1);
+      final TopDocs hits = s.search(new TermQuery(new QueryTerm("docid", id, 0)), 1);
       if (hits.totalHits.value != 0) {
         System.out.println(
             "doc id="
@@ -641,7 +647,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
 
     // Verify: make sure delPackIDs are in fact deleted:
     for (String id : delPackIDs) {
-      final TopDocs hits = s.search(new TermQuery(new Term("packID", id)), 1);
+      final TopDocs hits = s.search(new TermQuery(new QueryTerm("packID", id, 0)), 1);
       if (hits.totalHits.value != 0) {
         System.out.println(
             "packID="
@@ -655,7 +661,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
 
     // Verify: make sure each group of sub-docs are still in docID order:
     for (SubDocs subDocs : allSubDocs) {
-      TopDocs hits = s.search(new TermQuery(new Term("packID", subDocs.packID)), 20);
+      TopDocs hits = s.search(new TermQuery(new QueryTerm("packID", subDocs.packID, 0)), 20);
       StoredFields storedFields = s.storedFields();
       if (!subDocs.deleted) {
         // We sort by relevance but the scores should be identical so sort falls back to by docID:
@@ -685,7 +691,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
 
           lastDocID = startDocID - 1;
           for (String subID : subDocs.subIDs) {
-            hits = s.search(new TermQuery(new Term("docid", subID)), 1);
+            hits = s.search(new TermQuery(new QueryTerm("docid", subID, 0)), 1);
             assertEquals(1, hits.totalHits.value);
             final int docID = hits.scoreDocs[0].doc;
             if (lastDocID != -1) {
@@ -699,7 +705,8 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
         // deleted.  We can't verify packID is deleted
         // because we can re-use packID for update:
         for (String subID : subDocs.subIDs) {
-          assertEquals(0, s.search(new TermQuery(new Term("docid", subID)), 1).totalHits.value);
+          assertEquals(
+              0, s.search(new TermQuery(new QueryTerm("docid", subID, 0)), 1).totalHits.value);
         }
       }
     }
@@ -712,7 +719,7 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
     for (int id = 0; id < endID; id++) {
       String stringID = "" + id;
       if (!delIDs.contains(stringID)) {
-        final TopDocs hits = s.search(new TermQuery(new Term("docid", stringID)), 1);
+        final TopDocs hits = s.search(new TermQuery(new QueryTerm("docid", stringID, 0)), 1);
         if (hits.totalHits.value != 1) {
           System.out.println(
               "doc id="
@@ -786,9 +793,9 @@ public abstract class ThreadedIndexingAndSearchingTestCase extends LuceneTestCas
   }
 
   protected void smokeTestSearcher(IndexSearcher s) throws Exception {
-    runQuery(s, new TermQuery(new Term("body", "united")));
-    runQuery(s, new TermQuery(new Term("titleTokenized", "states")));
-    PhraseQuery pq = new PhraseQuery("body", "united", "states");
+    runQuery(s, new TermQuery(new QueryTerm("body", "united", 0)));
+    runQuery(s, new TermQuery(new QueryTerm("titleTokenized", "states", 0)));
+    PhraseQuery pq = new PhraseQuery("body", new int[] {0, 7}, "united", "states");
     runQuery(s, pq);
   }
 }

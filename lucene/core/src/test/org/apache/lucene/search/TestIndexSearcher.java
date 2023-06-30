@@ -41,6 +41,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
@@ -96,7 +97,8 @@ public class TestIndexSearcher extends LuceneTestCase {
 
     IndexSearcher[] searchers =
         new IndexSearcher[] {new IndexSearcher(reader), new IndexSearcher(reader, service)};
-    Query[] queries = new Query[] {new MatchAllDocsQuery(), new TermQuery(new Term("field", "1"))};
+    Query[] queries =
+        new Query[] {new MatchAllDocsQuery(), new TermQuery(new QueryTerm("field", "1", 0))};
     Sort[] sorts = new Sort[] {null, new Sort(new SortField("field2", SortField.Type.STRING))};
     ScoreDoc[] afters =
         new ScoreDoc[] {null, new FieldDoc(0, 0f, new Object[] {newBytesRef("boo!")})};
@@ -170,11 +172,11 @@ public class TestIndexSearcher extends LuceneTestCase {
           Arrays.asList(
               new MatchAllDocsQuery(),
               new MatchNoDocsQuery(),
-              new TermQuery(new Term("foo", "bar")),
-              new ConstantScoreQuery(new TermQuery(new Term("foo", "baz"))),
+              new TermQuery(new QueryTerm("foo", "bar", 0)),
+              new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "baz", 0))),
               new BooleanQuery.Builder()
-                  .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
-                  .add(new TermQuery(new Term("foo", "baz")), Occur.SHOULD)
+                  .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.SHOULD)
+                  .add(new TermQuery(new QueryTerm("foo", "baz", 0)), Occur.SHOULD)
                   .build())) {
         assertEquals(searcher.count(query), searcher.search(query, 1).totalHits.value);
       }
@@ -419,7 +421,8 @@ public class TestIndexSearcher extends LuceneTestCase {
 
     IndexSearcher searcher = new IndexSearcher(reader.getContext(), service, sliceExecutor);
 
-    Query[] queries = new Query[] {new MatchAllDocsQuery(), new TermQuery(new Term("field", "1"))};
+    Query[] queries =
+        new Query[] {new MatchAllDocsQuery(), new TermQuery(new QueryTerm("field", "1", 0))};
     Sort[] sorts = new Sort[] {null, new Sort(new SortField("field2", SortField.Type.STRING))};
     ScoreDoc[] afters =
         new ScoreDoc[] {null, new FieldDoc(0, 0f, new Object[] {newBytesRef("boo!")})};

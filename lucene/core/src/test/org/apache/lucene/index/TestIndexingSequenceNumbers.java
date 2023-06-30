@@ -126,7 +126,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
       assertEquals(threads.length, allSeqNos.size());
       DirectoryReader r = w.getReader();
       IndexSearcher s = newSearcher(r);
-      TopDocs hits = s.search(new TermQuery(id), 1);
+      TopDocs hits = s.search(new TermQuery(QueryTerm.asQueryTerm(id)), 1);
       assertEquals("maxDoc: " + r.maxDoc(), 1, hits.totalHits.value);
       Document doc = r.storedFields().document(hits.scoreDocs[0].doc);
       assertEquals(maxThread, doc.getField("thread").numericValue().intValue());
@@ -198,7 +198,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
                       if (random().nextBoolean()) {
                         op.seqNo = w.deleteDocuments(idTerm);
                       } else {
-                        op.seqNo = w.deleteDocuments(new TermQuery(idTerm));
+                        op.seqNo = w.deleteDocuments(new TermQuery(QueryTerm.asQueryTerm(idTerm)));
                       }
                     } else {
                       Document doc = new Document();
@@ -273,7 +273,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
       for (int id = 0; id < idCount; id++) {
         // System.out.println("TEST: check id=" + id + " expectedThreadID=" +
         // expectedThreadIDs[id]);
-        TopDocs hits = s.search(new TermQuery(new Term("id", "" + id)), 1);
+        TopDocs hits = s.search(new TermQuery(new QueryTerm("id", "" + id, 0)), 1);
 
         if (expectedThreadIDs[id] != -1) {
           assertEquals(1, hits.totalHits.value);
@@ -477,7 +477,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
       for (int id = 0; id < idCount; id++) {
         // System.out.println("TEST: check id=" + id + " expectedThreadID=" +
         // expectedThreadIDs[id]);
-        TopDocs hits = s.search(new TermQuery(new Term("id", "" + id)), 1);
+        TopDocs hits = s.search(new TermQuery(new QueryTerm("id", "" + id, 0)), 1);
         NumericDocValues docValues = MultiDocValues.getNumericValues(r, "thread");
 
         // We pre-add all ids up front:
@@ -578,7 +578,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
                       if (random().nextBoolean()) {
                         op.seqNo = w.deleteDocuments(idTerm);
                       } else {
-                        op.seqNo = w.deleteDocuments(new TermQuery(idTerm));
+                        op.seqNo = w.deleteDocuments(new TermQuery(QueryTerm.asQueryTerm(idTerm)));
                       }
                     } else {
                       Document doc = new Document();
@@ -660,7 +660,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
       for (int id = 0; id < idCount; id++) {
         // System.out.println("TEST: check id=" + id + " expectedThreadID=" +
         // expectedThreadIDs[id]);
-        int actualCount = s.count(new TermQuery(new Term("id", "" + id)));
+        int actualCount = s.count(new TermQuery(new QueryTerm("id", "" + id, 0)));
         if (expectedCounts[id] != actualCount) {
           System.out.println("TEST: FAIL r=" + r + " id=" + id + " commitSeqNo=" + commitSeqNo);
           for (int threadID = 0; threadID < threadOps.size(); threadID++) {
@@ -687,7 +687,7 @@ public class TestIndexingSequenceNumbers extends LuceneTestCase {
               opCount2++;
             }
           }
-          TopDocs hits = s.search(new TermQuery(new Term("id", "" + id)), 1 + actualCount);
+          TopDocs hits = s.search(new TermQuery(new QueryTerm("id", "" + id, 0)), 1 + actualCount);
           StoredFields storedFields = s.storedFields();
           for (ScoreDoc hit : hits.scoreDocs) {
             System.out.println("  hit: " + storedFields.document(hit.doc).get("threadop"));

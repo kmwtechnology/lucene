@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.builders.QueryTreeBuilder;
@@ -63,7 +64,7 @@ public class MultiPhraseQueryNodeBuilder implements StandardQueryBuilder {
 
       for (Map.Entry<Integer, List<Term>> entry : positionTermMap.entrySet()) {
         List<Term> termList = entry.getValue();
-        phraseQueryBuilder.add(termList.toArray(new Term[termList.size()]), entry.getKey());
+        phraseQueryBuilder.add(termList.toArray(new QueryTerm[termList.size()]), entry.getKey());
       }
     }
 

@@ -363,7 +363,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
     assertEquals(0, count(new Term("id", id50), r3));
 
     String id75 = r1.storedFields().document(75).getField("id").stringValue();
-    writer.deleteDocuments(new TermQuery(new Term("id", id75)));
+    writer.deleteDocuments(new TermQuery(new QueryTerm("id", id75, 0)));
     IndexReader r4 = DirectoryReader.open(writer);
     assertEquals(1, count(new Term("id", id75), r3));
     assertEquals(0, count(new Term("id", id75), r4));
@@ -732,7 +732,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
 
     // reader should remain usable even after IndexWriter is closed:
     assertEquals(100, r.numDocs());
-    Query q = new TermQuery(new Term("indexname", "test"));
+    Query q = new TermQuery(new QueryTerm("indexname", "test", 0));
     IndexSearcher searcher = newSearcher(r);
     assertEquals(100, searcher.count(q));
 
@@ -804,7 +804,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
       if (r2 != null) {
         r.close();
         r = r2;
-        Query q = new TermQuery(new Term("indexname", "test"));
+        Query q = new TermQuery(new QueryTerm("indexname", "test", 0));
         IndexSearcher searcher = newSearcher(r);
         final long count = searcher.count(q);
         assertTrue(count >= lastCount);
@@ -821,7 +821,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
       r.close();
       r = r2;
     }
-    Query q = new TermQuery(new Term("indexname", "test"));
+    Query q = new TermQuery(new QueryTerm("indexname", "test", 0));
     IndexSearcher searcher = newSearcher(r);
     final long count = searcher.count(q);
     assertTrue(count >= lastCount);
@@ -907,7 +907,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
       if (r2 != null) {
         r.close();
         r = r2;
-        Query q = new TermQuery(new Term("indexname", "test"));
+        Query q = new TermQuery(new QueryTerm("indexname", "test", 0));
         IndexSearcher searcher = newSearcher(r);
         sum += searcher.count(q);
       }
@@ -922,7 +922,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
       r.close();
       r = r2;
     }
-    Query q = new TermQuery(new Term("indexname", "test"));
+    Query q = new TermQuery(new QueryTerm("indexname", "test", 0));
     IndexSearcher searcher = newSearcher(r);
     sum += searcher.count(q);
     assertTrue("no documents found at all", sum > 0);
@@ -1013,7 +1013,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
                 .setMergedSegmentWarmer(
                     (r) -> {
                       IndexSearcher s = newSearcher(r);
-                      int count = s.count(new TermQuery(new Term("foo", "bar")));
+                      int count = s.count(new TermQuery(new QueryTerm("foo", "bar", 0)));
                       assertEquals(20, count);
                       didWarm.set(true);
                     })

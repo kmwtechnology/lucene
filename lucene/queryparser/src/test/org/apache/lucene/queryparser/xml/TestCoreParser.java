@@ -24,8 +24,8 @@ import java.util.Arrays;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -111,9 +111,9 @@ public class TestCoreParser extends LuceneTestCase {
     Query expected =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term("a", "merger")),
+                new TermQuery(new QueryTerm("a", "merger", 0)),
                 new DisjunctionMaxQuery(
-                    Arrays.asList(new TermQuery(new Term("b", "verger"))), 0.3f)),
+                    Arrays.asList(new TermQuery(new QueryTerm("b", "verger", 0))), 0.3f)),
             0.0f);
     assertEquals(expected, q);
   }
@@ -212,7 +212,7 @@ public class TestCoreParser extends LuceneTestCase {
     try (ByteArrayInputStream is =
         new ByteArrayInputStream(topLevel.getBytes(StandardCharsets.UTF_8))) {
       Query actual = coreParser().parse(is);
-      Query expected = new BoostQuery(new SpanTermQuery(new Term("field", "value")), 2);
+      Query expected = new BoostQuery(new SpanTermQuery(new QueryTerm("field", "value", 0)), 2);
       assertEquals(expected, actual);
     }
 
@@ -230,8 +230,8 @@ public class TestCoreParser extends LuceneTestCase {
           new BoostQuery(
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term("field", "value1")),
-                    new SpanTermQuery(new Term("field", "value2"))
+                    new SpanTermQuery(new QueryTerm("field", "value1", 0)),
+                    new SpanTermQuery(new QueryTerm("field", "value2", 0))
                   },
                   8,
                   false),

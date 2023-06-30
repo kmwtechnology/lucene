@@ -130,7 +130,7 @@ public class TestExitableDirectoryReader extends LuceneTestCase {
     IndexReader reader;
     IndexSearcher searcher;
 
-    Query query = new PrefixQuery(new Term("default", "o"));
+    Query query = new PrefixQuery(new QueryTerm("default", "o", 0));
 
     // Set a fairly high timeout value (infinite) and expect the query to complete in that time
     // frame.
@@ -190,7 +190,7 @@ public class TestExitableDirectoryReader extends LuceneTestCase {
         IndexReader reader;
         IndexSearcher searcher;
 
-        Query query = new PrefixQuery(new Term("default", "term"));
+        Query query = new PrefixQuery(new QueryTerm("default", "term", 0));
 
         // Set a fairly high timeout value (infinite) and expect the query to complete in that time
         // frame.

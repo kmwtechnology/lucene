@@ -19,7 +19,7 @@ package org.apache.lucene.queryparser.simple;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -291,6 +291,7 @@ public class SimpleQueryParser extends QueryBuilder {
     int copied = 0;
     boolean escaped = false;
     boolean hasSlop = false;
+    state.tokenStart = state.index;
 
     while (state.index < state.length) {
       if (!escaped) {
@@ -345,9 +346,10 @@ public class SimpleQueryParser extends QueryBuilder {
       String phrase = new String(state.buffer, 0, copied);
       Query branch;
       if (hasSlop) {
-        branch = newPhraseQuery(phrase, parseFuzziness(state));
+        branch = newPhraseQuery(phrase, parseFuzziness(state), state);
       } else {
-        branch = newPhraseQuery(phrase, 0);
+        this.queryTermOffsetAdjust = state.tokenStart;
+        branch = newPhraseQuery(phrase, 0, state);
       }
       buildQueryTree(state, branch);
 
@@ -360,6 +362,7 @@ public class SimpleQueryParser extends QueryBuilder {
     boolean escaped = false;
     boolean prefix = false;
     boolean fuzzy = false;
+    state.tokenStart = state.index;
 
     while (state.index < state.length) {
       if (!escaped) {
@@ -403,20 +406,20 @@ public class SimpleQueryParser extends QueryBuilder {
         // edit distance has a maximum, limit to the maximum supported
         fuzziness = Math.min(fuzziness, LevenshteinAutomata.MAXIMUM_SUPPORTED_DISTANCE);
         if (fuzziness == 0) {
-          branch = newDefaultQuery(token);
+          branch = newDefaultQuery(token, state);
         } else {
-          branch = newFuzzyQuery(token, fuzziness);
+          branch = newFuzzyQuery(token, fuzziness, state);
         }
       } else if (prefix) {
         // if a term is found with a closing '*' it is considered to be a prefix query
         // and will have prefix added as an option
         String token = new String(state.buffer, 0, copied - 1);
-        branch = newPrefixQuery(token);
+        branch = newPrefixQuery(token, state);
       } else {
         // a standard term has been found so it will be run through
         // the entire analysis chain from the specified schema field
         String token = new String(state.buffer, 0, copied);
-        branch = newDefaultQuery(token);
+        branch = newDefaultQuery(token, state);
       }
 
       buildQueryTree(state, branch);
@@ -542,7 +545,8 @@ public class SimpleQueryParser extends QueryBuilder {
   }
 
   /** Factory method to generate a standard query (no phrase or prefix operators). */
-  protected Query newDefaultQuery(String text) {
+  protected Query newDefaultQuery(String text, State state) {
+    queryTermOffsetAdjust = state.tokenStart;
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (Map.Entry<String, Float> entry : weights.entrySet()) {
       Query q = createBooleanQuery(entry.getKey(), text, defaultOperator);
@@ -558,12 +562,12 @@ public class SimpleQueryParser extends QueryBuilder {
   }
 
   /** Factory method to generate a fuzzy query. */
-  protected Query newFuzzyQuery(String text, int fuzziness) {
+  protected Query newFuzzyQuery(String text, int fuzziness, State state) {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (Map.Entry<String, Float> entry : weights.entrySet()) {
       final String fieldName = entry.getKey();
       final BytesRef term = getAnalyzer().normalize(fieldName, text);
-      Query q = new FuzzyQuery(new Term(fieldName, term), fuzziness);
+      Query q = new FuzzyQuery(new QueryTerm(fieldName, term, state.tokenStart), fuzziness);
       float boost = entry.getValue();
       if (boost != 1f) {
         q = new BoostQuery(q, boost);
@@ -574,8 +578,9 @@ public class SimpleQueryParser extends QueryBuilder {
   }
 
   /** Factory method to generate a phrase query with slop. */
-  protected Query newPhraseQuery(String text, int slop) {
+  protected Query newPhraseQuery(String text, int slop, State state) {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
+    queryTermOffsetAdjust = state.tokenStart;
     for (Map.Entry<String, Float> entry : weights.entrySet()) {
       Query q = createPhraseQuery(entry.getKey(), text, slop);
       if (q != null) {
@@ -590,12 +595,13 @@ public class SimpleQueryParser extends QueryBuilder {
   }
 
   /** Factory method to generate a prefix query. */
-  protected Query newPrefixQuery(String text) {
+  protected Query newPrefixQuery(String text, State state) {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (Map.Entry<String, Float> entry : weights.entrySet()) {
       final String fieldName = entry.getKey();
       final BytesRef term = getAnalyzer().normalize(fieldName, text);
-      Query q = new PrefixQuery(new Term(fieldName, term));
+      // +1 because of * that was also consumed
+      Query q = new PrefixQuery(new QueryTerm(fieldName, term, state.tokenStart));
       float boost = entry.getValue();
       if (boost != 1f) {
         q = new BoostQuery(q, boost);
@@ -629,11 +635,14 @@ public class SimpleQueryParser extends QueryBuilder {
     this.defaultOperator = operator;
   }
 
-  static class State {
+  /** Class to carry parsing state. */
+  public static class State {
     final char[] data; // the characters in the query string
     final char[] buffer; // a temporary buffer used to reduce necessary allocations
     int index;
     int length;
+
+    int tokenStart;
 
     BooleanClause.Occur currentOperation;
     BooleanClause.Occur previousOperation;

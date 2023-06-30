@@ -16,6 +16,7 @@
  */
 package org.apache.lucene.search;
 
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.automaton.AutomatonProvider;
 import org.apache.lucene.util.automaton.Operations;
@@ -52,7 +53,7 @@ public class RegexpQuery extends AutomatonQuery {
    *
    * @param term regular expression.
    */
-  public RegexpQuery(Term term) {
+  public RegexpQuery(QueryTerm term) {
     this(term, RegExp.ALL);
   }
 
@@ -62,7 +63,7 @@ public class RegexpQuery extends AutomatonQuery {
    * @param term regular expression.
    * @param flags optional RegExp features from {@link RegExp}
    */
-  public RegexpQuery(Term term, int flags) {
+  public RegexpQuery(QueryTerm term, int flags) {
     this(term, flags, DEFAULT_PROVIDER, Operations.DEFAULT_DETERMINIZE_WORK_LIMIT);
   }
 
@@ -76,7 +77,7 @@ public class RegexpQuery extends AutomatonQuery {
    *     Use {@link Operations#DEFAULT_DETERMINIZE_WORK_LIMIT} as a decent default if you don't
    *     otherwise know what to specify.
    */
-  public RegexpQuery(Term term, int flags, int determinizeWorkLimit) {
+  public RegexpQuery(QueryTerm term, int flags, int determinizeWorkLimit) {
     this(term, flags, DEFAULT_PROVIDER, determinizeWorkLimit);
   }
 
@@ -93,7 +94,7 @@ public class RegexpQuery extends AutomatonQuery {
    *     Use {@link Operations#DEFAULT_DETERMINIZE_WORK_LIMIT} as a decent default if you don't
    *     otherwise know what to specify.
    */
-  public RegexpQuery(Term term, int syntax_flags, int match_flags, int determinizeWorkLimit) {
+  public RegexpQuery(QueryTerm term, int syntax_flags, int match_flags, int determinizeWorkLimit) {
     this(
         term,
         syntax_flags,
@@ -115,7 +116,7 @@ public class RegexpQuery extends AutomatonQuery {
    *     otherwise know what to specify.
    */
   public RegexpQuery(
-      Term term, int syntax_flags, AutomatonProvider provider, int determinizeWorkLimit) {
+      QueryTerm term, int syntax_flags, AutomatonProvider provider, int determinizeWorkLimit) {
     this(term, syntax_flags, 0, provider, determinizeWorkLimit, CONSTANT_SCORE_REWRITE);
   }
 
@@ -133,7 +134,7 @@ public class RegexpQuery extends AutomatonQuery {
    * @param rewriteMethod the rewrite method to use to build the final query
    */
   public RegexpQuery(
-      Term term,
+      QueryTerm term,
       int syntax_flags,
       int match_flags,
       AutomatonProvider provider,

@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.QueryVisitor;
@@ -55,7 +55,7 @@ public class TestHighlightCustomQuery extends LuceneTestCase {
     // highlighted
     // regardless of the field name.
 
-    CustomQuery q = new CustomQuery(new Term(FIELD_NAME, "world"));
+    CustomQuery q = new CustomQuery(new QueryTerm(FIELD_NAME, "world", 0));
 
     String expected = "I call our <B>world</B> Flatland, not because we call it so,";
     String observed = highlightField(q, "SOME_FIELD_NAME", s1);
@@ -70,7 +70,7 @@ public class TestHighlightCustomQuery extends LuceneTestCase {
     // when the query field name differs from the name of the field being
     // highlighted,
     // which in this example happens to be the default field name.
-    q = new CustomQuery(new Term("text", "world"));
+    q = new CustomQuery(new QueryTerm("text", "world", 0));
 
     expected = s1;
     observed = highlightField(q, FIELD_NAME, s1);
@@ -92,7 +92,7 @@ public class TestHighlightCustomQuery extends LuceneTestCase {
         };
     Map<String, WeightedSpanTerm> terms =
         extractor.getWeightedSpanTerms(
-            new TermQuery(new Term("bar", "quux")), 3, new CannedTokenStream());
+            new TermQuery(new QueryTerm("bar", "quux", 0)), 3, new CannedTokenStream());
     // no foo
     assertEquals(Collections.singleton("quux"), terms.keySet());
   }
@@ -155,9 +155,9 @@ public class TestHighlightCustomQuery extends LuceneTestCase {
   }
 
   public static class CustomQuery extends Query {
-    private final Term term;
+    private final QueryTerm term;
 
-    public CustomQuery(Term term) {
+    public CustomQuery(QueryTerm term) {
       this.term = term;
     }
 

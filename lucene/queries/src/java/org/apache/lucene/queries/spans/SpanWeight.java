@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.search.CollectionStatistics;
@@ -307,7 +308,7 @@ public abstract class SpanWeight extends Weight {
 
                 @Override
                 public Query getQuery() {
-                  return new TermQuery(innerTerms[upto].term);
+                  return new TermQuery(QueryTerm.asQueryTerm(innerTerms[upto].term));
                 }
               };
             }

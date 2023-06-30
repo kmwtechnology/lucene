@@ -30,7 +30,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.IndexSearcher;
@@ -341,7 +341,7 @@ public class TestCombinedFieldQuery extends LuceneTestCase {
             .addTerm(new BytesRef("foo"))
             .build();
 
-    checkExpectedHits(searcher, numMatch, query, new TermQuery(new Term("ab", "foo")));
+    checkExpectedHits(searcher, numMatch, query, new TermQuery(new QueryTerm("ab", "foo", 0)));
 
     reader.close();
     w.close();
@@ -388,7 +388,7 @@ public class TestCombinedFieldQuery extends LuceneTestCase {
             .addTerm(new BytesRef("bar"))
             .build();
 
-    checkExpectedHits(searcher, numMatch, query, new TermQuery(new Term("ab", "foo")));
+    checkExpectedHits(searcher, numMatch, query, new TermQuery(new QueryTerm("ab", "foo", 0)));
 
     reader.close();
     w.close();
@@ -429,7 +429,7 @@ public class TestCombinedFieldQuery extends LuceneTestCase {
             .addTerm(new BytesRef("foo"))
             .build();
 
-    checkExpectedHits(searcher, numMatch, query, new TermQuery(new Term("b", "foo")));
+    checkExpectedHits(searcher, numMatch, query, new TermQuery(new QueryTerm("b", "foo", 0)));
 
     reader.close();
     w.close();
@@ -478,7 +478,7 @@ public class TestCombinedFieldQuery extends LuceneTestCase {
             .addTerm(new BytesRef("foo"))
             .build();
 
-    checkExpectedHits(searcher, numMatch, query, new TermQuery(new Term("ab", "foo")));
+    checkExpectedHits(searcher, numMatch, query, new TermQuery(new QueryTerm("ab", "foo", 0)));
 
     reader.close();
     w.close();
@@ -665,7 +665,7 @@ public class TestCombinedFieldQuery extends LuceneTestCase {
             .addTerm(new BytesRef("foo"))
             .build();
 
-    checkExpectedHits(searcher, numMatch, query, new TermQuery(new Term("ab", "foo")));
+    checkExpectedHits(searcher, numMatch, query, new TermQuery(new QueryTerm("ab", "foo", 0)));
 
     reader.close();
     w.close();

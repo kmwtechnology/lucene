@@ -23,7 +23,7 @@ import java.util.Locale;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -92,7 +92,7 @@ public class TestWildcardRandom extends LuceneTestCase {
     if (VERBOSE) {
       System.out.println("TEST: run wildcard pattern=" + pattern + " filled=" + filledPattern);
     }
-    Query wq = new WildcardQuery(new Term("field", filledPattern));
+    Query wq = new WildcardQuery(new QueryTerm("field", filledPattern, 0));
     TopDocs docs = searcher.search(wq, 25);
     assertEquals("Incorrect hits for pattern: " + pattern, numHits, docs.totalHits.value);
   }

@@ -20,7 +20,7 @@ package org.apache.lucene.queries.spans;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -61,8 +61,8 @@ public class TestQueryRescorerWithSpans extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), BooleanClause.Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
 
     TopDocs hits = searcher.search(bq.build(), 10);
@@ -71,8 +71,8 @@ public class TestQueryRescorerWithSpans extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Resort using SpanNearQuery:
-    SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
-    SpanTermQuery t2 = new SpanTermQuery(new Term("field", "oz"));
+    SpanTermQuery t1 = new SpanTermQuery(new QueryTerm("field", "wizard", 0));
+    SpanTermQuery t2 = new SpanTermQuery(new QueryTerm("field", "oz", 0));
     SpanNearQuery snq = new SpanNearQuery(new SpanQuery[] {t1, t2}, 0, true);
 
     TopDocs hits3 = QueryRescorer.rescore(searcher, hits, snq, 2.0, 10);
@@ -104,8 +104,8 @@ public class TestQueryRescorerWithSpans extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), BooleanClause.Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
 
     TopDocs hits = searcher.search(bq.build(), 10);
@@ -114,8 +114,8 @@ public class TestQueryRescorerWithSpans extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Resort using SpanNearQuery:
-    SpanTermQuery t1 = new SpanTermQuery(new Term("field", "wizard"));
-    SpanTermQuery t2 = new SpanTermQuery(new Term("field", "oz"));
+    SpanTermQuery t1 = new SpanTermQuery(new QueryTerm("field", "wizard", 0));
+    SpanTermQuery t2 = new SpanTermQuery(new QueryTerm("field", "oz", 0));
     SpanNearQuery snq = new SpanNearQuery(new SpanQuery[] {t1, t2}, 0, true);
 
     TopDocs hits3 = QueryRescorer.rescore(searcher, hits, snq, 2.0, 10);

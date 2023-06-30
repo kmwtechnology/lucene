@@ -26,7 +26,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.FilterCollector;
 import org.apache.lucene.search.IndexSearcher;
@@ -56,7 +56,7 @@ public class TestProfilerCollector extends LuceneTestCase {
     ProfilerCollector collector =
         new ProfilerCollector(new TotalHitCountCollector(), "total_hits", List.of());
     IndexSearcher searcher = new IndexSearcher(reader);
-    Query query = new TermQuery(new Term("foo", "bar"));
+    Query query = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.search(query, collector);
 
     MatcherAssert.assertThat(collector.getReason(), equalTo("total_hits"));

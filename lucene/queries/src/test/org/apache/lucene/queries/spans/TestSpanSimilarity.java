@@ -23,7 +23,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -147,8 +147,8 @@ public class TestSpanSimilarity extends LuceneTestCase {
 
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
-      SpanTermQuery s1 = new SpanTermQuery(new Term("foo", "bar"));
-      SpanTermQuery s2 = new SpanTermQuery(new Term("foo", "baz"));
+      SpanTermQuery s1 = new SpanTermQuery(new QueryTerm("foo", "bar", 0));
+      SpanTermQuery s2 = new SpanTermQuery(new QueryTerm("foo", "baz", 0));
       Query query = new SpanOrQuery(s1, s2);
       TopDocs td = is.search(query, 10);
       assertEquals(1, td.totalHits.value);

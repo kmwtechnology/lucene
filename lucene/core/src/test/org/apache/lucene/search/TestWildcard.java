@@ -22,7 +22,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -35,9 +35,9 @@ public class TestWildcard extends LuceneTestCase {
 
   @SuppressWarnings("unlikely-arg-type")
   public void testEquals() {
-    WildcardQuery wq1 = new WildcardQuery(new Term("field", "b*a"));
-    WildcardQuery wq2 = new WildcardQuery(new Term("field", "b*a"));
-    WildcardQuery wq3 = new WildcardQuery(new Term("field", "b*a"));
+    WildcardQuery wq1 = new WildcardQuery(new QueryTerm("field", "b*a", 0));
+    WildcardQuery wq2 = new WildcardQuery(new QueryTerm("field", "b*a", 0));
+    WildcardQuery wq3 = new WildcardQuery(new QueryTerm("field", "b*a", 0));
 
     // reflexive?
     assertEquals(wq1, wq2);
@@ -49,7 +49,7 @@ public class TestWildcard extends LuceneTestCase {
 
     assertFalse(wq1.equals(null));
 
-    FuzzyQuery fq = new FuzzyQuery(new Term("field", "b*a"));
+    FuzzyQuery fq = new FuzzyQuery(new QueryTerm("field", "b*a", 0));
     assertFalse(wq1.equals(fq));
     assertFalse(fq.equals(wq1));
   }
@@ -64,13 +64,13 @@ public class TestWildcard extends LuceneTestCase {
     IndexReader reader = DirectoryReader.open(indexStore);
     IndexSearcher searcher = newSearcher(reader);
 
-    MultiTermQuery wq = new WildcardQuery(new Term("field", "nowildcard"));
+    MultiTermQuery wq = new WildcardQuery(new QueryTerm("field", "nowildcard", 0));
     assertMatches(searcher, wq, 1);
 
     Query q =
         searcher.rewrite(
             new WildcardQuery(
-                new Term("field", "nowildcard"),
+                new QueryTerm("field", "nowildcard", 0),
                 Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
                 MultiTermQuery.SCORING_BOOLEAN_REWRITE));
     assertTrue(q instanceof TermQuery);
@@ -78,7 +78,7 @@ public class TestWildcard extends LuceneTestCase {
     q =
         searcher.rewrite(
             new WildcardQuery(
-                new Term("field", "nowildcard"),
+                new QueryTerm("field", "nowildcard", 0),
                 Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
                 MultiTermQuery.CONSTANT_SCORE_REWRITE));
     assertTrue(q instanceof MultiTermQueryConstantScoreWrapper);
@@ -86,7 +86,7 @@ public class TestWildcard extends LuceneTestCase {
     q =
         searcher.rewrite(
             new WildcardQuery(
-                new Term("field", "nowildcard"),
+                new QueryTerm("field", "nowildcard", 0),
                 Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
                 MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE));
     assertTrue(q instanceof ConstantScoreQuery);
@@ -102,7 +102,7 @@ public class TestWildcard extends LuceneTestCase {
 
     MultiTermQuery wq =
         new WildcardQuery(
-            new Term("field", ""),
+            new QueryTerm("field", "", 0),
             Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
             MultiTermQuery.SCORING_BOOLEAN_REWRITE);
     assertMatches(searcher, wq, 0);
@@ -121,10 +121,10 @@ public class TestWildcard extends LuceneTestCase {
     IndexReader reader = DirectoryReader.open(indexStore);
     IndexSearcher searcher = newSearcher(reader);
 
-    MultiTermQuery wq = new WildcardQuery(new Term("field", "prefix*"));
+    MultiTermQuery wq = new WildcardQuery(new QueryTerm("field", "prefix*", 0));
     assertMatches(searcher, wq, 2);
 
-    wq = new WildcardQuery(new Term("field", "*"));
+    wq = new WildcardQuery(new QueryTerm("field", "*", 0));
     assertMatches(searcher, wq, 2);
     Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), "field");
     assertFalse(wq.getTermsEnum(terms).getClass().getSimpleName().contains("AutomatonTermsEnum"));
@@ -137,11 +137,11 @@ public class TestWildcard extends LuceneTestCase {
     Directory indexStore = getIndexStore("body", new String[] {"metal", "metals"});
     IndexReader reader = DirectoryReader.open(indexStore);
     IndexSearcher searcher = newSearcher(reader);
-    Query query1 = new TermQuery(new Term("body", "metal"));
-    Query query2 = new WildcardQuery(new Term("body", "metal*"));
-    Query query3 = new WildcardQuery(new Term("body", "m*tal"));
-    Query query4 = new WildcardQuery(new Term("body", "m*tal*"));
-    Query query5 = new WildcardQuery(new Term("body", "m*tals"));
+    Query query1 = new TermQuery(new QueryTerm("body", "metal", 0));
+    Query query2 = new WildcardQuery(new QueryTerm("body", "metal*", 0));
+    Query query3 = new WildcardQuery(new QueryTerm("body", "m*tal", 0));
+    Query query4 = new WildcardQuery(new QueryTerm("body", "m*tal*", 0));
+    Query query5 = new WildcardQuery(new QueryTerm("body", "m*tals", 0));
 
     BooleanQuery.Builder query6 = new BooleanQuery.Builder();
     query6.add(query5, BooleanClause.Occur.SHOULD);
@@ -151,7 +151,7 @@ public class TestWildcard extends LuceneTestCase {
     query7.add(query5, BooleanClause.Occur.SHOULD);
 
     // Queries do not automatically lower-case search terms:
-    Query query8 = new WildcardQuery(new Term("body", "M*tal*"));
+    Query query8 = new WildcardQuery(new QueryTerm("body", "M*tal*", 0));
 
     assertMatches(searcher, query1, 1);
     assertMatches(searcher, query2, 2);
@@ -161,9 +161,9 @@ public class TestWildcard extends LuceneTestCase {
     assertMatches(searcher, query6.build(), 1);
     assertMatches(searcher, query7.build(), 2);
     assertMatches(searcher, query8, 0);
-    assertMatches(searcher, new WildcardQuery(new Term("body", "*tall")), 0);
-    assertMatches(searcher, new WildcardQuery(new Term("body", "*tal")), 1);
-    assertMatches(searcher, new WildcardQuery(new Term("body", "*tal*")), 2);
+    assertMatches(searcher, new WildcardQuery(new QueryTerm("body", "*tall", 0)), 0);
+    assertMatches(searcher, new WildcardQuery(new QueryTerm("body", "*tal", 0)), 1);
+    assertMatches(searcher, new WildcardQuery(new QueryTerm("body", "*tal*", 0)), 2);
     reader.close();
     indexStore.close();
   }
@@ -178,12 +178,12 @@ public class TestWildcard extends LuceneTestCase {
         getIndexStore("body", new String[] {"metal", "metals", "mXtals", "mXtXls"});
     IndexReader reader = DirectoryReader.open(indexStore);
     IndexSearcher searcher = newSearcher(reader);
-    Query query1 = new WildcardQuery(new Term("body", "m?tal"));
-    Query query2 = new WildcardQuery(new Term("body", "metal?"));
-    Query query3 = new WildcardQuery(new Term("body", "metals?"));
-    Query query4 = new WildcardQuery(new Term("body", "m?t?ls"));
-    Query query5 = new WildcardQuery(new Term("body", "M?t?ls"));
-    Query query6 = new WildcardQuery(new Term("body", "meta??"));
+    Query query1 = new WildcardQuery(new QueryTerm("body", "m?tal", 0));
+    Query query2 = new WildcardQuery(new QueryTerm("body", "metal?", 0));
+    Query query3 = new WildcardQuery(new QueryTerm("body", "metals?", 0));
+    Query query4 = new WildcardQuery(new QueryTerm("body", "m?t?ls", 0));
+    Query query5 = new WildcardQuery(new QueryTerm("body", "M?t?ls", 0));
+    Query query6 = new WildcardQuery(new QueryTerm("body", "meta??", 0));
 
     assertMatches(searcher, query1, 1);
     assertMatches(searcher, query2, 1);
@@ -204,23 +204,23 @@ public class TestWildcard extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     // without escape: matches foo??bar, fooCDbar, foo*bar, and fooSOMETHINGbar
-    WildcardQuery unescaped = new WildcardQuery(new Term("field", "foo*bar"));
+    WildcardQuery unescaped = new WildcardQuery(new QueryTerm("field", "foo*bar", 0));
     assertMatches(searcher, unescaped, 4);
 
     // with escape: only matches foo*bar
-    WildcardQuery escaped = new WildcardQuery(new Term("field", "foo\\*bar"));
+    WildcardQuery escaped = new WildcardQuery(new QueryTerm("field", "foo\\*bar", 0));
     assertMatches(searcher, escaped, 1);
 
     // without escape: matches foo??bar and fooCDbar
-    unescaped = new WildcardQuery(new Term("field", "foo??bar"));
+    unescaped = new WildcardQuery(new QueryTerm("field", "foo??bar", 0));
     assertMatches(searcher, unescaped, 2);
 
     // with escape: matches foo??bar only
-    escaped = new WildcardQuery(new Term("field", "foo\\?\\?bar"));
+    escaped = new WildcardQuery(new QueryTerm("field", "foo\\?\\?bar", 0));
     assertMatches(searcher, escaped, 1);
 
     // check escaping at end: lenient parse yields "foo\"
-    WildcardQuery atEnd = new WildcardQuery(new Term("field", "foo\\"));
+    WildcardQuery atEnd = new WildcardQuery(new QueryTerm("field", "foo\\", 0));
     assertMatches(searcher, atEnd, 1);
 
     reader.close();
@@ -260,72 +260,72 @@ public class TestWildcard extends LuceneTestCase {
 
     // queries that should find all docs
     Query[] matchAll = {
-      new WildcardQuery(new Term(field, "*")),
-      new WildcardQuery(new Term(field, "*1")),
-      new WildcardQuery(new Term(field, "**1")),
-      new WildcardQuery(new Term(field, "*?")),
-      new WildcardQuery(new Term(field, "*?1")),
-      new WildcardQuery(new Term(field, "?*1")),
-      new WildcardQuery(new Term(field, "**")),
-      new WildcardQuery(new Term(field, "***")),
-      new WildcardQuery(new Term(field, "\\\\*"))
+      new WildcardQuery(new QueryTerm(field, "*", 0)),
+      new WildcardQuery(new QueryTerm(field, "*1", 0)),
+      new WildcardQuery(new QueryTerm(field, "**1", 0)),
+      new WildcardQuery(new QueryTerm(field, "*?", 0)),
+      new WildcardQuery(new QueryTerm(field, "*?1", 0)),
+      new WildcardQuery(new QueryTerm(field, "?*1", 0)),
+      new WildcardQuery(new QueryTerm(field, "**", 0)),
+      new WildcardQuery(new QueryTerm(field, "***", 0)),
+      new WildcardQuery(new QueryTerm(field, "\\\\*", 0))
     };
 
     // queries that should find no docs
     Query[] matchNone = {
-      new WildcardQuery(new Term(field, "a*h")),
-      new WildcardQuery(new Term(field, "a?h")),
-      new WildcardQuery(new Term(field, "*a*h")),
-      new WildcardQuery(new Term(field, "?a")),
-      new WildcardQuery(new Term(field, "a?"))
+      new WildcardQuery(new QueryTerm(field, "a*h", 0)),
+      new WildcardQuery(new QueryTerm(field, "a?h", 0)),
+      new WildcardQuery(new QueryTerm(field, "*a*h", 0)),
+      new WildcardQuery(new QueryTerm(field, "?a", 0)),
+      new WildcardQuery(new QueryTerm(field, "a?", 0))
     };
 
     PrefixQuery[][] matchOneDocPrefix = {
       {
-        new PrefixQuery(new Term(field, "a")),
-        new PrefixQuery(new Term(field, "ab")),
-        new PrefixQuery(new Term(field, "abc"))
+        new PrefixQuery(new QueryTerm(field, "a", 0)),
+        new PrefixQuery(new QueryTerm(field, "ab", 0)),
+        new PrefixQuery(new QueryTerm(field, "abc", 0))
       }, // these should find only doc 0
       {
-        new PrefixQuery(new Term(field, "h")),
-        new PrefixQuery(new Term(field, "hi")),
-        new PrefixQuery(new Term(field, "hij")),
-        new PrefixQuery(new Term(field, "\\7"))
+        new PrefixQuery(new QueryTerm(field, "h", 0)),
+        new PrefixQuery(new QueryTerm(field, "hi", 0)),
+        new PrefixQuery(new QueryTerm(field, "hij", 0)),
+        new PrefixQuery(new QueryTerm(field, "\\7", 0))
       }, // these should find only doc 1
       {
-        new PrefixQuery(new Term(field, "o")),
-        new PrefixQuery(new Term(field, "op")),
-        new PrefixQuery(new Term(field, "opq")),
-        new PrefixQuery(new Term(field, "\\\\"))
+        new PrefixQuery(new QueryTerm(field, "o", 0)),
+        new PrefixQuery(new QueryTerm(field, "op", 0)),
+        new PrefixQuery(new QueryTerm(field, "opq", 0)),
+        new PrefixQuery(new QueryTerm(field, "\\\\", 0))
       }, // these should find only doc 2
     };
 
     WildcardQuery[][] matchOneDocWild = {
       {
-        new WildcardQuery(new Term(field, "*a*")), // these should find only doc 0
-        new WildcardQuery(new Term(field, "*ab*")),
-        new WildcardQuery(new Term(field, "*abc**")),
-        new WildcardQuery(new Term(field, "ab*e*")),
-        new WildcardQuery(new Term(field, "*g?")),
-        new WildcardQuery(new Term(field, "*f?1"))
+        new WildcardQuery(new QueryTerm(field, "*a*", 0)), // these should find only doc 0
+        new WildcardQuery(new QueryTerm(field, "*ab*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*abc**", 0)),
+        new WildcardQuery(new QueryTerm(field, "ab*e*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*g?", 0)),
+        new WildcardQuery(new QueryTerm(field, "*f?1", 0))
       },
       {
-        new WildcardQuery(new Term(field, "*h*")), // these should find only doc 1
-        new WildcardQuery(new Term(field, "*hi*")),
-        new WildcardQuery(new Term(field, "*hij**")),
-        new WildcardQuery(new Term(field, "hi*k*")),
-        new WildcardQuery(new Term(field, "*n?")),
-        new WildcardQuery(new Term(field, "*m?1")),
-        new WildcardQuery(new Term(field, "hij**"))
+        new WildcardQuery(new QueryTerm(field, "*h*", 0)), // these should find only doc 1
+        new WildcardQuery(new QueryTerm(field, "*hi*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*hij**", 0)),
+        new WildcardQuery(new QueryTerm(field, "hi*k*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*n?", 0)),
+        new WildcardQuery(new QueryTerm(field, "*m?1", 0)),
+        new WildcardQuery(new QueryTerm(field, "hij**", 0))
       },
       {
-        new WildcardQuery(new Term(field, "*o*")), // these should find only doc 2
-        new WildcardQuery(new Term(field, "*op*")),
-        new WildcardQuery(new Term(field, "*opq**")),
-        new WildcardQuery(new Term(field, "op*q*")),
-        new WildcardQuery(new Term(field, "*u?")),
-        new WildcardQuery(new Term(field, "*t?1")),
-        new WildcardQuery(new Term(field, "opq**"))
+        new WildcardQuery(new QueryTerm(field, "*o*", 0)), // these should find only doc 2
+        new WildcardQuery(new QueryTerm(field, "*op*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*opq**", 0)),
+        new WildcardQuery(new QueryTerm(field, "op*q*", 0)),
+        new WildcardQuery(new QueryTerm(field, "*u?", 0)),
+        new WildcardQuery(new QueryTerm(field, "*t?1", 0)),
+        new WildcardQuery(new QueryTerm(field, "opq**", 0))
       }
     };
 

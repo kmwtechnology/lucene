@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.classification;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +29,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -204,12 +207,12 @@ public class BM25NBClassifier implements Classifier<BytesRef> {
 
   private double getTermProbForClass(Term classTerm, String... words) throws IOException {
     BooleanQuery.Builder builder = new BooleanQuery.Builder();
-    builder.add(new BooleanClause(new TermQuery(classTerm), BooleanClause.Occur.MUST));
+    builder.add(new BooleanClause(new TermQuery(asQueryTerm(classTerm)), BooleanClause.Occur.MUST));
     for (String textFieldName : textFieldNames) {
       for (String word : words) {
         builder.add(
             new BooleanClause(
-                new TermQuery(new Term(textFieldName, word)), BooleanClause.Occur.SHOULD));
+                new TermQuery(new QueryTerm(textFieldName, word, 0)), BooleanClause.Occur.SHOULD));
       }
     }
     if (query != null) {
@@ -220,7 +223,7 @@ public class BM25NBClassifier implements Classifier<BytesRef> {
   }
 
   private double calculateLogPrior(Term term) throws IOException {
-    TermQuery termQuery = new TermQuery(term);
+    TermQuery termQuery = new TermQuery(asQueryTerm(term));
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(termQuery, BooleanClause.Occur.MUST);
     if (query != null) {

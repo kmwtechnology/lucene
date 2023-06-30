@@ -53,7 +53,7 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.luke.app.IndexHandler;
 import org.apache.lucene.luke.app.IndexObserver;
 import org.apache.lucene.luke.app.LukeState;
@@ -512,7 +512,7 @@ public final class SearchPanelProvider implements SearchTabOperator {
         throw new LukeException(
             String.format(Locale.ENGLISH, "Invalid query [ %s ]", queryStringTA.getText()));
       }
-      query = new TermQuery(new Term(tmp[0].trim(), tmp[1].trim()));
+      query = new TermQuery(new QueryTerm(tmp[0].trim(), tmp[1].trim(), 0));
     } else {
       query = parse(false);
     }

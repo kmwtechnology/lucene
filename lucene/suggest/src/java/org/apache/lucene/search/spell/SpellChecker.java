@@ -31,6 +31,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
@@ -410,13 +411,15 @@ public class SpellChecker implements java.io.Closeable {
   }
   /** Add a clause to a boolean query. */
   private static void add(BooleanQuery.Builder q, String name, String value, float boost) {
-    Query tq = new TermQuery(new Term(name, value));
+    Query tq = new TermQuery(new QueryTerm(name, value, 0));
     q.add(new BooleanClause(new BoostQuery(tq, boost), BooleanClause.Occur.SHOULD));
   }
 
   /** Add a clause to a boolean query. */
   private static void add(BooleanQuery.Builder q, String name, String value) {
-    q.add(new BooleanClause(new TermQuery(new Term(name, value)), BooleanClause.Occur.SHOULD));
+    q.add(
+        new BooleanClause(
+            new TermQuery(new QueryTerm(name, value, 0)), BooleanClause.Occur.SHOULD));
   }
 
   /**

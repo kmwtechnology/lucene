@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.search.vectorhighlight;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.function.FunctionScoreQuery;
 import org.apache.lucene.search.BooleanClause;
@@ -123,7 +126,7 @@ public class FieldQuery {
     } else if (sourceQuery instanceof SynonymQuery) {
       SynonymQuery synQuery = (SynonymQuery) sourceQuery;
       for (Term term : synQuery.getTerms()) {
-        flatten(new TermQuery(term), reader, flatQueries, boost);
+        flatten(new TermQuery(asQueryTerm(term)), reader, flatQueries, boost);
       }
     } else if (sourceQuery instanceof PhraseQuery) {
       PhraseQuery pq = (PhraseQuery) sourceQuery;
@@ -246,9 +249,9 @@ public class FieldQuery {
       }
       if (overlap && src.length - i < dest.length) {
         PhraseQuery.Builder pqBuilder = new PhraseQuery.Builder();
-        for (Term srcTerm : src) pqBuilder.add(srcTerm);
+        for (Term srcTerm : src) pqBuilder.add(asQueryTerm(srcTerm));
         for (int k = src.length - i; k < dest.length; k++) {
-          pqBuilder.add(new Term(src[0].field(), dest[k].text()));
+          pqBuilder.add(new QueryTerm(src[0].field(), dest[k].text(), 0));
         }
         pqBuilder.setSlop(slop);
         Query pq = pqBuilder.build();

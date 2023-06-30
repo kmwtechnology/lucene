@@ -26,7 +26,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
@@ -74,7 +74,7 @@ public class TestSameScoresWithThreads extends LuceneTestCase {
     while (termsEnum.next() != null) {
       if (random().nextDouble() <= chance) {
         BytesRef term = BytesRef.deepCopyOf(termsEnum.term());
-        answers.put(term, s.search(new TermQuery(new Term("body", term)), 100));
+        answers.put(term, s.search(new TermQuery(new QueryTerm("body", term, 0)), 100));
       }
     }
 
@@ -94,7 +94,8 @@ public class TestSameScoresWithThreads extends LuceneTestCase {
                         new ArrayList<>(answers.entrySet());
                     Collections.shuffle(shuffled, random());
                     for (Map.Entry<BytesRef, TopDocs> ent : shuffled) {
-                      TopDocs actual = s.search(new TermQuery(new Term("body", ent.getKey())), 100);
+                      TopDocs actual =
+                          s.search(new TermQuery(new QueryTerm("body", ent.getKey(), 0)), 100);
                       TopDocs expected = ent.getValue();
                       assertEquals(expected.totalHits.value, actual.totalHits.value);
                       assertEquals(

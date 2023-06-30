@@ -24,6 +24,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -117,13 +118,13 @@ public class TestDocValuesRewriteMethod extends LuceneTestCase {
   protected void assertSame(String regexp) throws IOException {
     RegexpQuery docValues =
         new RegexpQuery(
-            new Term(fieldName, regexp),
+            new QueryTerm(fieldName, regexp, 0),
             RegExp.NONE,
             0,
             name -> null,
             Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
             new DocValuesRewriteMethod());
-    RegexpQuery inverted = new RegexpQuery(new Term(fieldName, regexp), RegExp.NONE);
+    RegexpQuery inverted = new RegexpQuery(new QueryTerm(fieldName, regexp, 0), RegExp.NONE);
 
     TopDocs invertedDocs = searcher1.search(inverted, 25);
     TopDocs docValuesDocs = searcher2.search(docValues, 25);
@@ -133,9 +134,9 @@ public class TestDocValuesRewriteMethod extends LuceneTestCase {
 
   public void testEquals() throws Exception {
     {
-      RegexpQuery a1 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
-      RegexpQuery a2 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
-      RegexpQuery b = new RegexpQuery(new Term(fieldName, "[bB]"), RegExp.NONE);
+      RegexpQuery a1 = new RegexpQuery(new QueryTerm(fieldName, "[aA]", 0), RegExp.NONE);
+      RegexpQuery a2 = new RegexpQuery(new QueryTerm(fieldName, "[aA]", 0), RegExp.NONE);
+      RegexpQuery b = new RegexpQuery(new QueryTerm(fieldName, "[bB]", 0), RegExp.NONE);
       assertEquals(a1, a2);
       assertFalse(a1.equals(b));
     }
@@ -143,7 +144,7 @@ public class TestDocValuesRewriteMethod extends LuceneTestCase {
     {
       RegexpQuery a1 =
           new RegexpQuery(
-              new Term(fieldName, "[aA]"),
+              new QueryTerm(fieldName, "[aA]", 0),
               RegExp.NONE,
               0,
               name -> null,
@@ -151,7 +152,7 @@ public class TestDocValuesRewriteMethod extends LuceneTestCase {
               new DocValuesRewriteMethod());
       RegexpQuery a2 =
           new RegexpQuery(
-              new Term(fieldName, "[aA]"),
+              new QueryTerm(fieldName, "[aA]", 0),
               RegExp.NONE,
               0,
               name -> null,
@@ -159,7 +160,7 @@ public class TestDocValuesRewriteMethod extends LuceneTestCase {
               new DocValuesRewriteMethod());
       RegexpQuery b =
           new RegexpQuery(
-              new Term(fieldName, "[bB]"),
+              new QueryTerm(fieldName, "[bB]", 0),
               RegExp.NONE,
               0,
               name -> null,

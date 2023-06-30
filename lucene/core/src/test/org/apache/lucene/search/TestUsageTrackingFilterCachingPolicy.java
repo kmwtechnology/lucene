@@ -21,7 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -31,11 +31,13 @@ public class TestUsageTrackingFilterCachingPolicy extends LuceneTestCase {
 
   public void testCostlyFilter() {
     assertTrue(
-        UsageTrackingQueryCachingPolicy.isCostly(new PrefixQuery(new Term("field", "prefix"))));
+        UsageTrackingQueryCachingPolicy.isCostly(
+            new PrefixQuery(new QueryTerm("field", "prefix", 0))));
     assertTrue(
         UsageTrackingQueryCachingPolicy.isCostly(IntPoint.newRangeQuery("intField", 1, 1000)));
     assertFalse(
-        UsageTrackingQueryCachingPolicy.isCostly(new TermQuery(new Term("field", "value"))));
+        UsageTrackingQueryCachingPolicy.isCostly(
+            new TermQuery(new QueryTerm("field", "value", 0))));
   }
 
   public void testNeverCacheMatchAll() throws Exception {
@@ -48,7 +50,7 @@ public class TestUsageTrackingFilterCachingPolicy extends LuceneTestCase {
   }
 
   public void testNeverCacheTermFilter() throws IOException {
-    Query q = new TermQuery(new Term("foo", "bar"));
+    Query q = new TermQuery(new QueryTerm("foo", "bar", 0));
     UsageTrackingQueryCachingPolicy policy = new UsageTrackingQueryCachingPolicy();
     for (int i = 0; i < 1000; ++i) {
       policy.onUse(q);

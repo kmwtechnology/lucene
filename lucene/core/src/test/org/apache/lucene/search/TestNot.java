@@ -19,7 +19,7 @@ package org.apache.lucene.search;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -40,8 +40,8 @@ public class TestNot extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("field", "b", 0)), BooleanClause.Occur.MUST_NOT);
 
     ScoreDoc[] hits = searcher.search(query.build(), 1000).scoreDocs;
     assertEquals(0, hits.length);

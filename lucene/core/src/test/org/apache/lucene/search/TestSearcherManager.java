@@ -37,7 +37,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -84,7 +84,7 @@ public class TestSearcherManager extends ThreadedIndexingAndSearchingTestCase {
           public IndexSearcher newSearcher(IndexReader r, IndexReader previous) throws IOException {
             IndexSearcher s = new IndexSearcher(r, es);
             TestSearcherManager.this.warmCalled = true;
-            s.search(new TermQuery(new Term("body", "united")), 10);
+            s.search(new TermQuery(new QueryTerm("body", "united", 0)), 10);
             return s;
           }
         };

@@ -428,7 +428,7 @@ public class TestIndexWriter extends LuceneTestCase {
     }
     writer.close();
 
-    Term searchTerm = new Term("field", "aaa");
+    QueryTerm searchTerm = new QueryTerm("field", "aaa", 0);
 
     IndexReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = newSearcher(reader);
@@ -1866,8 +1866,8 @@ public class TestIndexWriter extends LuceneTestCase {
     iw.close();
     IndexSearcher is = newSearcher(ir);
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("body", "just"), 0);
-    builder.add(new Term("body", "test"), 2);
+    builder.add(new QueryTerm("body", "just", 0), 0);
+    builder.add(new QueryTerm("body", "test", 7), 2);
     PhraseQuery pq = builder.build();
     // body:"just ? test"
     assertEquals(1, is.search(pq, 5).totalHits.value);
@@ -1899,8 +1899,8 @@ public class TestIndexWriter extends LuceneTestCase {
     iw.close();
     IndexSearcher is = newSearcher(ir);
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("body", "just"), 0);
-    builder.add(new Term("body", "test"), 3);
+    builder.add(new QueryTerm("body", "just", 0), 0);
+    builder.add(new QueryTerm("body", "test", 9), 3);
     PhraseQuery pq = builder.build();
     // body:"just ? ? test"
     assertEquals(1, is.search(pq, 5).totalHits.value);
@@ -3347,7 +3347,7 @@ public class TestIndexWriter extends LuceneTestCase {
     DirectoryReader reader = DirectoryReader.open(writer);
     assertEquals(2, reader.docFreq(new Term("id", "1")));
     IndexSearcher searcher = new IndexSearcher(reader);
-    TopDocs topDocs = searcher.search(new TermQuery(new Term("id", "1")), 10);
+    TopDocs topDocs = searcher.search(new TermQuery(new QueryTerm("id", "1", 0)), 10);
     assertEquals(1, topDocs.totalHits.value);
     Document document = reader.storedFields().document(topDocs.scoreDocs[0].doc);
     assertEquals("2", document.get("version"));
@@ -3363,7 +3363,7 @@ public class TestIndexWriter extends LuceneTestCase {
     assertNotSame(reader, oldReader);
     oldReader.close();
     searcher = new IndexSearcher(reader);
-    topDocs = searcher.search(new TermQuery(new Term("id", "1")), 10);
+    topDocs = searcher.search(new TermQuery(new QueryTerm("id", "1", 0)), 10);
     assertEquals(1, topDocs.totalHits.value);
     document = reader.storedFields().document(topDocs.scoreDocs[0].doc);
     assertEquals("3", document.get("version"));
@@ -3376,7 +3376,7 @@ public class TestIndexWriter extends LuceneTestCase {
     assertNotNull(reader);
     oldReader.close();
     searcher = new IndexSearcher(reader);
-    topDocs = searcher.search(new TermQuery(new Term("id", "1")), 10);
+    topDocs = searcher.search(new TermQuery(new QueryTerm("id", "1", 0)), 10);
     assertEquals(0, topDocs.totalHits.value);
     int numSoftDeleted = 0;
     for (SegmentCommitInfo info : writer.cloneSegmentInfos()) {
@@ -3507,7 +3507,7 @@ public class TestIndexWriter extends LuceneTestCase {
     DirectoryReader reader = DirectoryReader.open(writer);
     IndexSearcher searcher = new IndexSearcher(reader);
     for (String id : ids) {
-      TopDocs topDocs = searcher.search(new TermQuery(new Term("id", id)), 10);
+      TopDocs topDocs = searcher.search(new TermQuery(new QueryTerm("id", id, 0)), 10);
       if (updateSeveralDocs) {
         assertEquals(2, topDocs.totalHits.value);
         assertEquals(Math.abs(topDocs.scoreDocs[0].doc - topDocs.scoreDocs[1].doc), 1);
@@ -4307,7 +4307,9 @@ public class TestIndexWriter extends LuceneTestCase {
                       try {
                         assertEquals(
                             1,
-                            acquire.search(new TermQuery(new Term("id", id)), 10).totalHits.value);
+                            acquire.search(new TermQuery(new QueryTerm("id", id, 0)), 10)
+                                .totalHits
+                                .value);
                       } finally {
                         manager.release(acquire);
                       }

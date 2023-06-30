@@ -27,7 +27,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.PostingsEnum;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -98,46 +98,46 @@ public class TestPositionIncrement extends LuceneTestCase {
     PhraseQuery q;
     ScoreDoc[] hits;
 
-    q = new PhraseQuery("field", "1", "2");
+    q = new PhraseQuery("field", new int[] {0, 0}, "1", "2");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
 
     // same as previous, using the builder with implicit positions
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("field", "1"));
-    builder.add(new Term("field", "2"));
+    builder.add(new QueryTerm("field", "1", 0));
+    builder.add(new QueryTerm("field", "2", 0));
     q = builder.build();
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
 
     // same as previous, just specify positions explicitely.
     builder = new PhraseQuery.Builder();
-    builder.add(new Term("field", "1"), 0);
-    builder.add(new Term("field", "2"), 1);
+    builder.add(new QueryTerm("field", "1", 0), 0);
+    builder.add(new QueryTerm("field", "2", 0), 1);
     q = builder.build();
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
 
     // specifying correct positions should find the phrase.
     builder = new PhraseQuery.Builder();
-    builder.add(new Term("field", "1"), 0);
-    builder.add(new Term("field", "2"), 2);
+    builder.add(new QueryTerm("field", "1", 0), 0);
+    builder.add(new QueryTerm("field", "2", 0), 2);
     q = builder.build();
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "2", "3");
+    q = new PhraseQuery("field", new int[] {0, 0}, "2", "3");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "3", "4");
+    q = new PhraseQuery("field", new int[] {0, 0}, "3", "4");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
 
     // phrase query would find it when correct positions are specified.
     builder = new PhraseQuery.Builder();
-    builder.add(new Term("field", "3"), 0);
-    builder.add(new Term("field", "4"), 0);
+    builder.add(new QueryTerm("field", "3", 0), 0);
+    builder.add(new QueryTerm("field", "4", 0), 0);
     q = builder.build();
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
@@ -145,8 +145,8 @@ public class TestPositionIncrement extends LuceneTestCase {
     // phrase query should fail for non existing searched term
     // even if there exist another searched terms in the same searched position.
     builder = new PhraseQuery.Builder();
-    builder.add(new Term("field", "3"), 0);
-    builder.add(new Term("field", "9"), 0);
+    builder.add(new QueryTerm("field", "3", 0), 0);
+    builder.add(new QueryTerm("field", "9", 0), 0);
     q = builder.build();
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
@@ -154,23 +154,23 @@ public class TestPositionIncrement extends LuceneTestCase {
     // multi-phrase query should succed for non existing searched term
     // because there exist another searched terms in the same searched position.
     MultiPhraseQuery.Builder mqb = new MultiPhraseQuery.Builder();
-    mqb.add(new Term[] {new Term("field", "3"), new Term("field", "9")}, 0);
+    mqb.add(new QueryTerm[] {new QueryTerm("field", "3", 0), new QueryTerm("field", "9", 0)}, 0);
     hits = searcher.search(mqb.build(), 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "2", "4");
+    q = new PhraseQuery("field", new int[] {0, 0}, "2", "4");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "3", "5");
+    q = new PhraseQuery("field", new int[] {0, 0}, "3", "5");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "4", "5");
+    q = new PhraseQuery("field", new int[] {0, 0}, "4", "5");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(1, hits.length);
 
-    q = new PhraseQuery("field", "2", "5");
+    q = new PhraseQuery("field", new int[] {0, 0}, "2", "5");
     hits = searcher.search(q, 1000).scoreDocs;
     assertEquals(0, hits.length);
 

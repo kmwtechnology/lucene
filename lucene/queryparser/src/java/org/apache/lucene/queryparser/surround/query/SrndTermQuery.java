@@ -19,7 +19,7 @@ package org.apache.lucene.queryparser.surround.query;
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -37,8 +37,8 @@ public class SrndTermQuery extends SimpleTerm {
     return termText;
   }
 
-  public Term getLuceneTerm(String fieldName) {
-    return new Term(fieldName, getTermText());
+  public QueryTerm getLuceneTerm(String fieldName) {
+    return new QueryTerm(fieldName, getTermText(), 0);
   }
 
   @Override

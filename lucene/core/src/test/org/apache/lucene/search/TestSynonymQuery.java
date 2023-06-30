@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.search;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +35,7 @@ import org.apache.lucene.index.ImpactsSource;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
@@ -49,29 +52,29 @@ public class TestSynonymQuery extends LuceneTestCase {
     QueryUtils.checkEqual(
         new SynonymQuery.Builder("foo").build(), new SynonymQuery.Builder("foo").build());
     QueryUtils.checkEqual(
-        new SynonymQuery.Builder("foo").addTerm(new Term("foo", "bar")).build(),
-        new SynonymQuery.Builder("foo").addTerm(new Term("foo", "bar")).build());
+        new SynonymQuery.Builder("foo").addTerm(new QueryTerm("foo", "bar", 0)).build(),
+        new SynonymQuery.Builder("foo").addTerm(new QueryTerm("foo", "bar", 0)).build());
 
     QueryUtils.checkEqual(
         new SynonymQuery.Builder("a")
-            .addTerm(new Term("a", "a"))
-            .addTerm(new Term("a", "b"))
+            .addTerm(new QueryTerm("a", "a", 0))
+            .addTerm(new QueryTerm("a", "b", 0))
             .build(),
         new SynonymQuery.Builder("a")
-            .addTerm(new Term("a", "b"))
-            .addTerm(new Term("a", "a"))
+            .addTerm(new QueryTerm("a", "b", 0))
+            .addTerm(new QueryTerm("a", "a", 0))
             .build());
 
     QueryUtils.checkEqual(
         new SynonymQuery.Builder("field")
-            .addTerm(new Term("field", "b"), 0.4f)
-            .addTerm(new Term("field", "c"), 0.2f)
-            .addTerm(new Term("field", "d"))
+            .addTerm(new QueryTerm("field", "b", 0), 0.4f)
+            .addTerm(new QueryTerm("field", "c", 0), 0.2f)
+            .addTerm(new QueryTerm("field", "d", 0))
             .build(),
         new SynonymQuery.Builder("field")
-            .addTerm(new Term("field", "b"), 0.4f)
-            .addTerm(new Term("field", "c"), 0.2f)
-            .addTerm(new Term("field", "d"))
+            .addTerm(new QueryTerm("field", "b", 0), 0.4f)
+            .addTerm(new QueryTerm("field", "c", 0), 0.2f)
+            .addTerm(new QueryTerm("field", "d", 0))
             .build());
   }
 
@@ -80,61 +83,61 @@ public class TestSynonymQuery extends LuceneTestCase {
         IllegalArgumentException.class,
         () -> {
           new SynonymQuery.Builder("field1")
-              .addTerm(new Term("field1", "a"))
-              .addTerm(new Term("field2", "b"));
+              .addTerm(new QueryTerm("field1", "a", 0))
+              .addTerm(new QueryTerm("field2", "b", 0));
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
-          new SynonymQuery.Builder("field1").addTerm(new Term("field1", "a"), 1.3f);
+          new SynonymQuery.Builder("field1").addTerm(new QueryTerm("field1", "a", 0), 1.3f);
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
-          new SynonymQuery.Builder("field1").addTerm(new Term("field1", "a"), Float.NaN);
-        });
-
-    expectThrows(
-        IllegalArgumentException.class,
-        () -> {
-          new SynonymQuery.Builder("field1")
-              .addTerm(new Term("field1", "a"), Float.POSITIVE_INFINITY);
+          new SynonymQuery.Builder("field1").addTerm(new QueryTerm("field1", "a", 0), Float.NaN);
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
           new SynonymQuery.Builder("field1")
-              .addTerm(new Term("field1", "a"), Float.NEGATIVE_INFINITY);
+              .addTerm(new QueryTerm("field1", "a", 0), Float.POSITIVE_INFINITY);
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
-          new SynonymQuery.Builder("field1").addTerm(new Term("field1", "a"), -0.3f);
+          new SynonymQuery.Builder("field1")
+              .addTerm(new QueryTerm("field1", "a", 0), Float.NEGATIVE_INFINITY);
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
-          new SynonymQuery.Builder("field1").addTerm(new Term("field1", "a"), 0f);
+          new SynonymQuery.Builder("field1").addTerm(new QueryTerm("field1", "a", 0), -0.3f);
         });
 
     expectThrows(
         IllegalArgumentException.class,
         () -> {
-          new SynonymQuery.Builder("field1").addTerm(new Term("field1", "a"), -0f);
+          new SynonymQuery.Builder("field1").addTerm(new QueryTerm("field1", "a", 0), 0f);
+        });
+
+    expectThrows(
+        IllegalArgumentException.class,
+        () -> {
+          new SynonymQuery.Builder("field1").addTerm(new QueryTerm("field1", "a", 0), -0f);
         });
   }
 
   public void testToString() {
     assertEquals("Synonym()", new SynonymQuery.Builder("foo").build().toString());
-    Term t1 = new Term("foo", "bar");
+    QueryTerm t1 = new QueryTerm("foo", "bar", 0);
     assertEquals(
         "Synonym(foo:bar)", new SynonymQuery.Builder("foo").addTerm(t1).build().toString());
-    Term t2 = new Term("foo", "baz");
+    QueryTerm t2 = new QueryTerm("foo", "baz", 0);
     assertEquals(
         "Synonym(foo:bar foo:baz)",
         new SynonymQuery.Builder("foo").addTerm(t1).addTerm(t2).build().toString());
@@ -163,8 +166,8 @@ public class TestSynonymQuery extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     SynonymQuery query =
         new SynonymQuery.Builder("f")
-            .addTerm(new Term("f", "a"), boost == 0 ? 1f : boost)
-            .addTerm(new Term("f", "b"), boost == 0 ? 1f : boost)
+            .addTerm(new QueryTerm("f", "a", 0), boost == 0 ? 1f : boost)
+            .addTerm(new QueryTerm("f", "b", 0), boost == 0 ? 1f : boost)
             .build();
 
     CollectorManager<TopScoreDocCollector, TopDocs> manager =
@@ -221,9 +224,9 @@ public class TestSynonymQuery extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     SynonymQuery query =
         new SynonymQuery.Builder("f")
-            .addTerm(new Term("f", "a"), 0.25f)
-            .addTerm(new Term("f", "b"), 0.5f)
-            .addTerm(new Term("f", "c"))
+            .addTerm(new QueryTerm("f", "a", 0), 0.25f)
+            .addTerm(new QueryTerm("f", "b", 0), 0.5f)
+            .addTerm(new QueryTerm("f", "c", 0))
             .build();
 
     CollectorManager<TopScoreDocCollector, TopDocs> manager =
@@ -439,8 +442,8 @@ public class TestSynonymQuery extends LuceneTestCase {
       float boost2 = random().nextBoolean() ? Math.max(random().nextFloat(), Float.MIN_NORMAL) : 1f;
       Query query =
           new SynonymQuery.Builder("foo")
-              .addTerm(new Term("foo", Integer.toString(term1)), boost1)
-              .addTerm(new Term("foo", Integer.toString(term2)), boost2)
+              .addTerm(new QueryTerm("foo", Integer.toString(term1), 0), boost1)
+              .addTerm(new QueryTerm("foo", Integer.toString(term2), 0), boost2)
               .build();
 
       CollectorManager<TopScoreDocCollector, TopDocs> completeManager =
@@ -456,7 +459,9 @@ public class TestSynonymQuery extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       completeManager = TopScoreDocCollector.createSharedManager(10, null, Integer.MAX_VALUE);
@@ -478,17 +483,21 @@ public class TestSynonymQuery extends LuceneTestCase {
     assertEquals(searcher.rewrite(q), new MatchNoDocsQuery());
 
     // non-boosted single term SynonymQuery is rewritten
-    q = new SynonymQuery.Builder("f").addTerm(new Term("f"), 1f).build();
+    q = new SynonymQuery.Builder("f").addTerm(asQueryTerm(new Term("f")), 1f).build();
     assertEquals(q.getTerms().size(), 1);
-    assertEquals(searcher.rewrite(q), new TermQuery(new Term("f")));
+    assertEquals(searcher.rewrite(q), new TermQuery(asQueryTerm(new Term("f"))));
 
     // boosted single term SynonymQuery is not rewritten
-    q = new SynonymQuery.Builder("f").addTerm(new Term("f"), 0.8f).build();
+    q = new SynonymQuery.Builder("f").addTerm(asQueryTerm(new Term("f")), 0.8f).build();
     assertEquals(q.getTerms().size(), 1);
     assertEquals(searcher.rewrite(q), q);
 
     // multiple term SynonymQuery is not rewritten
-    q = new SynonymQuery.Builder("f").addTerm(new Term("f"), 1f).addTerm(new Term("f"), 1f).build();
+    q =
+        new SynonymQuery.Builder("f")
+            .addTerm(asQueryTerm(new Term("f")), 1f)
+            .addTerm(asQueryTerm(new Term("f")), 1f)
+            .build();
     assertEquals(q.getTerms().size(), 2);
     assertEquals(searcher.rewrite(q), q);
   }

@@ -18,7 +18,7 @@ package org.apache.lucene.search.uhighlight;
 
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -42,8 +42,9 @@ public class TestUnifiedHighlighterReanalysis extends LuceneTestCase {
         "This is a test. Just a test highlighting without a searcher. Feel free to ignore.";
     BooleanQuery query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "highlighting")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("title", "test")), BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm("body", "highlighting", 0)), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("title", "test", 0)), BooleanClause.Occur.SHOULD)
             .build();
 
     UnifiedHighlighter highlighter =
@@ -62,7 +63,7 @@ public class TestUnifiedHighlighterReanalysis extends LuceneTestCase {
   public void testIndexSearcherNullness() throws IOException {
     String text =
         "This is a test. Just a test highlighting without a searcher. Feel free to ignore.";
-    Query query = new TermQuery(new Term("body", "highlighting"));
+    Query query = new TermQuery(new QueryTerm("body", "highlighting", 0));
 
     try (Directory directory = newDirectory();
         RandomIndexWriter indexWriter = new RandomIndexWriter(random(), directory);

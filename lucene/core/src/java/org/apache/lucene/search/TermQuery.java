@@ -22,6 +22,7 @@ import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -35,7 +36,7 @@ import org.apache.lucene.search.similarities.Similarity;
  */
 public class TermQuery extends Query {
 
-  private final Term term;
+  private final QueryTerm term;
   private final TermStates perReaderTermState;
 
   final class TermWeight extends Weight {
@@ -198,7 +199,7 @@ public class TermQuery extends Query {
   }
 
   /** Constructs a query for the term <code>t</code>. */
-  public TermQuery(Term t) {
+  public TermQuery(QueryTerm t) {
     term = Objects.requireNonNull(t);
     perReaderTermState = null;
   }
@@ -207,14 +208,14 @@ public class TermQuery extends Query {
    * Expert: constructs a TermQuery that will use the provided docFreq instead of looking up the
    * docFreq against the searcher.
    */
-  public TermQuery(Term t, TermStates states) {
+  public TermQuery(QueryTerm t, TermStates states) {
     assert states != null;
     term = Objects.requireNonNull(t);
     perReaderTermState = Objects.requireNonNull(states);
   }
 
   /** Returns the term of this query. */
-  public Term getTerm() {
+  public QueryTerm getTerm() {
     return term;
   }
 

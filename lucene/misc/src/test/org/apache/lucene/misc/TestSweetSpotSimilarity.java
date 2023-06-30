@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
@@ -47,7 +47,7 @@ public class TestSweetSpotSimilarity extends LuceneTestCase {
     w.close();
     IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setSimilarity(sim);
-    Explanation expl = searcher.explain(new TermQuery(new Term(field, "a")), 0);
+    Explanation expl = searcher.explain(new TermQuery(new QueryTerm(field, "a", 0)), 0);
     reader.close();
     dir.close();
     Explanation norm = findExplanation(expl, "fieldNorm");

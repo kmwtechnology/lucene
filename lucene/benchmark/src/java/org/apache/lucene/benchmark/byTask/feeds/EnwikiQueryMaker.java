@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.benchmark.byTask.tasks.NewAnalyzerTask;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanFirstQuery;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
@@ -133,23 +133,23 @@ public class EnwikiQueryMaker extends AbstractQueryMaker {
   private static Query[] getPrebuiltQueries(String field) {
     WildcardQuery wcq =
         new WildcardQuery(
-            new Term(field, "fo*"),
+            new QueryTerm(field, "fo*", 0),
             Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
             MultiTermQuery.CONSTANT_SCORE_REWRITE);
     // be wary of unanalyzed text
     return new Query[] {
-      new SpanFirstQuery(new SpanTermQuery(new Term(field, "ford")), 5),
+      new SpanFirstQuery(new SpanTermQuery(new QueryTerm(field, "ford", 0)), 5),
       new SpanNearQuery(
           new SpanQuery[] {
-            new SpanTermQuery(new Term(field, "night")),
-            new SpanTermQuery(new Term(field, "trading"))
+            new SpanTermQuery(new QueryTerm(field, "night", 0)),
+            new SpanTermQuery(new QueryTerm(field, "trading", 0))
           },
           4,
           false),
       new SpanNearQuery(
           new SpanQuery[] {
-            new SpanFirstQuery(new SpanTermQuery(new Term(field, "ford")), 10),
-            new SpanTermQuery(new Term(field, "credit"))
+            new SpanFirstQuery(new SpanTermQuery(new QueryTerm(field, "ford", 0)), 10),
+            new SpanTermQuery(new QueryTerm(field, "credit", 0))
           },
           10,
           false),

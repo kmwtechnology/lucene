@@ -36,11 +36,13 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.queryparser.classic.TestQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.CommonQueryParserConfiguration;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -285,8 +287,8 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
     BooleanQuery.Builder expected = new BooleanQuery.Builder();
-    expected.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.SHOULD);
-    expected.add(new TermQuery(new Term("field", "国")), BooleanClause.Occur.SHOULD);
+    expected.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.SHOULD);
+    expected.add(new TermQuery(new QueryTerm("field", "国", 0)), BooleanClause.Occur.SHOULD);
 
     assertEquals(expected.build(), getQuery("中国", analyzer));
   }
@@ -296,8 +298,8 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
     BooleanQuery.Builder expectedB = new BooleanQuery.Builder();
-    expectedB.add(new TermQuery(new Term("field", "中")), BooleanClause.Occur.SHOULD);
-    expectedB.add(new TermQuery(new Term("field", "国")), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm("field", "中", 0)), BooleanClause.Occur.SHOULD);
+    expectedB.add(new TermQuery(new QueryTerm("field", "国", 0)), BooleanClause.Occur.SHOULD);
     Query expected = expectedB.build();
     expected = new BoostQuery(expected, 0.5f);
 
@@ -308,7 +310,7 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    PhraseQuery expected = new PhraseQuery("field", "中", "国");
+    PhraseQuery expected = new PhraseQuery("field", new int[] {0, 0}, "中", "国");
 
     assertEquals(expected, getQuery("\"中国\"", analyzer));
   }
@@ -317,7 +319,7 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    Query expected = new PhraseQuery("field", "中", "国");
+    Query expected = new PhraseQuery("field", new int[] {0, 0}, "中", "国");
     expected = new BoostQuery(expected, 0.5f);
 
     assertEquals(expected, getQuery("\"中国\"^0.5", analyzer));
@@ -327,7 +329,7 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    PhraseQuery expected = new PhraseQuery(3, "field", "中", "国");
+    PhraseQuery expected = new PhraseQuery(3, "field", new int[] {0, 0}, "中", "国");
 
     assertEquals(expected, getQuery("\"中国\"~3", analyzer));
   }
@@ -336,7 +338,7 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     // individual CJK chars as terms
     SimpleCJKAnalyzer analyzer = new SimpleCJKAnalyzer();
 
-    PhraseQuery expected = new PhraseQuery("field", "中", "国");
+    PhraseQuery expected = new PhraseQuery("field", new int[] {0, 0}, "中", "国");
     CommonQueryParserConfiguration qp = getParserConfig(analyzer);
     if (qp instanceof QueryParser) { // Always true, since TestStandardQP overrides this method
       ((QueryParser) qp).setSplitOnWhitespace(true); // LUCENE-7533
@@ -986,7 +988,12 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
         getParserConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false));
     Query query1 = getQuery("A AND B OR C AND D", qp);
     Query query2 = getQuery("+A +B +C +D", qp);
-    assertEquals(query1, query2);
+    assertEqualsIgnoreQueryTermOffsets(query1, query2);
+  }
+
+  public void assertEqualsIgnoreQueryTermOffsets(Query expected, Query actual) {
+    // NO MERGE: not sure if this is good enough... get 2nd opinions...
+    assertEquals(expected.toString(), actual.toString());
   }
 
   // Todo: convert this from DateField to DateUtil
@@ -1025,57 +1032,57 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
   public void testEscapedWildcard() throws Exception {
     CommonQueryParserConfiguration qp =
         getParserConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false));
-    WildcardQuery q = new WildcardQuery(new Term("field", "foo\\?ba?r"));
+    WildcardQuery q = new WildcardQuery(new QueryTerm("field", "foo\\?ba?r", 0));
     assertEquals(q, getQuery("foo\\?ba?r", qp));
   }
 
   public void testRegexps() throws Exception {
     CommonQueryParserConfiguration qp =
         getParserConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true));
-    RegexpQuery q = new RegexpQuery(new Term("field", "[a-z][123]"));
+    RegexpQuery q = new RegexpQuery(new QueryTerm("field", "[a-z][123]", 0));
     assertEquals(q, getQuery("/[a-z][123]/", qp));
     assertEquals(q, getQuery("/[A-Z][123]/", qp));
     assertEquals(new BoostQuery(q, 0.5f), getQuery("/[A-Z][123]/^0.5", qp));
 
-    Query escaped = new RegexpQuery(new Term("field", "[a-z]\\/[123]"));
+    Query escaped = new RegexpQuery(new QueryTerm("field", "[a-z]\\/[123]", 0));
     assertEquals(escaped, getQuery("/[a-z]\\/[123]/", qp));
-    Query escaped2 = new RegexpQuery(new Term("field", "[a-z]\\*[123]"));
+    Query escaped2 = new RegexpQuery(new QueryTerm("field", "[a-z]\\*[123]", 0));
     assertEquals(escaped2, getQuery("/[a-z]\\*[123]/", qp));
 
     BooleanQuery.Builder complex = new BooleanQuery.Builder();
-    complex.add(new RegexpQuery(new Term("field", "[a-z]\\/[123]")), Occur.MUST);
-    complex.add(new TermQuery(new Term("path", "/etc/init.d/")), Occur.MUST);
-    complex.add(new TermQuery(new Term("field", "/etc/init[.]d/lucene/")), Occur.SHOULD);
-    assertEquals(
+    complex.add(new RegexpQuery(new QueryTerm("field", "[a-z]\\/[123]", 0)), Occur.MUST);
+    complex.add(new TermQuery(new QueryTerm("path", "/etc/init.d/", 0)), Occur.MUST);
+    complex.add(new TermQuery(new QueryTerm("field", "/etc/init[.]d/lucene/", 0)), Occur.SHOULD);
+    assertEqualsIgnoreQueryTermOffsets(
         complex.build(),
         getQuery(
             "/[a-z]\\/[123]/ AND path:\"/etc/init.d/\" OR \"/etc\\/init\\[.\\]d/lucene/\" ", qp));
 
-    Query re = new RegexpQuery(new Term("field", "http.*"));
-    assertEquals(re, getQuery("field:/http.*/", qp));
-    assertEquals(re, getQuery("/http.*/", qp));
+    Query re = new RegexpQuery(new QueryTerm("field", "http.*", 0));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("field:/http.*/", qp));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("/http.*/", qp));
 
-    re = new RegexpQuery(new Term("field", "http~0.5"));
-    assertEquals(re, getQuery("field:/http~0.5/", qp));
-    assertEquals(re, getQuery("/http~0.5/", qp));
+    re = new RegexpQuery(new QueryTerm("field", "http~0.5", 0));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("field:/http~0.5/", qp));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("/http~0.5/", qp));
 
-    re = new RegexpQuery(new Term("field", "boo"));
-    assertEquals(re, getQuery("field:/boo/", qp));
-    assertEquals(re, getQuery("/boo/", qp));
+    re = new RegexpQuery(new QueryTerm("field", "boo", 0));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("field:/boo/", qp));
+    assertEqualsIgnoreQueryTermOffsets(re, getQuery("/boo/", qp));
 
-    assertEquals(new TermQuery(new Term("field", "/boo/")), getQuery("\"/boo/\"", qp));
-    assertEquals(new TermQuery(new Term("field", "/boo/")), getQuery("\\/boo\\/", qp));
+    assertEquals(new TermQuery(new QueryTerm("field", "/boo/", 0)), getQuery("\"/boo/\"", qp));
+    assertEquals(new TermQuery(new QueryTerm("field", "/boo/", 0)), getQuery("\\/boo\\/", qp));
 
     BooleanQuery.Builder two = new BooleanQuery.Builder();
-    two.add(new RegexpQuery(new Term("field", "foo")), Occur.SHOULD);
-    two.add(new RegexpQuery(new Term("field", "bar")), Occur.SHOULD);
-    assertEquals(two.build(), getQuery("field:/foo/ field:/bar/", qp));
-    assertEquals(two.build(), getQuery("/foo/ /bar/", qp));
+    two.add(new RegexpQuery(new QueryTerm("field", "foo", 0)), Occur.SHOULD);
+    two.add(new RegexpQuery(new QueryTerm("field", "bar", 0)), Occur.SHOULD);
+    assertEqualsIgnoreQueryTermOffsets(two.build(), getQuery("field:/foo/ field:/bar/", qp));
+    assertEqualsIgnoreQueryTermOffsets(two.build(), getQuery("/foo/ /bar/", qp));
 
     qp.setMultiTermRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_REWRITE);
     q =
         new RegexpQuery(
-            new Term("field", "[a-z][123]"),
+            new QueryTerm("field", "[a-z][123]", 0),
             RegExp.ALL,
             0,
             name -> null,
@@ -1321,9 +1328,15 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     qp.setEnablePositionIncrements(true);
 
     PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
-    phraseQuery.add(new Term("field", "1"));
-    phraseQuery.add(new Term("field", "2"), 2);
-    assertEquals(phraseQuery.build(), getQuery("\"1 stop 2\"", qp));
+    phraseQuery.add(new QueryTerm("field", "1", 0));
+    if (qp instanceof StandardQueryParser) {
+      phraseQuery.add(new QueryTerm("field", "2", 0), 2);
+    } else {
+      phraseQuery.add(new QueryTerm("field", "2", 7), 2);
+    }
+    Query query = getQuery("\"1 stop 2\"", qp);
+    PhraseQuery phraseQ = phraseQuery.build();
+    assertEquals(phraseQ, query);
   }
 
   public void testMatchAllQueryParsing() throws Exception {
@@ -1342,6 +1355,7 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
 
   public void testNestedAndClausesFoo() throws Exception {
     String query = "(field1:[1 TO *] AND field1:[* TO 2]) AND field2:(z)";
+    //              012345678901234567890123456789012345678901234567890
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(
@@ -1349,7 +1363,9 @@ public abstract class QueryParserTestBase extends LuceneTestCase {
     bq.add(
         TermRangeQuery.newStringRange("field1", null, "2", true, true), BooleanClause.Occur.MUST);
     q.add(bq.build(), BooleanClause.Occur.MUST);
-    q.add(new TermQuery(new Term("field2", "z")), BooleanClause.Occur.MUST);
-    assertEquals(q.build(), getQuery(query, new MockAnalyzer(random())));
+    q.add(new TermQuery(new QueryTerm("field2", "z", 50)), BooleanClause.Occur.MUST);
+    Query actual = getQuery(query, new MockAnalyzer(random()));
+    BooleanQuery expected = q.build();
+    assertEqualsIgnoreQueryTermOffsets(expected, actual);
   }
 }

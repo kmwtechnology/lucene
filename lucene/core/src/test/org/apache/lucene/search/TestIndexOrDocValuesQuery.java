@@ -28,7 +28,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -69,7 +69,7 @@ public class TestIndexOrDocValuesQuery extends LuceneTestCase {
     // The term query is more selective, so the IndexOrDocValuesQuery should use doc values
     final Query q1 =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("f1", "foo")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("f1", "foo", 0)), Occur.MUST)
             .add(
                 new IndexOrDocValuesQuery(
                     LongPoint.newExactQuery("f2", 2),
@@ -84,7 +84,7 @@ public class TestIndexOrDocValuesQuery extends LuceneTestCase {
     // The term query is less selective, so the IndexOrDocValuesQuery should use points
     final Query q2 =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("f1", "bar")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("f1", "bar", 0)), Occur.MUST)
             .add(
                 new IndexOrDocValuesQuery(
                     LongPoint.newExactQuery("f2", 42),
@@ -135,7 +135,7 @@ public class TestIndexOrDocValuesQuery extends LuceneTestCase {
     // The term query is less selective, so the IndexOrDocValuesQuery should use points
     final Query q1 =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("f1", "bar")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("f1", "bar", 0)), Occur.MUST)
             .add(
                 new IndexOrDocValuesQuery(
                     LongPoint.newExactQuery("f2", 2),
@@ -150,7 +150,7 @@ public class TestIndexOrDocValuesQuery extends LuceneTestCase {
     // The term query is less selective, so the IndexOrDocValuesQuery should use points
     final Query q2 =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("f1", "bar")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("f1", "bar", 0)), Occur.MUST)
             .add(
                 new IndexOrDocValuesQuery(
                     LongPoint.newExactQuery("f2", 42),
@@ -165,7 +165,7 @@ public class TestIndexOrDocValuesQuery extends LuceneTestCase {
     // The term query is more selective, so the IndexOrDocValuesQuery should use doc values
     final Query q3 =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("f1", "foo")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("f1", "foo", 0)), Occur.MUST)
             .add(
                 new IndexOrDocValuesQuery(
                     LongPoint.newExactQuery("f2", 42),

@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.flexible.standard.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.standard.nodes.PrefixWildcardQueryNode;
@@ -45,6 +45,8 @@ public class PrefixWildcardQueryNodeBuilder implements StandardQueryBuilder {
     String text =
         wildcardNode.getText().subSequence(0, wildcardNode.getText().length() - 1).toString();
 
-    return new PrefixQuery(new Term(wildcardNode.getFieldAsString(), text), method);
+    // creating a term with a zero offset is reasonable here because this is for the standard
+    // query parser which doesn't (yet) care about query term offsets
+    return new PrefixQuery(new QueryTerm(wildcardNode.getFieldAsString(), text, 0), method);
   }
 }

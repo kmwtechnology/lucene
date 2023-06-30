@@ -24,6 +24,7 @@ import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -58,11 +59,11 @@ public class TestDocValuesTermsQuery extends LuceneTestCase {
   public void testDuelTermsQuery() throws IOException {
     final int iters = atLeast(2);
     for (int iter = 0; iter < iters; ++iter) {
-      final List<Term> allTerms = new ArrayList<>();
+      final List<QueryTerm> allTerms = new ArrayList<>();
       final int numTerms = TestUtil.nextInt(random(), 1, 1 << TestUtil.nextInt(random(), 1, 10));
       for (int i = 0; i < numTerms; ++i) {
         final String value = TestUtil.randomAnalysisString(random(), 10, true);
-        allTerms.add(new Term("f", value));
+        allTerms.add(new QueryTerm("f", value, 0));
       }
       Directory dir = newDirectory();
       RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
@@ -92,12 +93,12 @@ public class TestDocValuesTermsQuery extends LuceneTestCase {
         final float boost = random().nextFloat() * 10;
         final int numQueryTerms =
             TestUtil.nextInt(random(), 1, 1 << TestUtil.nextInt(random(), 1, 8));
-        List<Term> queryTerms = new ArrayList<>();
+        List<QueryTerm> queryTerms = new ArrayList<>();
         for (int j = 0; j < numQueryTerms; ++j) {
           queryTerms.add(allTerms.get(random().nextInt(allTerms.size())));
         }
         final BooleanQuery.Builder bq = new BooleanQuery.Builder();
-        for (Term term : queryTerms) {
+        for (QueryTerm term : queryTerms) {
           bq.add(new TermQuery(term), Occur.SHOULD);
         }
         Query q1 = new BoostQuery(new ConstantScoreQuery(bq.build()), boost);
@@ -118,11 +119,11 @@ public class TestDocValuesTermsQuery extends LuceneTestCase {
   public void testApproximation() throws IOException {
     final int iters = atLeast(2);
     for (int iter = 0; iter < iters; ++iter) {
-      final List<Term> allTerms = new ArrayList<>();
+      final List<QueryTerm> allTerms = new ArrayList<>();
       final int numTerms = TestUtil.nextInt(random(), 1, 1 << TestUtil.nextInt(random(), 1, 10));
       for (int i = 0; i < numTerms; ++i) {
         final String value = TestUtil.randomAnalysisString(random(), 10, true);
-        allTerms.add(new Term("f", value));
+        allTerms.add(new QueryTerm("f", value, 0));
       }
       Directory dir = newDirectory();
       RandomIndexWriter iw = new RandomIndexWriter(random(), dir);
@@ -152,12 +153,12 @@ public class TestDocValuesTermsQuery extends LuceneTestCase {
         final float boost = random().nextFloat() * 10;
         final int numQueryTerms =
             TestUtil.nextInt(random(), 1, 1 << TestUtil.nextInt(random(), 1, 8));
-        List<Term> queryTerms = new ArrayList<>();
+        List<QueryTerm> queryTerms = new ArrayList<>();
         for (int j = 0; j < numQueryTerms; ++j) {
           queryTerms.add(allTerms.get(random().nextInt(allTerms.size())));
         }
         final BooleanQuery.Builder bq = new BooleanQuery.Builder();
-        for (Term term : queryTerms) {
+        for (QueryTerm term : queryTerms) {
           bq.add(new TermQuery(term), Occur.SHOULD);
         }
         Query q1 = new BoostQuery(new ConstantScoreQuery(bq.build()), boost);

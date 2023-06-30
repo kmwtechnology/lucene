@@ -17,7 +17,7 @@
 package org.apache.lucene.search;
 
 import java.io.IOException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.tests.search.CheckHits;
 import org.apache.lucene.tests.search.QueryUtils;
 import org.apache.lucene.util.automaton.Operations;
@@ -31,7 +31,7 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
   protected void assertSame(String regexp) throws IOException {
     RegexpQuery fieldCache =
         new RegexpQuery(
-            new Term(fieldName, regexp),
+            new QueryTerm(fieldName, regexp, 0),
             RegExp.NONE,
             0,
             name -> null,
@@ -40,7 +40,7 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
 
     RegexpQuery filter =
         new RegexpQuery(
-            new Term(fieldName, regexp),
+            new QueryTerm(fieldName, regexp, 0),
             RegExp.NONE,
             0,
             name -> null,
@@ -55,9 +55,9 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
 
   public void testEquals() throws Exception {
     {
-      RegexpQuery a1 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
-      RegexpQuery a2 = new RegexpQuery(new Term(fieldName, "[aA]"), RegExp.NONE);
-      RegexpQuery b = new RegexpQuery(new Term(fieldName, "[bB]"), RegExp.NONE);
+      RegexpQuery a1 = new RegexpQuery(new QueryTerm(fieldName, "[aA]", 0), RegExp.NONE);
+      RegexpQuery a2 = new RegexpQuery(new QueryTerm(fieldName, "[aA]", 0), RegExp.NONE);
+      RegexpQuery b = new RegexpQuery(new QueryTerm(fieldName, "[bB]", 0), RegExp.NONE);
       assertEquals(a1, a2);
       assertFalse(a1.equals(b));
       QueryUtils.check(a1);
@@ -66,7 +66,7 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
     {
       RegexpQuery a1 =
           new RegexpQuery(
-              new Term(fieldName, "[aA]"),
+              new QueryTerm(fieldName, "[aA]", 0),
               RegExp.NONE,
               0,
               name -> null,
@@ -74,7 +74,7 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
               new DocValuesRewriteMethod());
       RegexpQuery a2 =
           new RegexpQuery(
-              new Term(fieldName, "[aA]"),
+              new QueryTerm(fieldName, "[aA]", 0),
               RegExp.NONE,
               0,
               name -> null,
@@ -82,7 +82,7 @@ public class TestFieldCacheRewriteMethod extends TestRegexpRandom2 {
               new DocValuesRewriteMethod());
       RegexpQuery b =
           new RegexpQuery(
-              new Term(fieldName, "[bB]"),
+              new QueryTerm(fieldName, "[bB]", 0),
               RegExp.NONE,
               0,
               name -> null,

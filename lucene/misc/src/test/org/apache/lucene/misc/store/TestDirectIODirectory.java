@@ -76,7 +76,7 @@ public class TestDirectIODirectory extends BaseDirectoryTestCase {
 
       try (IndexReader ir = DirectoryReader.open(dir)) {
         IndexSearcher s = newSearcher(ir);
-        assertEquals(1, s.count(new PhraseQuery("field", "foo", "bar")));
+        assertEquals(1, s.count(new PhraseQuery("field", new int[] {0, 0}, "foo", "bar")));
       }
     }
   }

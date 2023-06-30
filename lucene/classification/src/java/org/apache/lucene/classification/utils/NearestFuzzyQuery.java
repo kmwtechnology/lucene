@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.classification.utils;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -198,7 +201,7 @@ public class NearestFuzzyQuery extends Query {
     return (float) (Math.log((docCount + 1) / (double) (docFreq + 1)) + 1.0);
   }
 
-  private Query newTermQuery(IndexReader reader, Term term) throws IOException {
+  private Query newTermQuery(IndexReader reader, QueryTerm term) throws IOException {
     // we build an artificial TermStates that will give an overall df and ttf
     // equal to 1
     TermStates termStates = new TermStates(reader.getContext());
@@ -241,14 +244,14 @@ public class NearestFuzzyQuery extends Query {
       if (variants.size() == 1) {
         // optimize where only one selected variant
         ScoreTerm st = variants.get(0);
-        Query tq = newTermQuery(reader, st.term);
+        Query tq = newTermQuery(reader, asQueryTerm(st.term));
         // set the boost to a mix of IDF and score
         bq.add(new BoostQuery(tq, st.score), BooleanClause.Occur.SHOULD);
       } else {
         BooleanQuery.Builder termVariants = new BooleanQuery.Builder();
         for (ScoreTerm st : variants) {
           // found a match
-          Query tq = newTermQuery(reader, st.term);
+          Query tq = newTermQuery(reader, asQueryTerm(st.term));
           // set the boost using the ScoreTerm's score
           termVariants.add(
               new BoostQuery(tq, st.score), BooleanClause.Occur.SHOULD); // add to query

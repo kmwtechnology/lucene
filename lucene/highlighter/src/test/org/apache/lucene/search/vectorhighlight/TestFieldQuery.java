@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -93,7 +93,7 @@ public class TestFieldQuery extends AbstractTestCase {
 
   public void testFlattenTermAndPhrase2gram() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(F, "AA")), Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(F, "AA", 0)), Occur.MUST);
     query.add(toPhraseQuery(analyze("BCD", F, analyzerB), F), Occur.MUST);
     query.add(toPhraseQuery(analyze("EFGH", F, analyzerB), F), Occur.SHOULD);
 
@@ -273,13 +273,13 @@ public class TestFieldQuery extends AbstractTestCase {
 
   public void testGetTermSet() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(F, "A")), Occur.MUST);
-    query.add(new TermQuery(new Term(F, "B")), Occur.MUST);
-    query.add(new TermQuery(new Term("x", "C")), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F, "A", 0)), Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(F, "B", 0)), Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("x", "C", 0)), Occur.SHOULD);
 
     BooleanQuery.Builder innerQuery = new BooleanQuery.Builder();
-    innerQuery.add(new TermQuery(new Term(F, "D")), Occur.MUST);
-    innerQuery.add(new TermQuery(new Term(F, "E")), Occur.MUST);
+    innerQuery.add(new TermQuery(new QueryTerm(F, "D", 0)), Occur.MUST);
+    innerQuery.add(new TermQuery(new QueryTerm(F, "E", 0)), Occur.MUST);
     query.add(innerQuery.build(), Occur.MUST_NOT);
 
     FieldQuery fq = new FieldQuery(query.build(), true, true);
@@ -888,17 +888,17 @@ public class TestFieldQuery extends AbstractTestCase {
 
   public void testHighlightQuery() throws Exception {
     makeIndexStrMV();
-    defgMultiTermQueryTest(new WildcardQuery(new Term(F, "d*g")));
+    defgMultiTermQueryTest(new WildcardQuery(new QueryTerm(F, "d*g", 0)));
   }
 
   public void testPrefixQuery() throws Exception {
     makeIndexStrMV();
-    defgMultiTermQueryTest(new PrefixQuery(new Term(F, "de")));
+    defgMultiTermQueryTest(new PrefixQuery(new QueryTerm(F, "de", 0)));
   }
 
   public void testRegexpQuery() throws Exception {
     makeIndexStrMV();
-    Term term = new Term(F, "d[a-z].g");
+    QueryTerm term = new QueryTerm(F, "d[a-z].g", 0);
     defgMultiTermQueryTest(new RegexpQuery(term));
   }
 

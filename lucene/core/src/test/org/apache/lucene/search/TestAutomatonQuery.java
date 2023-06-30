@@ -27,8 +27,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SingleTermsEnum;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
@@ -79,8 +79,8 @@ public class TestAutomatonQuery extends LuceneTestCase {
     super.tearDown();
   }
 
-  private Term newTerm(String value) {
-    return new Term(FN, value);
+  private QueryTerm newTerm(String value) {
+    return new QueryTerm(FN, value, 0);
   }
 
   private long automatonQueryNrHits(AutomatonQuery query) throws IOException {
@@ -215,7 +215,7 @@ public class TestAutomatonQuery extends LuceneTestCase {
     for (int i = 0; i < queries.length; i++) {
       queries[i] =
           new AutomatonQuery(
-              new Term("bogus", "bogus"),
+              new QueryTerm("bogus", "bogus", 0),
               AutomatonTestUtil.randomAutomaton(random()),
               Integer.MAX_VALUE);
     }
@@ -253,6 +253,7 @@ public class TestAutomatonQuery extends LuceneTestCase {
       terms.add(new BytesRef(TestUtil.randomUnicodeString(random())));
     }
     Collections.sort(terms);
-    new AutomatonQuery(new Term("foo", "bar"), Automata.makeStringUnion(terms), Integer.MAX_VALUE);
+    new AutomatonQuery(
+        new QueryTerm("foo", "bar", 0), Automata.makeStringUnion(terms), Integer.MAX_VALUE);
   }
 }

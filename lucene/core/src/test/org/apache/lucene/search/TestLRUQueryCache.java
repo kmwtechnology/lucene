@@ -57,6 +57,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -144,7 +145,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
                   if (rarely()) {
                     final String color =
                         RandomPicks.randomFrom(random(), new String[] {"blue", "red", "yellow"});
-                    w.deleteDocuments(new Term("color", color));
+                    w.deleteDocuments(new QueryTerm("color", color, 0));
                   }
                 }
               } catch (Throwable t) {
@@ -167,7 +168,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
                     final String value =
                         RandomPicks.randomFrom(
                             random(), new String[] {"blue", "red", "yellow", "green"});
-                    final Query q = new TermQuery(new Term("color", value));
+                    final Query q = new TermQuery(new QueryTerm("color", value, 0));
                     CollectorManager<DummyTotalHitCountCollector, Integer> collectorManager =
                         DummyTotalHitCountCollector.createManager();
                     // will use the cache
@@ -248,9 +249,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
     final LRUQueryCache queryCache =
         new LRUQueryCache(2, 100000, context -> true, Float.POSITIVE_INFINITY);
 
-    final Query blue = new TermQuery(new Term("color", "blue"));
-    final Query red = new TermQuery(new Term("color", "red"));
-    final Query green = new TermQuery(new Term("color", "green"));
+    final Query blue = new TermQuery(new QueryTerm("color", "blue", 0));
+    final Query red = new TermQuery(new QueryTerm("color", "red", 0));
+    final Query green = new TermQuery(new QueryTerm("color", "green", 0));
 
     assertEquals(Collections.emptyList(), queryCache.cachedQueries());
 
@@ -331,9 +332,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
     final DirectoryReader reader = w.getReader();
     final IndexSearcher searcher = newSearcher(reader);
 
-    final Query query1 = new TermQuery(new Term("color", "blue"));
+    final Query query1 = new TermQuery(new QueryTerm("color", "blue", 0));
     // different instance yet equal
-    final Query query2 = new TermQuery(new Term("color", "blue"));
+    final Query query2 = new TermQuery(new QueryTerm("color", "blue", 0));
 
     final LRUQueryCache queryCache =
         new LRUQueryCache(Integer.MAX_VALUE, Long.MAX_VALUE, context -> true, 1);
@@ -431,7 +432,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
         searcher.setQueryCachingPolicy(MAYBE_CACHE_POLICY);
         for (int i = 0; i < 3; ++i) {
           final Query query =
-              new TermQuery(new Term("color", RandomPicks.randomFrom(random(), colors)));
+              new TermQuery(new QueryTerm("color", RandomPicks.randomFrom(random(), colors), 0));
           searcher.search(new ConstantScoreQuery(query), 1);
         }
       }
@@ -638,10 +639,11 @@ public class TestLRUQueryCache extends LuceneTestCase {
       queries[i] =
           new BoostQuery(
               new TermQuery(
-                  new Term(
+                  new QueryTerm(
                       "color",
                       RandomPicks.randomFrom(
-                          random(), Arrays.asList("red", "blue", "green", "yellow")))),
+                          random(), Arrays.asList("red", "blue", "green", "yellow")),
+                      0)),
               random().nextFloat());
     }
 
@@ -686,8 +688,8 @@ public class TestLRUQueryCache extends LuceneTestCase {
     final DirectoryReader reader = w.getReader();
     final int segmentCount = reader.leaves().size();
     final IndexSearcher searcher = new IndexSearcher(reader);
-    final Query query = new TermQuery(new Term("color", "red"));
-    final Query query2 = new TermQuery(new Term("color", "blue"));
+    final Query query = new TermQuery(new QueryTerm("color", "red", 0));
+    final Query query2 = new TermQuery(new QueryTerm("color", "blue", 0));
 
     searcher.setQueryCache(queryCache);
     // first pass, lookups without caching that all miss
@@ -865,9 +867,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
           }
         };
 
-    final Query query = new TermQuery(new Term("color", "red"));
-    final Query query2 = new TermQuery(new Term("color", "blue"));
-    final Query query3 = new TermQuery(new Term("color", "green"));
+    final Query query = new TermQuery(new QueryTerm("color", "red", 0));
+    final Query query2 = new TermQuery(new QueryTerm("color", "blue", 0));
+    final Query query3 = new TermQuery(new QueryTerm("color", "green", 0));
 
     for (IndexSearcher searcher : Arrays.asList(searcher1, searcher2)) {
       searcher.setQueryCache(queryCache);
@@ -926,7 +928,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
   }
 
   public void testUseRewrittenQueryAsCacheKey() throws IOException {
-    final Query expectedCacheKey = new TermQuery(new Term("foo", "bar"));
+    final Query expectedCacheKey = new TermQuery(new QueryTerm("foo", "bar", 0));
     final BooleanQuery.Builder query = new BooleanQuery.Builder();
     query.add(new BoostQuery(expectedCacheKey, 42f), Occur.MUST);
 
@@ -984,9 +986,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
     searcher.setQueryCachingPolicy(ALWAYS_CACHE);
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    TermQuery must = new TermQuery(new Term("foo", "bar"));
-    TermQuery filter = new TermQuery(new Term("foo", "quux"));
-    TermQuery mustNot = new TermQuery(new Term("foo", "foo"));
+    TermQuery must = new TermQuery(new QueryTerm("foo", "bar", 0));
+    TermQuery filter = new TermQuery(new QueryTerm("foo", "quux", 0));
+    TermQuery mustNot = new TermQuery(new QueryTerm("foo", "foo", 0));
     bq.add(must, Occur.MUST);
     bq.add(filter, Occur.FILTER);
     bq.add(mustNot, Occur.MUST_NOT);
@@ -1013,9 +1015,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
     dir.close();
   }
 
-  private static Term randomTerm() {
+  private static QueryTerm randomTerm() {
     final String term = RandomPicks.randomFrom(random(), Arrays.asList("foo", "bar", "baz"));
-    return new Term("foo", term);
+    return new QueryTerm("foo", term, 0);
   }
 
   private static Query buildRandomQuery(int level) {
@@ -1042,7 +1044,9 @@ public class TestLRUQueryCache extends LuceneTestCase {
       case 2:
         Term t1 = randomTerm();
         Term t2 = randomTerm();
-        PhraseQuery pq = new PhraseQuery(random().nextInt(2), t1.field(), t1.bytes(), t2.bytes());
+        PhraseQuery pq =
+            new PhraseQuery(
+                random().nextInt(2), t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
         return pq;
       case 3:
         return new MatchAllDocsQuery();
@@ -1258,8 +1262,8 @@ public class TestLRUQueryCache extends LuceneTestCase {
             new LRUQueryCache(
                 100, 10240, context -> random().nextBoolean(), Float.POSITIVE_INFINITY));
         indexSearcher.setQueryCachingPolicy(policy);
-        final Query foo = new TermQuery(new Term("f", "foo"));
-        final Query bar = new TermQuery(new Term("f", "bar"));
+        final Query foo = new TermQuery(new QueryTerm("f", "foo", 0));
+        final Query bar = new TermQuery(new QueryTerm("f", "bar", 0));
         final BooleanQuery.Builder query = new BooleanQuery.Builder();
         if (random().nextBoolean()) {
           query.add(foo, Occur.FILTER);
@@ -1549,7 +1553,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
     BooleanQuery bq =
         new BooleanQuery.Builder()
             .add(new NoCacheQuery(), Occur.MUST)
-            .add(new TermQuery(new Term("field", "term")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("field", "term", 0)), Occur.MUST)
             .build();
     assertEquals(0, searcher.count(bq));
     assertEquals(0, cache.getCacheCount());
@@ -1740,7 +1744,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
     assertEquals(2, searcher.count(query));
     assertEquals(2, query.scorerCreatedCount.get()); // both segments cached
 
-    w.updateNumericDocValue(new Term("text", "text"), "field", 2l);
+    w.updateNumericDocValue(new QueryTerm("text", "text", 0), "field", 2l);
     reader.close();
     reader = DirectoryReader.open(w);
     searcher =
@@ -1784,7 +1788,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
     IndexSearcher searcher = sm.acquire();
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("id", "1")), BooleanClause.Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("id", "1", 0)), BooleanClause.Occur.FILTER)
             .build();
     searcher.search(query, 10);
     assertEquals(1, queryCache.getCacheSize());
@@ -1795,12 +1799,12 @@ public class TestLRUQueryCache extends LuceneTestCase {
       Document tombstone = new Document();
       tombstone.add(new NumericDocValuesField("soft_delete", 1));
       w.softUpdateDocument(
-          new Term("id", "1"), tombstone, new NumericDocValuesField("soft_delete", 1));
+          new QueryTerm("id", "1", 0), tombstone, new NumericDocValuesField("soft_delete", 1));
       w.softUpdateDocument(
-          new Term("id", "2"), tombstone, new NumericDocValuesField("soft_delete", 1));
+          new QueryTerm("id", "2", 0), tombstone, new NumericDocValuesField("soft_delete", 1));
     } else {
-      w.deleteDocuments(new Term("id", "1"));
-      w.deleteDocuments(new Term("id", "2"));
+      w.deleteDocuments(new QueryTerm("id", "1", 0));
+      w.deleteDocuments(new QueryTerm("id", "2", 0));
     }
     sm.maybeRefreshBlocking();
     // All docs in the first segment are deleted - we should drop it with the default merge policy.
@@ -1854,9 +1858,15 @@ public class TestLRUQueryCache extends LuceneTestCase {
     Query query =
         new ConstantScoreQuery(
             new BooleanQuery.Builder()
-                .add(new BoostQuery(new TermQuery(new Term("field", "foo")), 3), Occur.SHOULD)
-                .add(new BoostQuery(new TermQuery(new Term("field", "bar")), 3), Occur.SHOULD)
-                .add(new BoostQuery(new TermQuery(new Term("field", "baz")), 3), Occur.SHOULD)
+                .add(
+                    new BoostQuery(new TermQuery(new QueryTerm("field", "foo", 0)), 3),
+                    Occur.SHOULD)
+                .add(
+                    new BoostQuery(new TermQuery(new QueryTerm("field", "bar", 0)), 3),
+                    Occur.SHOULD)
+                .add(
+                    new BoostQuery(new TermQuery(new QueryTerm("field", "baz", 0)), 3),
+                    Occur.SHOULD)
                 .build());
 
     searcher.search(query, 1);
@@ -1900,7 +1910,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
 
     // lead cost is 1, cost of subQuery1 is 1, cost of subQuery2 is 2
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    TermQuery subQuery1 = new TermQuery(new Term("name", "tom"));
+    TermQuery subQuery1 = new TermQuery(new QueryTerm("name", "tom", 0));
     IndexOrDocValuesQuery subQuery2 =
         new IndexOrDocValuesQuery(
             LongPoint.newRangeQuery("age", 10, 30),
@@ -1940,7 +1950,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
     final IndexSearcher searcher = newSearcher(reader);
     searcher.setQueryCachingPolicy(ALWAYS_CACHE);
 
-    Query q = new TermQuery(new Term("foo", "bar"));
+    Query q = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.count(q); // add to cache
 
     Weight weight = searcher.createWeight(searcher.rewrite(q), ScoreMode.COMPLETE_NO_SCORES, 1);
@@ -1984,13 +1994,13 @@ public class TestLRUQueryCache extends LuceneTestCase {
 
     // lead cost is 2, cost of subQuery1 is 3, cost of subQuery2 is 2
     BooleanQuery.Builder inner = new BooleanQuery.Builder();
-    TermQuery innerSubQuery1 = new TermQuery(new Term("hobby", "book"));
-    TermQuery innerSubQuery2 = new TermQuery(new Term("hobby", "movie"));
+    TermQuery innerSubQuery1 = new TermQuery(new QueryTerm("hobby", "book", 0));
+    TermQuery innerSubQuery2 = new TermQuery(new QueryTerm("hobby", "movie", 0));
     BooleanQuery subQuery1 =
         inner.add(innerSubQuery1, Occur.SHOULD).add(innerSubQuery2, Occur.SHOULD).build();
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    TermQuery subQuery2 = new TermQuery(new Term("name", "alice"));
+    TermQuery subQuery2 = new TermQuery(new QueryTerm("name", "alice", 0));
     BooleanQuery query =
         bq.add(new ConstantScoreQuery(subQuery1), Occur.FILTER)
             .add(subQuery2, Occur.FILTER)
@@ -2016,7 +2026,8 @@ public class TestLRUQueryCache extends LuceneTestCase {
   }
 
   public void testCacheHasFastCount() throws IOException {
-    Query query = new PhraseQuery("words", new BytesRef("alice"), new BytesRef("ran"));
+    Query query =
+        new PhraseQuery("words", new int[] {0, 0}, new BytesRef("alice"), new BytesRef("ran"));
 
     Directory dir = newDirectory();
     RandomIndexWriter w =
@@ -2049,7 +2060,7 @@ public class TestLRUQueryCache extends LuceneTestCase {
       assertEquals(2, weight.count(context));
     }
 
-    w.deleteDocuments(new TermQuery(new Term("f", new BytesRef("b"))));
+    w.deleteDocuments(new TermQuery(new QueryTerm("f", new BytesRef("b"), 0)));
     try (IndexReader reader = w.getReader()) {
       IndexSearcher searcher = newSearcher(reader);
       searcher.setQueryCachingPolicy(ALWAYS_CACHE);

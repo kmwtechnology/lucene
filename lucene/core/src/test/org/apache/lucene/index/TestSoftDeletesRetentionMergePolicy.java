@@ -17,6 +17,8 @@
 
 package org.apache.lucene.index;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import com.carrotsearch.randomizedtesting.generators.RandomPicks;
 import java.io.IOException;
 import java.time.Duration;
@@ -338,7 +340,7 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
     DirectoryReader reader = DirectoryReader.open(writer);
     IndexSearcher searcher = new IndexSearcher(reader);
     for (String id : ids) {
-      TopDocs topDocs = searcher.search(new TermQuery(new Term("id", id)), 10);
+      TopDocs topDocs = searcher.search(new TermQuery(new QueryTerm("id", id, 0)), 10);
       if (updateSeveralDocs) {
         assertEquals(2, topDocs.totalHits.value);
         assertEquals(Math.abs(topDocs.scoreDocs[0].doc - topDocs.scoreDocs[1].doc), 1);
@@ -390,9 +392,11 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
     searcher = new IndexSearcher(reader);
     for (String id : ids) {
       if (updateSeveralDocs) {
-        assertEquals(2, searcher.search(new TermQuery(new Term("id", id)), 10).totalHits.value);
+        assertEquals(
+            2, searcher.search(new TermQuery(new QueryTerm("id", id, 0)), 10).totalHits.value);
       } else {
-        assertEquals(1, searcher.search(new TermQuery(new Term("id", id)), 10).totalHits.value);
+        assertEquals(
+            1, searcher.search(new TermQuery(new QueryTerm("id", id, 0)), 10).totalHits.value);
       }
     }
     IOUtils.close(reader, writer, dir);
@@ -650,7 +654,7 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
       try (DirectoryReader reader = DirectoryReader.open(writer)) {
         TopDocs topDocs =
             new IndexSearcher(new IncludeSoftDeletesWrapper(reader))
-                .search(new TermQuery(new Term("id", "1")), 1);
+                .search(new TermQuery(new QueryTerm("id", "1", 0)), 1);
         assertEquals(1, topDocs.totalHits.value);
         if (writer.tryDeleteDocument(reader, topDocs.scoreDocs[0].doc) > 0) {
           break;
@@ -753,7 +757,7 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
             .setMergePolicy(
                 new SoftDeletesRetentionMergePolicy(
                     "soft_deletes",
-                    () -> new PrefixQuery(new Term("id", "foo")),
+                    () -> new PrefixQuery(new QueryTerm("id", "foo", 0)),
                     newMergePolicy()));
     IndexWriter writer = new IndexWriter(dir, config);
 
@@ -783,7 +787,8 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
     do { // retry if we just committing a merge
       try (DirectoryReader reader = DirectoryReader.open(writer)) {
         TopDocs topDocs =
-            new IndexSearcher(new IncludeSoftDeletesWrapper(reader)).search(new TermQuery(doc), 10);
+            new IndexSearcher(new IncludeSoftDeletesWrapper(reader))
+                .search(new TermQuery(asQueryTerm(doc)), 10);
         assertEquals(1, topDocs.totalHits.value);
         int theDoc = topDocs.scoreDocs[0].doc;
         seqId = writer.tryUpdateDocValue(reader, theDoc, fields);
@@ -796,7 +801,8 @@ public class TestSoftDeletesRetentionMergePolicy extends LuceneTestCase {
     do { // retry if we just committing a merge
       try (DirectoryReader reader = DirectoryReader.open(writer)) {
         TopDocs topDocs =
-            new IndexSearcher(new IncludeSoftDeletesWrapper(reader)).search(new TermQuery(doc), 10);
+            new IndexSearcher(new IncludeSoftDeletesWrapper(reader))
+                .search(new TermQuery(asQueryTerm(doc)), 10);
         assertEquals(1, topDocs.totalHits.value);
         int theDoc = topDocs.scoreDocs[0].doc;
         seqId = writer.tryDeleteDocument(reader, theDoc);

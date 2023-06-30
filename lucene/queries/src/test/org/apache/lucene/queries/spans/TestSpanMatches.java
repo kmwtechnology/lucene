@@ -18,7 +18,7 @@
 package org.apache.lucene.queries.spans;
 
 import java.io.IOException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.tests.search.MatchesTestBase;
 
@@ -39,15 +39,15 @@ public class TestSpanMatches extends MatchesTestBase {
   public void testSpanQuery() throws IOException {
     SpanQuery subq =
         SpanNearQuery.newOrderedNearQuery(FIELD_WITH_OFFSETS)
-            .addClause(new SpanTermQuery(new Term(FIELD_WITH_OFFSETS, "with")))
-            .addClause(new SpanTermQuery(new Term(FIELD_WITH_OFFSETS, "many")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "with", 0)))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "many", 0)))
             .build();
     Query q =
         SpanNearQuery.newOrderedNearQuery(FIELD_WITH_OFFSETS)
-            .addClause(new SpanTermQuery(new Term(FIELD_WITH_OFFSETS, "sentence")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "sentence", 0)))
             .addClause(
                 new SpanOrQuery(
-                    subq, new SpanTermQuery(new Term(FIELD_WITH_OFFSETS, "iterations"))))
+                    subq, new SpanTermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "iterations", 0))))
             .build();
     checkMatches(
         q, FIELD_WITH_OFFSETS, new int[][] {{0}, {1}, {2}, {3}, {4, 2, 4, 9, 27, 6, 7, 35, 54}});

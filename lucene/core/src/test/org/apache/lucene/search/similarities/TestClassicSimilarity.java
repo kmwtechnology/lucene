@@ -27,7 +27,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
@@ -68,7 +68,7 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   }
 
   public void testHit() throws IOException {
-    Query query = new TermQuery(new Term("test", "hit"));
+    Query query = new TermQuery(new QueryTerm("test", "hit", 0));
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
     assertEquals(1, topDocs.scoreDocs.length);
@@ -76,13 +76,13 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   }
 
   public void testMiss() throws IOException {
-    Query query = new TermQuery(new Term("test", "miss"));
+    Query query = new TermQuery(new QueryTerm("test", "miss", 0));
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(0, topDocs.totalHits.value);
   }
 
   public void testEmpty() throws IOException {
-    Query query = new TermQuery(new Term("empty", "miss"));
+    Query query = new TermQuery(new QueryTerm("empty", "miss", 0));
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(0, topDocs.totalHits.value);
   }
@@ -90,7 +90,7 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   public void testBQHit() throws IOException {
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("test", "hit")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("test", "hit", 0)), Occur.SHOULD)
             .build();
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
@@ -101,8 +101,8 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   public void testBQHitOrMiss() throws IOException {
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("test", "hit")), Occur.SHOULD)
-            .add(new TermQuery(new Term("test", "miss")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("test", "hit", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("test", "miss", 0)), Occur.SHOULD)
             .build();
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
@@ -113,8 +113,8 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   public void testBQHitOrEmpty() throws IOException {
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("test", "hit")), Occur.SHOULD)
-            .add(new TermQuery(new Term("empty", "miss")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("test", "hit", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("empty", "miss", 0)), Occur.SHOULD)
             .build();
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
@@ -123,7 +123,8 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
   }
 
   public void testDMQHit() throws IOException {
-    Query query = new DisjunctionMaxQuery(Arrays.asList(new TermQuery(new Term("test", "hit"))), 0);
+    Query query =
+        new DisjunctionMaxQuery(Arrays.asList(new TermQuery(new QueryTerm("test", "hit", 0))), 0);
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
     assertEquals(1, topDocs.scoreDocs.length);
@@ -134,7 +135,8 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
     Query query =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term("test", "hit")), new TermQuery(new Term("test", "miss"))),
+                new TermQuery(new QueryTerm("test", "hit", 0)),
+                new TermQuery(new QueryTerm("test", "miss", 0))),
             0);
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);
@@ -146,7 +148,8 @@ public class TestClassicSimilarity extends BaseSimilarityTestCase {
     Query query =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term("test", "hit")), new TermQuery(new Term("empty", "miss"))),
+                new TermQuery(new QueryTerm("test", "hit", 0)),
+                new TermQuery(new QueryTerm("empty", "miss", 0))),
             0);
     TopDocs topDocs = indexSearcher.search(query, 1);
     assertEquals(1, topDocs.totalHits.value);

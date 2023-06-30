@@ -58,10 +58,10 @@ import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.DocIdSetIterator;
@@ -99,11 +99,11 @@ public class TestMemoryIndex extends LuceneTestCase {
     mi.addField("f1", "some text", analyzer);
 
     assertThat(mi.search(new MatchAllDocsQuery()), not(is(0.0f)));
-    assertThat(mi.search(new TermQuery(new Term("f1", "some"))), not(is(0.0f)));
+    assertThat(mi.search(new TermQuery(new QueryTerm("f1", "some", 0))), not(is(0.0f)));
 
     // check we can add a new field after searching
     mi.addField("f2", "some more text", analyzer);
-    assertThat(mi.search(new TermQuery(new Term("f2", "some"))), not(is(0.0f)));
+    assertThat(mi.search(new TermQuery(new QueryTerm("f2", "some", 0))), not(is(0.0f)));
 
     // freeze!
     mi.freeze();
@@ -124,12 +124,12 @@ public class TestMemoryIndex extends LuceneTestCase {
             });
     assertThat(expected.getMessage(), containsString("frozen"));
 
-    assertThat(mi.search(new TermQuery(new Term("f1", "some"))), not(is(0.0f)));
+    assertThat(mi.search(new TermQuery(new QueryTerm("f1", "some", 0))), not(is(0.0f)));
 
     mi.reset();
     mi.addField("f1", "wibble", analyzer);
-    assertThat(mi.search(new TermQuery(new Term("f1", "some"))), is(0.0f));
-    assertThat(mi.search(new TermQuery(new Term("f1", "wibble"))), not(is(0.0f)));
+    assertThat(mi.search(new TermQuery(new QueryTerm("f1", "some", 0))), is(0.0f));
+    assertThat(mi.search(new TermQuery(new QueryTerm("f1", "wibble", 0))), not(is(0.0f)));
 
     // check we can set the Similarity again
     mi.setSimilarity(new ClassicSimilarity());
@@ -249,13 +249,15 @@ public class TestMemoryIndex extends LuceneTestCase {
 
     MemoryIndex mi = MemoryIndex.fromDocument(doc, analyzer);
 
-    assertThat(mi.search(new TermQuery(new Term("field1", "text"))), not(0.0f));
-    assertThat(mi.search(new TermQuery(new Term("field2", "text"))), is(0.0f));
-    assertThat(mi.search(new TermQuery(new Term("field2", "untokenized text"))), not(0.0f));
+    assertThat(mi.search(new TermQuery(new QueryTerm("field1", "text", 0))), not(0.0f));
+    assertThat(mi.search(new TermQuery(new QueryTerm("field2", "text", 0))), is(0.0f));
+    assertThat(mi.search(new TermQuery(new QueryTerm("field2", "untokenized text", 0))), not(0.0f));
 
-    assertThat(mi.search(new PhraseQuery("field1", "some", "more", "text")), not(0.0f));
-    assertThat(mi.search(new PhraseQuery("field1", "some", "text")), not(0.0f));
-    assertThat(mi.search(new PhraseQuery("field1", "text", "some")), is(0.0f));
+    assertThat(
+        mi.search(new PhraseQuery("field1", new int[] {0, 0, 0}, "some", "more", "text")),
+        not(0.0f));
+    assertThat(mi.search(new PhraseQuery("field1", new int[] {0, 0}, "some", "text")), not(0.0f));
+    assertThat(mi.search(new PhraseQuery("field1", new int[] {0, 0}, "text", "some")), is(0.0f));
   }
 
   public void testDocValues() throws Exception {

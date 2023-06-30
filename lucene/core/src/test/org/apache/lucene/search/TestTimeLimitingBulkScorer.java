@@ -22,9 +22,9 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.QueryTimeout;
 import org.apache.lucene.index.QueryTimeoutImpl;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -52,7 +52,7 @@ public class TestTimeLimitingBulkScorer extends LuceneTestCase {
     TopDocs top;
     ScoreDoc[] hits = null;
 
-    Query query = new TermQuery(new Term("default", "ones"));
+    Query query = new TermQuery(new QueryTerm("default", "ones", 0));
     directoryReader = DirectoryReader.open(directory);
     searcher = new IndexSearcher(directoryReader);
     searcher.setTimeout(countingQueryTimeout(10));

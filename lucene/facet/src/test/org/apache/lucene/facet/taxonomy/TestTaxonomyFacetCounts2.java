@@ -41,7 +41,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
@@ -54,7 +54,7 @@ import org.junit.Test;
 
 public class TestTaxonomyFacetCounts2 extends FacetTestCase {
 
-  private static final Term A = new Term("f", "a");
+  private static final QueryTerm A = new QueryTerm("f", "a", 0);
   private static final String CP_A = "A", CP_B = "B";
   private static final String CP_C = "C", CP_D = "D"; // indexed w/ NO_PARENTS
   private static final int NUM_CHILDREN_CP_A = 5, NUM_CHILDREN_CP_B = 3;

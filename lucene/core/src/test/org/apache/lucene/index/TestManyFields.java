@@ -107,7 +107,7 @@ public class TestManyFields extends LuceneTestCase {
 
     IndexReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = newSearcher(reader);
-    long totalHits = searcher.count(new TermQuery(new Term("field", "aaa")));
+    long totalHits = searcher.count(new TermQuery(new QueryTerm("field", "aaa", 0)));
     assertEquals(n * 100, totalHits);
     reader.close();
 

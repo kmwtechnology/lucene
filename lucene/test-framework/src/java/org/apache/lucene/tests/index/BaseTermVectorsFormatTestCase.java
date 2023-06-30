@@ -57,6 +57,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermVectors;
 import org.apache.lucene.index.Terms;
@@ -545,7 +546,10 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
   }
 
   protected int docID(IndexReader reader, String id) throws IOException {
-    return new IndexSearcher(reader).search(new TermQuery(new Term("id", id)), 1).scoreDocs[0].doc;
+    return new IndexSearcher(reader)
+        .search(new TermQuery(new QueryTerm("id", id, 0)), 1)
+        .scoreDocs[0]
+        .doc;
   }
 
   // only one doc with vectors

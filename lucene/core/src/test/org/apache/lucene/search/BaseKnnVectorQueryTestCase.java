@@ -36,6 +36,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.VectorSimilarityFunction;
@@ -70,21 +71,21 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
 
   public void testEquals() {
     AbstractKnnVectorQuery q1 = getKnnVectorQuery("f1", new float[] {0, 1}, 10);
-    Query filter1 = new TermQuery(new Term("id", "id1"));
+    Query filter1 = new TermQuery(new QueryTerm("id", "id1", 0));
     AbstractKnnVectorQuery q2 = getKnnVectorQuery("f1", new float[] {0, 1}, 10, filter1);
 
     assertNotEquals(q2, q1);
     assertNotEquals(q1, q2);
     assertEquals(q2, getKnnVectorQuery("f1", new float[] {0, 1}, 10, filter1));
 
-    Query filter2 = new TermQuery(new Term("id", "id2"));
+    Query filter2 = new TermQuery(new QueryTerm("id", "id2", 0));
     assertNotEquals(q2, getKnnVectorQuery("f1", new float[] {0, 1}, 10, filter2));
 
     assertEquals(q1, getKnnVectorQuery("f1", new float[] {0, 1}, 10));
 
     assertNotEquals(null, q1);
 
-    assertNotEquals(q1, new TermQuery(new Term("f1", "x")));
+    assertNotEquals(q1, new TermQuery(new QueryTerm("f1", "x", 0)));
 
     assertNotEquals(q1, getKnnVectorQuery("f2", new float[] {0, 1}, 10));
     assertNotEquals(q1, getKnnVectorQuery("f1", new float[] {1, 1}, 10));
@@ -94,7 +95,7 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
 
   public void testGetField() {
     AbstractKnnVectorQuery q1 = getKnnVectorQuery("f1", new float[] {0, 1}, 10);
-    Query filter1 = new TermQuery(new Term("id", "id1"));
+    Query filter1 = new TermQuery(new QueryTerm("id", "id1", 0));
     AbstractKnnVectorQuery q2 = getKnnVectorQuery("f2", new float[] {0, 1}, 10, filter1);
 
     assertEquals("f1", q1.getField());
@@ -103,7 +104,7 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
 
   public void testGetK() {
     AbstractKnnVectorQuery q1 = getKnnVectorQuery("f1", new float[] {0, 1}, 6);
-    Query filter1 = new TermQuery(new Term("id", "id1"));
+    Query filter1 = new TermQuery(new QueryTerm("id", "id1", 0));
     AbstractKnnVectorQuery q2 = getKnnVectorQuery("f2", new float[] {0, 1}, 7, filter1);
 
     assertEquals(6, q1.getK());
@@ -112,7 +113,7 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
 
   public void testGetFilter() {
     AbstractKnnVectorQuery q1 = getKnnVectorQuery("f1", new float[] {0, 1}, 6);
-    Query filter1 = new TermQuery(new Term("id", "id1"));
+    Query filter1 = new TermQuery(new QueryTerm("id", "id1", 0));
     AbstractKnnVectorQuery q2 = getKnnVectorQuery("f2", new float[] {0, 1}, 7, filter1);
 
     assertNull(q1.getFilter());
@@ -181,7 +182,7 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
             getIndexStore("field", new float[] {0, 1}, new float[] {1, 2}, new float[] {0, 0});
         IndexReader reader = DirectoryReader.open(indexStore)) {
       IndexSearcher searcher = newSearcher(reader);
-      Query filter = new TermQuery(new Term("id", "id2"));
+      Query filter = new TermQuery(new QueryTerm("id", "id2", 0));
       Query kvq = getKnnVectorQuery("field", new float[] {0, 0}, 10, filter);
       TopDocs topDocs = searcher.search(kvq, 3);
       assertEquals(1, topDocs.totalHits.value);
@@ -195,7 +196,7 @@ abstract class BaseKnnVectorQueryTestCase extends LuceneTestCase {
         IndexReader reader = DirectoryReader.open(indexStore)) {
       IndexSearcher searcher = newSearcher(reader);
 
-      Query filter = new TermQuery(new Term("other", "value"));
+      Query filter = new TermQuery(new QueryTerm("other", "value", 0));
       Query kvq = getKnnVectorQuery("field", new float[] {0, 0}, 10, filter);
       TopDocs topDocs = searcher.search(kvq, 3);
       assertEquals(0, topDocs.totalHits.value);

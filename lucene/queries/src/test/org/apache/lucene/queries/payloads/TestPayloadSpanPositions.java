@@ -26,6 +26,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanCollector;
 import org.apache.lucene.queries.spans.SpanNearQuery;
@@ -85,8 +86,8 @@ public class TestPayloadSpanPositions extends LuceneTestCase {
 
     IndexSearcher is = newSearcher(getOnlyLeafReader(readerFromWriter));
 
-    SpanTermQuery stq1 = new SpanTermQuery(new Term("content", "a"));
-    SpanTermQuery stq2 = new SpanTermQuery(new Term("content", "k"));
+    SpanTermQuery stq1 = new SpanTermQuery(new QueryTerm("content", "a", 0));
+    SpanTermQuery stq2 = new SpanTermQuery(new QueryTerm("content", "k", 0));
     SpanQuery[] sqs = {stq1, stq2};
     SpanNearQuery snq = new SpanNearQuery(sqs, 30, false);
 

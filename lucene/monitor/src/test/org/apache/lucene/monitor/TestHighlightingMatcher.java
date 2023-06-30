@@ -25,7 +25,7 @@ import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
@@ -132,7 +132,7 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     try (Monitor monitor = newMonitor()) {
 
-      monitor.register(new MonitorQuery("1", new RegexpQuery(new Term(FIELD, "he.*"))));
+      monitor.register(new MonitorQuery("1", new RegexpQuery(new QueryTerm(FIELD, "he.*", 0))));
 
       MatchingQueries<HighlightsMatch> matches =
           monitor.match(buildDoc("hello world"), HighlightsMatch.MATCHER);
@@ -146,9 +146,9 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "term1")), BooleanClause.Occur.MUST)
-            .add(new PrefixQuery(new Term(FIELD, "term2")), BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term(FIELD, "term3")), BooleanClause.Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm(FIELD, "term1", 0)), BooleanClause.Occur.MUST)
+            .add(new PrefixQuery(new QueryTerm(FIELD, "term2", 0)), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "term3", 0)), BooleanClause.Occur.MUST_NOT)
             .build();
 
     try (Monitor monitor = newMonitor()) {
@@ -166,7 +166,8 @@ public class TestHighlightingMatcher extends MonitorTestBase {
     final DisjunctionMaxQuery query =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term(FIELD, "term1")), new PrefixQuery(new Term(FIELD, "term2"))),
+                new TermQuery(new QueryTerm(FIELD, "term1", 0)),
+                new PrefixQuery(new QueryTerm(FIELD, "term2", 0))),
             1.0f);
 
     try (Monitor monitor = newMonitor()) {
@@ -183,8 +184,8 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "term1")), BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term(FIELD, "term1")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "term1", 0)), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "term1", 0)), BooleanClause.Occur.SHOULD)
             .build();
 
     try (Monitor monitor = new Monitor(ANALYZER)) {
@@ -199,7 +200,7 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
   public void testWildcardBooleanRewrites() throws Exception {
 
-    final Query wc = new PrefixQuery(new Term(FIELD, "term1"));
+    final Query wc = new PrefixQuery(new QueryTerm(FIELD, "term1", 0));
 
     final Query wrapper = new BooleanQuery.Builder().add(wc, BooleanClause.Occur.MUST).build();
 
@@ -208,7 +209,7 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new PrefixQuery(new Term(FIELD, "term2")), BooleanClause.Occur.MUST)
+            .add(new PrefixQuery(new QueryTerm(FIELD, "term2", 0)), BooleanClause.Occur.MUST)
             .add(wrapper2, BooleanClause.Occur.MUST_NOT)
             .build();
 
@@ -231,8 +232,10 @@ public class TestHighlightingMatcher extends MonitorTestBase {
   public void testWildcardProximityRewrites() throws Exception {
     final SpanNearQuery snq =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term(FIELD, "term*"))))
-            .addClause(new SpanTermQuery(new Term(FIELD, "foo")))
+            .addClause(
+                new SpanMultiTermQueryWrapper<>(
+                    new WildcardQuery(new QueryTerm(FIELD, "term*", 0))))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "foo", 0)))
             .build();
 
     try (Monitor monitor = newMonitor()) {
@@ -251,18 +254,18 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final Query bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.SHOULD)
             .add(
                 SpanNearQuery.newOrderedNearQuery(FIELD)
-                    .addClause(new SpanTermQuery(new Term(FIELD, "b")))
-                    .addClause(new SpanTermQuery(new Term(FIELD, "c")))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "b", 0)))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "c", 0)))
                     .setSlop(1)
                     .build(),
                 BooleanClause.Occur.SHOULD)
             .build();
     final Query parent =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.MUST)
             .add(bq, BooleanClause.Occur.MUST)
             .build();
 
@@ -282,18 +285,18 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final Query bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.SHOULD)
             .add(
                 SpanNearQuery.newUnorderedNearQuery(FIELD)
-                    .addClause(new SpanTermQuery(new Term(FIELD, "b")))
-                    .addClause(new SpanTermQuery(new Term(FIELD, "c")))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "b", 0)))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "c", 0)))
                     .setSlop(1)
                     .build(),
                 BooleanClause.Occur.SHOULD)
             .build();
     final Query parent =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.MUST)
             .add(bq, BooleanClause.Occur.MUST)
             .build();
 
@@ -387,18 +390,18 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final Query bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.SHOULD)
             .add(
                 SpanNearQuery.newOrderedNearQuery(FIELD)
-                    .addClause(new SpanTermQuery(new Term(FIELD, "b")))
-                    .addClause(new SpanTermQuery(new Term(FIELD, "c")))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "b", 0)))
+                    .addClause(new SpanTermQuery(new QueryTerm(FIELD, "c", 0)))
                     .setSlop(1)
                     .build(),
                 BooleanClause.Occur.SHOULD)
             .build();
     final Query parent =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.MUST)
             .add(bq, BooleanClause.Occur.MUST)
             .build();
 
@@ -422,41 +425,41 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final SpanQuery spanPhrase =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanTermQuery(new Term(FIELD, "time")))
-            .addClause(new SpanTermQuery(new Term(FIELD, "men")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "time", 0)))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "men", 0)))
             .setSlop(1)
             .build();
 
     final SpanQuery unorderedNear =
         SpanNearQuery.newUnorderedNearQuery(FIELD)
             .addClause(spanPhrase)
-            .addClause(new SpanTermQuery(new Term(FIELD, "all")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "all", 0)))
             .setSlop(5)
             .build();
 
     final SpanQuery orderedNear =
         SpanNearQuery.newOrderedNearQuery(FIELD)
-            .addClause(new SpanTermQuery(new Term(FIELD, "the")))
+            .addClause(new SpanTermQuery(new QueryTerm(FIELD, "the", 0)))
             .addClause(unorderedNear)
             .setSlop(10)
             .build();
 
     final Query innerConjunct =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "is")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "is", 0)), BooleanClause.Occur.MUST)
             .add(orderedNear, BooleanClause.Occur.MUST)
             .build();
 
     final Query disjunct =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "now")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "now", 0)), BooleanClause.Occur.SHOULD)
             .add(innerConjunct, BooleanClause.Occur.SHOULD)
             .build();
 
     final Query outerConjunct =
         new BooleanQuery.Builder()
             .add(disjunct, BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term(FIELD, "good")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "good", 0)), BooleanClause.Occur.MUST)
             .build();
 
     try (Monitor monitor = newMonitor()) {
@@ -475,16 +478,16 @@ public class TestHighlightingMatcher extends MonitorTestBase {
 
     final Query minq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "x")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FIELD, "y")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FIELD, "z")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "x", 0)), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "y", 0)), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(FIELD, "z", 0)), BooleanClause.Occur.SHOULD)
             .setMinimumNumberShouldMatch(2)
             .build();
 
     final Query bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "a")), BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term(FIELD, "b")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "a", 0)), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "b", 0)), BooleanClause.Occur.MUST)
             .add(minq, BooleanClause.Occur.SHOULD)
             .build();
 

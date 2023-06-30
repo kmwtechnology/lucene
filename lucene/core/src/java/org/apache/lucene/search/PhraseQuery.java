@@ -29,6 +29,7 @@ import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SlowImpactsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -74,7 +75,7 @@ public class PhraseQuery extends Query {
   public static class Builder {
 
     private int slop;
-    private final List<Term> terms;
+    private final List<QueryTerm> terms;
     private final List<Integer> positions;
 
     /** Sole constructor. */
@@ -98,7 +99,7 @@ public class PhraseQuery extends Query {
      * Adds a term to the end of the query phrase. The relative position of the term is the one
      * immediately after the last term added.
      */
-    public Builder add(Term term) {
+    public Builder add(QueryTerm term) {
       return add(term, positions.isEmpty() ? 0 : 1 + positions.get(positions.size() - 1));
     }
 
@@ -109,7 +110,7 @@ public class PhraseQuery extends Query {
      * If the position is equal, you most likely should be using {@link MultiPhraseQuery} instead
      * which only requires one term at each position to match; this class requires all of them.
      */
-    public Builder add(Term term, int position) {
+    public Builder add(QueryTerm term, int position) {
       Objects.requireNonNull(term, "Cannot add a null term to PhraseQuery");
       if (position < 0) {
         throw new IllegalArgumentException("Positions must be >= 0, got " + position);
@@ -135,7 +136,7 @@ public class PhraseQuery extends Query {
 
     /** Build a phrase query based on the terms that have been added. */
     public PhraseQuery build() {
-      Term[] terms = this.terms.toArray(new Term[this.terms.size()]);
+      QueryTerm[] terms = this.terms.toArray(new QueryTerm[0]);
       int[] positions = new int[this.positions.size()];
       for (int i = 0; i < positions.length; ++i) {
         positions[i] = this.positions.get(i);
@@ -146,10 +147,10 @@ public class PhraseQuery extends Query {
 
   private final int slop;
   private final String field;
-  private final Term[] terms;
+  private final QueryTerm[] terms;
   private final int[] positions;
 
-  private PhraseQuery(int slop, Term[] terms, int[] positions) {
+  private PhraseQuery(int slop, QueryTerm[] terms, int[] positions) {
     if (terms.length != positions.length) {
       throw new IllegalArgumentException("Must have as many terms as positions");
     }
@@ -192,20 +193,20 @@ public class PhraseQuery extends Query {
     return positions;
   }
 
-  private static Term[] toTerms(String field, String... termStrings) {
-    Term[] terms = new Term[termStrings.length];
+  private static QueryTerm[] toTerms(String field, int[] offsets, String... termStrings) {
+    QueryTerm[] terms = new QueryTerm[termStrings.length];
     for (int i = 0; i < terms.length; ++i) {
       Objects.requireNonNull(termStrings[i], "Cannot add a null term to PhraseQuery");
-      terms[i] = new Term(field, termStrings[i]);
+      terms[i] = new QueryTerm(field, termStrings[i], offsets[i]);
     }
     return terms;
   }
 
-  private static Term[] toTerms(String field, BytesRef... termBytes) {
-    Term[] terms = new Term[termBytes.length];
+  private static QueryTerm[] toTerms(String field, int[] offsets, BytesRef... termBytes) {
+    QueryTerm[] terms = new QueryTerm[termBytes.length];
     for (int i = 0; i < terms.length; ++i) {
       Objects.requireNonNull(termBytes[i], "Cannot add a null term to PhraseQuery");
-      terms[i] = new Term(field, termBytes[i]);
+      terms[i] = new QueryTerm(field, termBytes[i], offsets[i]);
     }
     return terms;
   }
@@ -217,16 +218,16 @@ public class PhraseQuery extends Query {
    *
    * @see #getSlop()
    */
-  public PhraseQuery(int slop, String field, String... terms) {
-    this(slop, toTerms(field, terms), incrementalPositions(terms.length));
+  public PhraseQuery(int slop, String field, int[] offsets, String... terms) {
+    this(slop, toTerms(field, offsets, terms), incrementalPositions(terms.length));
   }
 
   /**
    * Create a phrase query which will match documents that contain the given list of terms at
    * consecutive positions in {@code field}.
    */
-  public PhraseQuery(String field, String... terms) {
-    this(0, field, terms);
+  public PhraseQuery(String field, int[] offsets, String... terms) {
+    this(0, field, offsets, terms);
   }
 
   /**
@@ -236,16 +237,16 @@ public class PhraseQuery extends Query {
    *
    * @see #getSlop()
    */
-  public PhraseQuery(int slop, String field, BytesRef... terms) {
-    this(slop, toTerms(field, terms), incrementalPositions(terms.length));
+  public PhraseQuery(int slop, String field, int[] offsets, BytesRef... terms) {
+    this(slop, toTerms(field, offsets, terms), incrementalPositions(terms.length));
   }
 
   /**
    * Create a phrase query which will match documents that contain the given list of terms at
    * consecutive positions in {@code field}.
    */
-  public PhraseQuery(String field, BytesRef... terms) {
-    this(0, field, terms);
+  public PhraseQuery(String field, int[] offsets, BytesRef... terms) {
+    this(0, field, offsets, terms);
   }
 
   /**
@@ -274,7 +275,7 @@ public class PhraseQuery extends Query {
   }
 
   /** Returns the list of terms in this phrase. */
-  public Term[] getTerms() {
+  public QueryTerm[] getTerms() {
     return terms;
   }
 

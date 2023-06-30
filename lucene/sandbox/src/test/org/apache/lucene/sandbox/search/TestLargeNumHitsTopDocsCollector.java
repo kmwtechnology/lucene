@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.CollectorManager;
@@ -42,7 +42,7 @@ public class TestLargeNumHitsTopDocsCollector extends LuceneTestCase {
   private IndexReader reader;
   private final Query testQuery =
       new BooleanQuery.Builder()
-          .add(new TermQuery(new Term("field", "5")), BooleanClause.Occur.SHOULD)
+          .add(new TermQuery(new QueryTerm("field", "5", 0)), BooleanClause.Occur.SHOULD)
           .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
           .build();
 

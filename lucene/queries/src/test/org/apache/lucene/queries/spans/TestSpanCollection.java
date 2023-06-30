@@ -25,6 +25,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreMode;
@@ -109,10 +110,10 @@ public class TestSpanCollection extends LuceneTestCase {
 
     // near(w1, near(w2, or(w3, w4)))
 
-    SpanTermQuery q1 = new SpanTermQuery(new Term(FIELD, "w1"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term(FIELD, "w2"));
-    SpanTermQuery q3 = new SpanTermQuery(new Term(FIELD, "w3"));
-    SpanTermQuery q4 = new SpanTermQuery(new Term(FIELD, "w4"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm(FIELD, "w1", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm(FIELD, "w2", 0));
+    SpanTermQuery q3 = new SpanTermQuery(new QueryTerm(FIELD, "w3", 0));
+    SpanTermQuery q4 = new SpanTermQuery(new QueryTerm(FIELD, "w4", 0));
 
     SpanOrQuery q5 = new SpanOrQuery(q4, q3);
     SpanNearQuery q6 = new SpanNearQuery(new SpanQuery[] {q2, q5}, 1, true);
@@ -125,21 +126,33 @@ public class TestSpanCollection extends LuceneTestCase {
     assertEquals(0, spans.advance(0));
     spans.nextStartPosition();
     checkCollectedTerms(
-        spans, collector, new Term(FIELD, "w1"), new Term(FIELD, "w2"), new Term(FIELD, "w3"));
+        spans,
+        collector,
+        new QueryTerm(FIELD, "w1", 0),
+        new QueryTerm(FIELD, "w2", 0),
+        new QueryTerm(FIELD, "w3", 0));
 
     assertEquals(3, spans.advance(3));
     spans.nextStartPosition();
     checkCollectedTerms(
-        spans, collector, new Term(FIELD, "w1"), new Term(FIELD, "w2"), new Term(FIELD, "w4"));
+        spans,
+        collector,
+        new QueryTerm(FIELD, "w1", 0),
+        new QueryTerm(FIELD, "w2", 0),
+        new QueryTerm(FIELD, "w4", 0));
     spans.nextStartPosition();
     checkCollectedTerms(
-        spans, collector, new Term(FIELD, "w1"), new Term(FIELD, "w2"), new Term(FIELD, "w3"));
+        spans,
+        collector,
+        new QueryTerm(FIELD, "w1", 0),
+        new QueryTerm(FIELD, "w2", 0),
+        new QueryTerm(FIELD, "w3", 0));
   }
 
   @Test
   public void testOrQuery() throws IOException {
-    SpanTermQuery q2 = new SpanTermQuery(new Term(FIELD, "w2"));
-    SpanTermQuery q3 = new SpanTermQuery(new Term(FIELD, "w3"));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm(FIELD, "w2", 0));
+    SpanTermQuery q3 = new SpanTermQuery(new QueryTerm(FIELD, "w3", 0));
     SpanOrQuery orQuery = new SpanOrQuery(q2, q3);
 
     TermCollector collector = new TermCollector();
@@ -150,27 +163,27 @@ public class TestSpanCollection extends LuceneTestCase {
 
     assertEquals(1, spans.advance(1));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w3"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w3", 0));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w2"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w2", 0));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w3"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w3", 0));
 
     assertEquals(3, spans.advance(3));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w2"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w2", 0));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w2"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w2", 0));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w3"));
+    checkCollectedTerms(spans, collector, new QueryTerm(FIELD, "w3", 0));
   }
 
   @Test
   public void testSpanNotQuery() throws IOException {
 
-    SpanTermQuery q1 = new SpanTermQuery(new Term(FIELD, "w1"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term(FIELD, "w2"));
-    SpanTermQuery q3 = new SpanTermQuery(new Term(FIELD, "w3"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm(FIELD, "w1", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm(FIELD, "w2", 0));
+    SpanTermQuery q3 = new SpanTermQuery(new QueryTerm(FIELD, "w3", 0));
 
     SpanNearQuery nq = new SpanNearQuery(new SpanQuery[] {q1, q2}, 2, true);
     SpanNotQuery notq = new SpanNotQuery(nq, q3);
@@ -182,6 +195,7 @@ public class TestSpanCollection extends LuceneTestCase {
 
     assertEquals(2, spans.advance(2));
     spans.nextStartPosition();
-    checkCollectedTerms(spans, collector, new Term(FIELD, "w1"), new Term(FIELD, "w2"));
+    checkCollectedTerms(
+        spans, collector, new QueryTerm(FIELD, "w1", 0), new QueryTerm(FIELD, "w2", 0));
   }
 }

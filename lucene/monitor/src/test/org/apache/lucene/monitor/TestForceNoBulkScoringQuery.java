@@ -26,7 +26,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -38,9 +38,9 @@ public class TestForceNoBulkScoringQuery extends LuceneTestCase {
 
   public void testEquality() {
 
-    TermQuery tq1 = new TermQuery(new Term("f", "t"));
-    TermQuery tq2 = new TermQuery(new Term("f", "t2"));
-    TermQuery tq3 = new TermQuery(new Term("f", "t2"));
+    TermQuery tq1 = new TermQuery(new QueryTerm("f", "t", 0));
+    TermQuery tq2 = new TermQuery(new QueryTerm("f", "t2", 0));
+    TermQuery tq3 = new TermQuery(new QueryTerm("f", "t2", 0));
 
     assertEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq1));
     assertNotEquals(new ForceNoBulkScoringQuery(tq1), new ForceNoBulkScoringQuery(tq2));
@@ -62,7 +62,7 @@ public class TestForceNoBulkScoringQuery extends LuceneTestCase {
 
       IndexReader reader = DirectoryReader.open(dir);
 
-      PrefixQuery pq = new PrefixQuery(new Term("field", "term"));
+      PrefixQuery pq = new PrefixQuery(new QueryTerm("field", "term", 0));
       ForceNoBulkScoringQuery q = new ForceNoBulkScoringQuery(pq);
 
       assertEquals(q.getWrappedQuery(), pq);

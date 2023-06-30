@@ -46,7 +46,7 @@ import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.intervals.IntervalQuery;
 import org.apache.lucene.queries.intervals.Intervals;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -142,8 +142,12 @@ public class TestMatchHighlighter extends LuceneTestCase {
             reader -> {
               Query query =
                   new BooleanQuery.Builder()
-                      .add(new TermQuery(new Term(FLD_TEXT1, "foo")), BooleanClause.Occur.SHOULD)
-                      .add(new TermQuery(new Term(FLD_TEXT2, "bar")), BooleanClause.Occur.SHOULD)
+                      .add(
+                          new TermQuery(new QueryTerm(FLD_TEXT1, "foo", 0)),
+                          BooleanClause.Occur.SHOULD)
+                      .add(
+                          new TermQuery(new QueryTerm(FLD_TEXT2, "bar", 0)),
+                          BooleanClause.Occur.SHOULD)
                       .build();
 
               // In the most basic scenario, we run a search against a query, retrieve
@@ -256,12 +260,12 @@ public class TestMatchHighlighter extends LuceneTestCase {
                               80 * 3, 1, new PassageFormatter("...", ">", "<"), FLD_TEXT1::equals))
                       .appendFieldHighlighter(FieldValueHighlighters.skipRemaining());
 
-              Query query = new TermQuery(new Term(FLD_TEXT1, "firewater"));
+              Query query = new TermQuery(new QueryTerm(FLD_TEXT1, "firewater", 0));
               assertHighlights(
                   toDocList(highlighter.highlight(searcher.search(query, 10, sortOrder), query)),
                   "0. text1: Where the >moon shine< falls, >firewater< flows.");
 
-              query = new PhraseQuery(FLD_TEXT1, "moon", "shine");
+              query = new PhraseQuery(FLD_TEXT1, new int[] {0, 0}, "moon", "shine");
               assertHighlights(
                   toDocList(highlighter.highlight(searcher.search(query, 10, sortOrder), query)),
                   "0. text1: Where the >moon shine< falls, >firewater< flows.");
@@ -570,7 +574,7 @@ public class TestMatchHighlighter extends LuceneTestCase {
                       .appendFieldHighlighter(highlighted)
                       .appendFieldHighlighter(FieldValueHighlighters.skipRemaining());
 
-              Query query = new TermQuery(new Term(FLD_TEXT1, "foo"));
+              Query query = new TermQuery(new QueryTerm(FLD_TEXT1, "foo", 0));
               TopDocs topDocs = searcher.search(query, 10, sortOrder);
 
               // Note the highlighter is configured with at most 2 snippets so the match on the
@@ -672,7 +676,7 @@ public class TestMatchHighlighter extends LuceneTestCase {
                           1, Intervals.unordered(Intervals.term("foo"), Intervals.term("baz"))));
 
               // The second one will be a simpler term query for "bar".
-              Query q2 = new TermQuery(new Term(FLD_TEXT1, "bar"));
+              Query q2 = new TermQuery(new QueryTerm(FLD_TEXT1, "bar", 0));
 
               // Let's fetch matching documents by combining the two into a Boolean query.
               Query query =

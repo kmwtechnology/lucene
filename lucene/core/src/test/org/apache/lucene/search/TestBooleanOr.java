@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -41,10 +41,10 @@ public class TestBooleanOr extends LuceneTestCase {
   private static String FIELD_T = "T";
   private static String FIELD_C = "C";
 
-  private TermQuery t1 = new TermQuery(new Term(FIELD_T, "files"));
-  private TermQuery t2 = new TermQuery(new Term(FIELD_T, "deleting"));
-  private TermQuery c1 = new TermQuery(new Term(FIELD_C, "production"));
-  private TermQuery c2 = new TermQuery(new Term(FIELD_C, "optimize"));
+  private TermQuery t1 = new TermQuery(new QueryTerm(FIELD_T, "files", 0));
+  private TermQuery t2 = new TermQuery(new QueryTerm(FIELD_T, "deleting", 0));
+  private TermQuery c1 = new TermQuery(new QueryTerm(FIELD_C, "production", 0));
+  private TermQuery c2 = new TermQuery(new QueryTerm(FIELD_C, "optimize", 0));
 
   private IndexSearcher searcher = null;
   private Directory dir;
@@ -168,8 +168,8 @@ public class TestBooleanOr extends LuceneTestCase {
 
     IndexSearcher s = newSearcher(r);
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
 
     Weight w = s.createWeight(s.rewrite(bq.build()), ScoreMode.COMPLETE, 1);
 

@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.payloads.AveragePayloadFunction;
 import org.apache.lucene.queries.payloads.PayloadDecoder;
 import org.apache.lucene.queries.payloads.PayloadScoreQuery;
@@ -36,7 +36,7 @@ public class BoostingTermBuilder extends SpanBuilderBase {
 
     // TODO make function and decoder pluggable somehow?
     return new PayloadScoreQuery(
-        new SpanTermQuery(new Term(fieldName, value)),
+        new SpanTermQuery(new QueryTerm(fieldName, value, 0)),
         new AveragePayloadFunction(),
         PayloadDecoder.FLOAT_DECODER);
   }

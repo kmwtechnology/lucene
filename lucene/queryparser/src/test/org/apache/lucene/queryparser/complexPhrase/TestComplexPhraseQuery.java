@@ -24,8 +24,8 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -225,8 +225,8 @@ public class TestComplexPhraseQuery extends LuceneTestCase {
         new BoostQuery(
             new SpanNearQuery(
                 new SpanQuery[] {
-                  new SpanTermQuery(new Term("name", "john")),
-                  new SpanTermQuery(new Term("name", "smith"))
+                  new SpanTermQuery(new QueryTerm("name", "john", 0)),
+                  new SpanTermQuery(new QueryTerm("name", "smith", 0))
                 },
                 4,
                 true),

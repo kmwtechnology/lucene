@@ -36,8 +36,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
@@ -566,7 +566,7 @@ public class TestDisjunctionMaxQuery extends LuceneTestCase {
 
   /** macro */
   protected Query tq(String f, String t) {
-    return new TermQuery(new Term(f, t));
+    return new TermQuery(new QueryTerm(f, t, 0));
   }
 
   /** macro */

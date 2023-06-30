@@ -33,7 +33,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -304,7 +304,7 @@ public abstract class BaseLockFactoryTestCase extends LuceneTestCase {
     public void run() {
       IndexReader reader = null;
       IndexSearcher searcher = null;
-      Query query = new TermQuery(new Term("content", "aaa"));
+      Query query = new TermQuery(new QueryTerm("content", "aaa", 0));
       for (int i = 0; i < this.numIteration; i++) {
         try {
           reader = DirectoryReader.open(dir);

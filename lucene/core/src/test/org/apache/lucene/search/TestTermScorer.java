@@ -30,7 +30,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
@@ -81,7 +81,7 @@ public class TestTermScorer extends LuceneTestCase {
 
   public void test() throws IOException {
 
-    Term allTerm = new Term(FIELD, "all");
+    QueryTerm allTerm = new QueryTerm(FIELD, "all", 0);
     TermQuery termQuery = new TermQuery(allTerm);
 
     Weight weight = indexSearcher.createWeight(termQuery, ScoreMode.COMPLETE, 1);
@@ -133,7 +133,7 @@ public class TestTermScorer extends LuceneTestCase {
 
   public void testNext() throws Exception {
 
-    Term allTerm = new Term(FIELD, "all");
+    QueryTerm allTerm = new QueryTerm(FIELD, "all", 0);
     TermQuery termQuery = new TermQuery(allTerm);
 
     Weight weight = indexSearcher.createWeight(termQuery, ScoreMode.COMPLETE, 1);
@@ -151,7 +151,7 @@ public class TestTermScorer extends LuceneTestCase {
 
   public void testAdvance() throws Exception {
 
-    Term allTerm = new Term(FIELD, "all");
+    QueryTerm allTerm = new QueryTerm(FIELD, "all", 0);
     TermQuery termQuery = new TermQuery(allTerm);
 
     Weight weight = indexSearcher.createWeight(termQuery, ScoreMode.COMPLETE, 1);
@@ -179,7 +179,7 @@ public class TestTermScorer extends LuceneTestCase {
   }
 
   public void testDoesNotLoadNorms() throws IOException {
-    Term allTerm = new Term(FIELD, "all");
+    QueryTerm allTerm = new QueryTerm(FIELD, "all", 0);
     TermQuery termQuery = new TermQuery(allTerm);
 
     LeafReader forbiddenNorms =
@@ -240,7 +240,7 @@ public class TestTermScorer extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     for (int iter = 0; iter < 15; ++iter) {
-      Query query = new TermQuery(new Term("foo", Integer.toString(iter)));
+      Query query = new TermQuery(new QueryTerm("foo", Integer.toString(iter), 0));
 
       CollectorManager<TopScoreDocCollector, TopDocs> completeManager =
           TopScoreDocCollector.createSharedManager(10, null, Integer.MAX_VALUE);
@@ -255,7 +255,9 @@ public class TestTermScorer extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       completeManager = TopScoreDocCollector.createSharedManager(10, null, Integer.MAX_VALUE);

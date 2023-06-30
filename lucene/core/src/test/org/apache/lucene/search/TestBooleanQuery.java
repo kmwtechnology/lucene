@@ -42,6 +42,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
@@ -62,19 +63,23 @@ public class TestBooleanQuery extends LuceneTestCase {
 
   public void testEquality() throws Exception {
     BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
-    bq1.add(new TermQuery(new Term("field", "value1")), BooleanClause.Occur.SHOULD);
-    bq1.add(new TermQuery(new Term("field", "value2")), BooleanClause.Occur.SHOULD);
+    bq1.add(new TermQuery(new QueryTerm("field", "value1", 0)), BooleanClause.Occur.SHOULD);
+    bq1.add(new TermQuery(new QueryTerm("field", "value2", 0)), BooleanClause.Occur.SHOULD);
     BooleanQuery.Builder nested1 = new BooleanQuery.Builder();
-    nested1.add(new TermQuery(new Term("field", "nestedvalue1")), BooleanClause.Occur.SHOULD);
-    nested1.add(new TermQuery(new Term("field", "nestedvalue2")), BooleanClause.Occur.SHOULD);
+    nested1.add(
+        new TermQuery(new QueryTerm("field", "nestedvalue1", 0)), BooleanClause.Occur.SHOULD);
+    nested1.add(
+        new TermQuery(new QueryTerm("field", "nestedvalue2", 0)), BooleanClause.Occur.SHOULD);
     bq1.add(nested1.build(), BooleanClause.Occur.SHOULD);
 
     BooleanQuery.Builder bq2 = new BooleanQuery.Builder();
-    bq2.add(new TermQuery(new Term("field", "value1")), BooleanClause.Occur.SHOULD);
-    bq2.add(new TermQuery(new Term("field", "value2")), BooleanClause.Occur.SHOULD);
+    bq2.add(new TermQuery(new QueryTerm("field", "value1", 0)), BooleanClause.Occur.SHOULD);
+    bq2.add(new TermQuery(new QueryTerm("field", "value2", 0)), BooleanClause.Occur.SHOULD);
     BooleanQuery.Builder nested2 = new BooleanQuery.Builder();
-    nested2.add(new TermQuery(new Term("field", "nestedvalue1")), BooleanClause.Occur.SHOULD);
-    nested2.add(new TermQuery(new Term("field", "nestedvalue2")), BooleanClause.Occur.SHOULD);
+    nested2.add(
+        new TermQuery(new QueryTerm("field", "nestedvalue1", 0)), BooleanClause.Occur.SHOULD);
+    nested2.add(
+        new TermQuery(new QueryTerm("field", "nestedvalue2", 0)), BooleanClause.Occur.SHOULD);
     bq2.add(nested2.build(), BooleanClause.Occur.SHOULD);
 
     assertEquals(bq1.build(), bq2.build());
@@ -83,7 +88,8 @@ public class TestBooleanQuery extends LuceneTestCase {
   public void testEqualityDoesNotDependOnOrder() {
     TermQuery[] queries =
         new TermQuery[] {
-          new TermQuery(new Term("foo", "bar")), new TermQuery(new Term("foo", "baz"))
+          new TermQuery(new QueryTerm("foo", "bar", 0)),
+          new TermQuery(new QueryTerm("foo", "baz", 0))
         };
     for (int iter = 0; iter < 10; ++iter) {
       List<BooleanClause> clauses = new ArrayList<>();
@@ -121,13 +127,13 @@ public class TestBooleanQuery extends LuceneTestCase {
     BooleanQuery bq1 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(random().nextInt(2))
-            .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.SHOULD)
             .build();
     BooleanQuery bq2 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(bq1.getMinimumNumberShouldMatch())
-            .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.SHOULD)
             .build();
     QueryUtils.checkUnequal(bq1, bq2);
   }
@@ -136,13 +142,13 @@ public class TestBooleanQuery extends LuceneTestCase {
     BooleanQuery bq1 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(random().nextInt(2))
-            .add(new TermQuery(new Term("foo", "bar")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.MUST)
             .build();
     BooleanQuery bq2 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(bq1.getMinimumNumberShouldMatch())
-            .add(new TermQuery(new Term("foo", "bar")), Occur.MUST)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.MUST)
             .build();
     QueryUtils.checkUnequal(bq1, bq2);
   }
@@ -151,13 +157,13 @@ public class TestBooleanQuery extends LuceneTestCase {
     BooleanQuery bq1 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(random().nextInt(2))
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
             .build();
     BooleanQuery bq2 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(bq1.getMinimumNumberShouldMatch())
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
             .build();
     QueryUtils.checkEqual(bq1, bq2);
   }
@@ -167,14 +173,14 @@ public class TestBooleanQuery extends LuceneTestCase {
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(random().nextInt(2))
             .add(new MatchAllDocsQuery(), Occur.MUST)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
             .build();
     BooleanQuery bq2 =
         new BooleanQuery.Builder()
             .setMinimumNumberShouldMatch(bq1.getMinimumNumberShouldMatch())
             .add(new MatchAllDocsQuery(), Occur.MUST)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
-            .add(new TermQuery(new Term("foo", "bar")), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.FILTER)
             .build();
     QueryUtils.checkEqual(bq1, bq2);
   }
@@ -183,9 +189,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     BooleanQuery bq =
         new BooleanQuery.Builder()
             .add(
-                new TermQuery(new Term("foo", TestUtil.randomSimpleString(random()))), Occur.SHOULD)
+                new TermQuery(new QueryTerm("foo", TestUtil.randomSimpleString(random()), 0)),
+                Occur.SHOULD)
             .add(
-                new TermQuery(new Term("foo", TestUtil.randomSimpleString(random()))), Occur.SHOULD)
+                new TermQuery(new QueryTerm("foo", TestUtil.randomSimpleString(random()), 0)),
+                Occur.SHOULD)
             .build();
     final int hashCode = bq.hashCode();
     assertEquals(hashCode, bq.hashCode());
@@ -197,12 +205,12 @@ public class TestBooleanQuery extends LuceneTestCase {
     // full walk of the final result)
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (int i = 0; i < IndexSearcher.getMaxClauseCount(); i++) {
-      bq.add(new TermQuery(new Term("foo", "bar-" + i)), Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("foo", "bar-" + i, 0)), Occur.SHOULD);
     }
     expectThrows(
         IndexSearcher.TooManyClauses.class,
         () -> {
-          bq.add(new TermQuery(new Term("foo", "bar-MAX")), Occur.SHOULD);
+          bq.add(new TermQuery(new QueryTerm("foo", "bar-MAX", 0)), Occur.SHOULD);
         });
   }
 
@@ -221,23 +229,24 @@ public class TestBooleanQuery extends LuceneTestCase {
     s.setSimilarity(new ClassicSimilarity());
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
-    q.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+    q.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
 
     // PhraseQuery w/ no terms added returns a null scorer
-    PhraseQuery pq = new PhraseQuery("field", new String[0]);
+    PhraseQuery pq = new PhraseQuery("field", new int[] {}, new String[0]);
     q.add(pq, BooleanClause.Occur.SHOULD);
     assertEquals(1, s.search(q.build(), 10).totalHits.value);
 
     // A required clause which returns null scorer should return null scorer to
     // IndexSearcher.
     q = new BooleanQuery.Builder();
-    pq = new PhraseQuery("field", new String[0]);
-    q.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
+    pq = new PhraseQuery("field", new int[] {}, new String[0]);
+    q.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
     q.add(pq, BooleanClause.Occur.MUST);
     assertEquals(0, s.search(q.build(), 10).totalHits.value);
 
     DisjunctionMaxQuery dmq =
-        new DisjunctionMaxQuery(Arrays.asList(new TermQuery(new Term("field", "a")), pq), 1.0f);
+        new DisjunctionMaxQuery(
+            Arrays.asList(new TermQuery(new QueryTerm("field", "a", 0)), pq), 1.0f);
     assertEquals(1, s.search(dmq, 10).totalHits.value);
 
     r.close();
@@ -263,10 +272,10 @@ public class TestBooleanQuery extends LuceneTestCase {
     iw2.close();
 
     BooleanQuery.Builder query = new BooleanQuery.Builder(); // Query: +foo -ba*
-    query.add(new TermQuery(new Term("field", "foo")), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm("field", "foo", 0)), BooleanClause.Occur.MUST);
     WildcardQuery wildcardQuery =
         new WildcardQuery(
-            new Term("field", "ba*"),
+            new QueryTerm("field", "ba*", 0),
             Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
             MultiTermQuery.SCORING_BOOLEAN_REWRITE);
     query.add(wildcardQuery, BooleanClause.Occur.MUST_NOT);
@@ -337,7 +346,8 @@ public class TestBooleanQuery extends LuceneTestCase {
       final BooleanQuery.Builder q = new BooleanQuery.Builder();
       for (String term : terms) {
         q.add(
-            new BooleanClause(new TermQuery(new Term("field", term)), BooleanClause.Occur.SHOULD));
+            new BooleanClause(
+                new TermQuery(new QueryTerm("field", term, 0)), BooleanClause.Occur.SHOULD));
       }
 
       Weight weight = s.createWeight(s.rewrite(q.build()), ScoreMode.COMPLETE, 1);
@@ -414,8 +424,8 @@ public class TestBooleanQuery extends LuceneTestCase {
     IndexReader r = DirectoryReader.open(w);
     IndexSearcher s = newSearcher(r);
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "b", 0)), BooleanClause.Occur.SHOULD);
 
     // No doc can match: BQ has only 2 clauses and we are asking for minShouldMatch=4
     bq.setMinimumNumberShouldMatch(4);
@@ -455,7 +465,7 @@ public class TestBooleanQuery extends LuceneTestCase {
       final BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
       final BooleanQuery.Builder bq2 = new BooleanQuery.Builder();
       for (String term : requiredTerms) {
-        final Query q = new TermQuery(new Term("field", term));
+        final Query q = new TermQuery(new QueryTerm("field", term, 0));
         bq1.add(q, Occur.MUST);
         bq2.add(q, Occur.FILTER);
       }
@@ -543,7 +553,7 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = newSearcher(reader);
 
     BooleanQuery.Builder qBuilder = new BooleanQuery.Builder();
-    qBuilder.add(new TermQuery(new Term("field", "a")), Occur.FILTER);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "a", 0)), Occur.FILTER);
 
     // With a single clause, we will rewrite to the underlying
     // query. Make sure that it returns null scores
@@ -551,36 +561,36 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     // Now with two clauses, we will get a conjunction scorer
     // Make sure it returns null scores
-    qBuilder.add(new TermQuery(new Term("field", "b")), Occur.FILTER);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "b", 0)), Occur.FILTER);
     BooleanQuery q = qBuilder.build();
     assertSameScoresWithoutFilters(searcher, q);
 
     // Now with a scoring clause, we need to make sure that
     // the boolean scores are the same as those from the term
     // query
-    qBuilder.add(new TermQuery(new Term("field", "c")), Occur.SHOULD);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.SHOULD);
     q = qBuilder.build();
     assertSameScoresWithoutFilters(searcher, q);
 
     // FILTER and empty SHOULD
     qBuilder = new BooleanQuery.Builder();
-    qBuilder.add(new TermQuery(new Term("field", "a")), Occur.FILTER);
-    qBuilder.add(new TermQuery(new Term("field", "e")), Occur.SHOULD);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "a", 0)), Occur.FILTER);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "e", 0)), Occur.SHOULD);
     q = qBuilder.build();
     assertSameScoresWithoutFilters(searcher, q);
 
     // mix of FILTER and MUST
     qBuilder = new BooleanQuery.Builder();
-    qBuilder.add(new TermQuery(new Term("field", "a")), Occur.FILTER);
-    qBuilder.add(new TermQuery(new Term("field", "d")), Occur.MUST);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "a", 0)), Occur.FILTER);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "d", 0)), Occur.MUST);
     q = qBuilder.build();
     assertSameScoresWithoutFilters(searcher, q);
 
     // FILTER + minShouldMatch
     qBuilder = new BooleanQuery.Builder();
-    qBuilder.add(new TermQuery(new Term("field", "b")), Occur.FILTER);
-    qBuilder.add(new TermQuery(new Term("field", "a")), Occur.SHOULD);
-    qBuilder.add(new TermQuery(new Term("field", "d")), Occur.SHOULD);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "b", 0)), Occur.FILTER);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "a", 0)), Occur.SHOULD);
+    qBuilder.add(new TermQuery(new QueryTerm("field", "d", 0)), Occur.SHOULD);
     qBuilder.setMinimumNumberShouldMatch(1);
     q = qBuilder.build();
     assertSameScoresWithoutFilters(searcher, q);
@@ -605,11 +615,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(pq, Occur.MUST);
-    q.add(new TermQuery(new Term("field", "c")), Occur.FILTER);
+    q.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.FILTER);
 
     final Weight weight = searcher.createWeight(searcher.rewrite(q.build()), ScoreMode.COMPLETE, 1);
     final Scorer scorer = weight.scorer(searcher.getIndexReader().leaves().get(0));
@@ -634,11 +644,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(pq, Occur.SHOULD);
-    q.add(new TermQuery(new Term("field", "c")), Occur.SHOULD);
+    q.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.SHOULD);
 
     final Weight weight = searcher.createWeight(searcher.rewrite(q.build()), ScoreMode.COMPLETE, 1);
     final Scorer scorer = weight.scorer(reader.leaves().get(0));
@@ -665,11 +675,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(pq, Occur.SHOULD);
-    q.add(new TermQuery(new Term("field", "d")), Occur.SHOULD);
+    q.add(new TermQuery(new QueryTerm("field", "d", 0)), Occur.SHOULD);
 
     final Weight weight = searcher.createWeight(searcher.rewrite(q.build()), ScoreMode.COMPLETE, 1);
     final Scorer scorer = weight.scorer(searcher.getIndexReader().leaves().get(0));
@@ -694,11 +704,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(pq, Occur.SHOULD);
-    q.add(new TermQuery(new Term("field", "c")), Occur.MUST_NOT);
+    q.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.MUST_NOT);
 
     final Weight weight = searcher.createWeight(searcher.rewrite(q.build()), ScoreMode.COMPLETE, 1);
     final Scorer scorer = weight.scorer(reader.leaves().get(0));
@@ -723,11 +733,11 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(pq, Occur.MUST);
-    q.add(new TermQuery(new Term("field", "c")), Occur.SHOULD);
+    q.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.SHOULD);
 
     final Weight weight = searcher.createWeight(searcher.rewrite(q.build()), ScoreMode.COMPLETE, 1);
     final Scorer scorer = weight.scorer(reader.leaves().get(0));
@@ -765,8 +775,8 @@ public class TestBooleanQuery extends LuceneTestCase {
     final IndexSearcher searcher = new IndexSearcher(reader);
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
-    q.add(new PhraseQuery("field", "a", "b"), Occur.SHOULD);
-    q.add(new TermQuery(new Term("field", "c")), Occur.SHOULD);
+    q.add(new PhraseQuery("field", new int[] {0, 0}, "a", "b"), Occur.SHOULD);
+    q.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.SHOULD);
 
     Query builtQuery = q.build();
 
@@ -793,7 +803,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 3L), Occur.FILTER)
             .build();
     Weight weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -802,7 +812,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "missing")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "missing", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 3L), Occur.FILTER)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -811,7 +821,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 5L), Occur.FILTER)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -820,7 +830,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newRangeQuery("long", 0L, 10L), Occur.FILTER)
             .build();
     // One query matches all docs, the count of the conjunction is the count of the other query
@@ -861,7 +871,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.SHOULD)
             .add(LongPoint.newExactQuery("long", 3L), Occur.SHOULD)
             .build();
     Weight weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -870,7 +880,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "missing")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("string", "missing", 0)), Occur.SHOULD)
             .add(LongPoint.newExactQuery("long", 3L), Occur.SHOULD)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -879,7 +889,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.SHOULD)
             .add(LongPoint.newExactQuery("long", 5L), Occur.SHOULD)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -888,7 +898,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.SHOULD)
             .add(LongPoint.newRangeQuery("long", 0L, 10L), Occur.SHOULD)
             .build();
     // One query matches all docs, the count of the disjunction is the number of docs
@@ -915,7 +925,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "xyz")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "xyz", 0)), Occur.MUST)
             .add(unknownCountQuery, Occur.MUST_NOT)
             .add(new MatchAllDocsQuery(), Occur.MUST_NOT)
             .build();
@@ -926,9 +936,9 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "xyz")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "xyz", 0)), Occur.MUST)
             .add(unknownCountQuery, Occur.MUST_NOT)
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST_NOT)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
     // count of the first MUST_NOT clause is unknown, though the second MUST_NOT clause matche one
@@ -949,7 +959,7 @@ public class TestBooleanQuery extends LuceneTestCase {
     query =
         new BooleanQuery.Builder()
             .add(unknownCountQuery, Occur.SHOULD)
-            .add(new TermQuery(new Term("string", "abc")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.SHOULD)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
     // count of the first SHOULD clause is unknown, though the second SHOULD clause matche one doc,
@@ -1002,10 +1012,11 @@ public class TestBooleanQuery extends LuceneTestCase {
         Query query =
             new BooleanQuery.Builder()
                 .add(
-                    new BoostQuery(new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                    new BoostQuery(
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                     BooleanClause.Occur.SHOULD)
                 .add(
-                    new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                    new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                     BooleanClause.Occur.SHOULD)
                 .build();
 
@@ -1056,7 +1067,8 @@ public class TestBooleanQuery extends LuceneTestCase {
           if (randomBoolean()) {
             matchedDocsCount += numDocsPerFieldValue[i];
             builder.add(
-                new TermQuery(new Term("field", String.valueOf(i))), BooleanClause.Occur.SHOULD);
+                new TermQuery(new QueryTerm("field", String.valueOf(i), 0)),
+                BooleanClause.Occur.SHOULD);
           }
         }
 
@@ -1086,7 +1098,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 3L), Occur.MUST_NOT)
             .build();
     Weight weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -1095,7 +1107,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "missing")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "missing", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 3L), Occur.MUST_NOT)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -1104,7 +1116,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newExactQuery("long", 5L), Occur.MUST_NOT)
             .build();
     weight = searcher.createWeight(query, ScoreMode.COMPLETE, 1f);
@@ -1114,7 +1126,7 @@ public class TestBooleanQuery extends LuceneTestCase {
 
     query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST)
             .add(LongPoint.newRangeQuery("long", 0L, 10L), Occur.MUST_NOT)
             .build();
     // the negative clause matches all docs, so the query doesn't match any docs
@@ -1124,7 +1136,7 @@ public class TestBooleanQuery extends LuceneTestCase {
     query =
         new BooleanQuery.Builder()
             .add(LongPoint.newRangeQuery("long", 0L, 10L), Occur.MUST)
-            .add(new TermQuery(new Term("string", "abc")), Occur.MUST_NOT)
+            .add(new TermQuery(new QueryTerm("string", "abc", 0)), Occur.MUST_NOT)
             .build();
     // The positive clause matches all docs, so we can subtract the number of matches of the
     // negative clause
@@ -1158,13 +1170,13 @@ public class TestBooleanQuery extends LuceneTestCase {
         Query query;
         switch (random().nextInt(6)) {
           case 0:
-            query = new TermQuery(new Term("string", "abc"));
+            query = new TermQuery(new QueryTerm("string", "abc", 0));
             break;
           case 1:
             query = LongPoint.newExactQuery("long", 3L);
             break;
           case 2:
-            query = new TermQuery(new Term("string", "missing"));
+            query = new TermQuery(new QueryTerm("string", "missing", 0));
             break;
           case 3:
             query = LongPoint.newExactQuery("long", 5L);
@@ -1194,18 +1206,18 @@ public class TestBooleanQuery extends LuceneTestCase {
 
   public void testToString() {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "a")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "b")), Occur.MUST);
-    bq.add(new TermQuery(new Term("field", "c")), Occur.MUST_NOT);
-    bq.add(new TermQuery(new Term("field", "d")), Occur.FILTER);
+    bq.add(new TermQuery(new QueryTerm("field", "a", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "b", 0)), Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm("field", "c", 0)), Occur.MUST_NOT);
+    bq.add(new TermQuery(new QueryTerm("field", "d", 0)), Occur.FILTER);
     assertEquals("a +b -c #d", bq.build().toString("field"));
   }
 
   public void testQueryVisitor() throws IOException {
-    Term a = new Term("f", "a");
-    Term b = new Term("f", "b");
-    Term c = new Term("f", "c");
-    Term d = new Term("f", "d");
+    QueryTerm a = new QueryTerm("f", "a", 0);
+    QueryTerm b = new QueryTerm("f", "b", 0);
+    QueryTerm c = new QueryTerm("f", "c", 0);
+    QueryTerm d = new QueryTerm("f", "d", 0);
     BooleanQuery.Builder bqBuilder = new BooleanQuery.Builder();
     bqBuilder.add(new TermQuery(a), Occur.SHOULD);
     bqBuilder.add(new TermQuery(b), Occur.MUST);

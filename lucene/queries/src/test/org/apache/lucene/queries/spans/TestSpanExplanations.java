@@ -25,7 +25,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -209,8 +209,8 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
     SpanNearQuery query =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD_CONTENT, "dolor")),
-              new SpanTermQuery(new Term(FIELD_CONTENT, "lorem"))
+              new SpanTermQuery(new QueryTerm(FIELD_CONTENT, "dolor", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD_CONTENT, "lorem", 0))
             },
             0,
             true);
@@ -231,7 +231,9 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
 
         assertEquals(0f, explanation.getValue());
         assertEquals(
-            "match spanNear([content:dolor, content:lorem], 0, true) in 0 without score",
+            // [0] on terms because we constructed this manually, a parser derived query might
+            // provide real values
+            "match spanNear([content:dolor[0], content:lorem[0]], 0, true) in 0 without score",
             explanation.getDescription());
       }
     }
@@ -241,14 +243,14 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
 
-    PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, "w1", "w2");
+    PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, new int[] {0, 0}, "w1", "w2");
     q.add(phraseQuery, Occur.MUST);
     q.add(snear(st("w2"), sor("w5", "zz"), 4, true), Occur.SHOULD);
     q.add(snear(sf("w3", 2), st("w2"), st("w3"), 5, true), Occur.SHOULD);
 
     Query t =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "xx")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.MUST)
             .add(matchTheseItems(new int[] {1, 3}), Occur.FILTER)
             .build();
     q.add(new BoostQuery(t, 1000), Occur.SHOULD);
@@ -258,27 +260,27 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
 
     List<Query> disjuncts = new ArrayList<>();
     disjuncts.add(snear(st("w2"), sor("w5", "zz"), 4, true));
-    disjuncts.add(new TermQuery(new Term(FIELD, "QQ")));
+    disjuncts.add(new TermQuery(new QueryTerm(FIELD, "QQ", 0)));
 
     BooleanQuery.Builder xxYYZZ = new BooleanQuery.Builder();
     ;
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "xx")), Occur.SHOULD);
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "yy")), Occur.SHOULD);
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "zz")), Occur.MUST_NOT);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.SHOULD);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "yy", 0)), Occur.SHOULD);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "zz", 0)), Occur.MUST_NOT);
 
     disjuncts.add(xxYYZZ.build());
 
     BooleanQuery.Builder xxW1 = new BooleanQuery.Builder();
     ;
-    xxW1.add(new TermQuery(new Term(FIELD, "xx")), Occur.MUST_NOT);
-    xxW1.add(new TermQuery(new Term(FIELD, "w1")), Occur.MUST_NOT);
+    xxW1.add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.MUST_NOT);
+    xxW1.add(new TermQuery(new QueryTerm(FIELD, "w1", 0)), Occur.MUST_NOT);
 
     disjuncts.add(xxW1.build());
 
     List<Query> disjuncts2 = new ArrayList<>();
-    disjuncts2.add(new TermQuery(new Term(FIELD, "w1")));
-    disjuncts2.add(new TermQuery(new Term(FIELD, "w2")));
-    disjuncts2.add(new TermQuery(new Term(FIELD, "w3")));
+    disjuncts2.add(new TermQuery(new QueryTerm(FIELD, "w1", 0)));
+    disjuncts2.add(new TermQuery(new QueryTerm(FIELD, "w2", 0)));
+    disjuncts2.add(new TermQuery(new QueryTerm(FIELD, "w3", 0)));
     disjuncts.add(new DisjunctionMaxQuery(disjuncts2, 0.5f));
 
     q.add(new DisjunctionMaxQuery(disjuncts, 0.2f), Occur.SHOULD);
@@ -299,14 +301,14 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
 
     BooleanQuery.Builder q = new BooleanQuery.Builder();
 
-    PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, "w1", "w2");
+    PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, new int[] {0, 0}, "w1", "w2");
     q.add(phraseQuery, Occur.MUST);
     q.add(snear(st("w2"), sor("w5", "zz"), 4, true), Occur.SHOULD);
     q.add(snear(sf("w3", 2), st("w2"), st("w3"), 5, true), Occur.SHOULD);
 
     Query t =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD, "xx")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.MUST)
             .add(matchTheseItems(new int[] {1, 3}), Occur.FILTER)
             .build();
     q.add(new BoostQuery(t, 1000), Occur.SHOULD);
@@ -316,29 +318,29 @@ public class TestSpanExplanations extends BaseSpanExplanationTestCase {
 
     List<Query> disjuncts = new ArrayList<>();
     disjuncts.add(snear(st("w2"), sor("w5", "zz"), 4, true));
-    disjuncts.add(new TermQuery(new Term(FIELD, "QQ")));
+    disjuncts.add(new TermQuery(new QueryTerm(FIELD, "QQ", 0)));
 
     BooleanQuery.Builder xxYYZZ = new BooleanQuery.Builder();
     ;
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "xx")), Occur.SHOULD);
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "yy")), Occur.SHOULD);
-    xxYYZZ.add(new TermQuery(new Term(FIELD, "zz")), Occur.MUST_NOT);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.SHOULD);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "yy", 0)), Occur.SHOULD);
+    xxYYZZ.add(new TermQuery(new QueryTerm(FIELD, "zz", 0)), Occur.MUST_NOT);
 
     disjuncts.add(xxYYZZ.build());
 
     BooleanQuery.Builder xxW1 = new BooleanQuery.Builder();
     ;
-    xxW1.add(new TermQuery(new Term(FIELD, "xx")), Occur.MUST_NOT);
-    xxW1.add(new TermQuery(new Term(FIELD, "w1")), Occur.MUST_NOT);
+    xxW1.add(new TermQuery(new QueryTerm(FIELD, "xx", 0)), Occur.MUST_NOT);
+    xxW1.add(new TermQuery(new QueryTerm(FIELD, "w1", 0)), Occur.MUST_NOT);
 
     disjuncts.add(xxW1.build());
 
     DisjunctionMaxQuery dm2 =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term(FIELD, "w1")),
-                new TermQuery(new Term(FIELD, "w2")),
-                new TermQuery(new Term(FIELD, "w3"))),
+                new TermQuery(new QueryTerm(FIELD, "w1", 0)),
+                new TermQuery(new QueryTerm(FIELD, "w2", 0)),
+                new TermQuery(new QueryTerm(FIELD, "w3", 0))),
             0.5f);
     disjuncts.add(dm2);
 

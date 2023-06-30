@@ -33,7 +33,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
@@ -87,9 +87,9 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testDisjunctions() throws IOException {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term(F1, "lucene")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term(F2, "lucene")), BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term(F2, "search")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F1, "lucene", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F2, "lucene", 0)), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F2, "search", 0)), BooleanClause.Occur.SHOULD);
     Map<Integer, Integer> tfs = getDocCounts(scorerSearcher, bq.build());
     assertEquals(3, tfs.size()); // 3 documents
     assertEquals(3, tfs.get(0).intValue()); // f1:lucene + f2:lucene + f2:search
@@ -99,10 +99,10 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testNestedDisjunctions() throws IOException {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term(F1, "lucene")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F1, "lucene", 0)), BooleanClause.Occur.SHOULD);
     BooleanQuery.Builder bq2 = new BooleanQuery.Builder();
-    bq2.add(new TermQuery(new Term(F2, "lucene")), BooleanClause.Occur.SHOULD);
-    bq2.add(new TermQuery(new Term(F2, "search")), BooleanClause.Occur.SHOULD);
+    bq2.add(new TermQuery(new QueryTerm(F2, "lucene", 0)), BooleanClause.Occur.SHOULD);
+    bq2.add(new TermQuery(new QueryTerm(F2, "search", 0)), BooleanClause.Occur.SHOULD);
     bq.add(bq2.build(), BooleanClause.Occur.SHOULD);
     Map<Integer, Integer> tfs = getDocCounts(scorerSearcher, bq.build());
     assertEquals(3, tfs.size()); // 3 documents
@@ -113,8 +113,8 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testConjunctions() throws IOException {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term(F2, "lucene")), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term(F2, "is")), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm(F2, "lucene", 0)), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm(F2, "is", 0)), BooleanClause.Occur.MUST);
     Map<Integer, Integer> tfs = getDocCounts(scorerSearcher, bq.build());
     assertEquals(3, tfs.size()); // 3 documents
     assertEquals(2, tfs.get(0).intValue()); // f2:lucene + f2:is
@@ -206,8 +206,8 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testDisjunctionMatches() throws IOException {
     BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
-    bq1.add(new TermQuery(new Term(F1, "lucene")), Occur.SHOULD);
-    bq1.add(new PhraseQuery(F2, "search", "engine"), Occur.SHOULD);
+    bq1.add(new TermQuery(new QueryTerm(F1, "lucene", 0)), Occur.SHOULD);
+    bq1.add(new PhraseQuery(F2, new int[] {0, 0}, "search", "engine"), Occur.SHOULD);
 
     Weight w1 =
         scorerSearcher.createWeight(scorerSearcher.rewrite(bq1.build()), ScoreMode.COMPLETE, 1);
@@ -216,8 +216,8 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
     assertEquals(2, s1.getChildren().size());
 
     BooleanQuery.Builder bq2 = new BooleanQuery.Builder();
-    bq2.add(new TermQuery(new Term(F1, "lucene")), Occur.SHOULD);
-    bq2.add(new PhraseQuery(F2, "search", "library"), Occur.SHOULD);
+    bq2.add(new TermQuery(new QueryTerm(F1, "lucene", 0)), Occur.SHOULD);
+    bq2.add(new PhraseQuery(F2, new int[] {0, 0}, "search", "library"), Occur.SHOULD);
 
     Weight w2 =
         scorerSearcher.createWeight(scorerSearcher.rewrite(bq2.build()), ScoreMode.COMPLETE, 1);
@@ -228,9 +228,9 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testMinShouldMatchMatches() throws IOException {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term(F1, "lucene")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term(F2, "lucene")), Occur.SHOULD);
-    bq.add(new PhraseQuery(F2, "search", "library"), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F1, "lucene", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(F2, "lucene", 0)), Occur.SHOULD);
+    bq.add(new PhraseQuery(F2, new int[] {0, 0}, "search", "library"), Occur.SHOULD);
     bq.setMinimumNumberShouldMatch(2);
 
     Weight w =
@@ -242,9 +242,9 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testGetChildrenMinShouldMatchSumScorer() throws IOException {
     final BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(F2, "nutch")), Occur.SHOULD);
-    query.add(new TermQuery(new Term(F2, "web")), Occur.SHOULD);
-    query.add(new TermQuery(new Term(F2, "crawler")), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F2, "nutch", 0)), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F2, "web", 0)), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F2, "crawler", 0)), Occur.SHOULD);
     query.setMinimumNumberShouldMatch(2);
     query.add(new MatchAllDocsQuery(), Occur.MUST);
     ScoreSummary scoreSummary =
@@ -265,8 +265,8 @@ public class TestBooleanQueryVisitSubscorers extends LuceneTestCase {
 
   public void testGetChildrenBoosterScorer() throws IOException {
     final BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(F2, "nutch")), Occur.SHOULD);
-    query.add(new TermQuery(new Term(F2, "miss")), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F2, "nutch", 0)), Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F2, "miss", 0)), Occur.SHOULD);
     ScoreSummary scoreSummary =
         scorerSearcher.search(query.build(), new ScorerSummarizingCollectorManager());
     assertEquals(1, scoreSummary.numHits.get());

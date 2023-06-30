@@ -35,6 +35,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -133,7 +134,7 @@ public class TermFilteredPresearcher extends Presearcher {
 
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(presearcherQuery, BooleanClause.Occur.SHOULD);
-      bq.add(new TermQuery(new Term(ANYTOKEN_FIELD, ANYTOKEN)), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm(ANYTOKEN_FIELD, ANYTOKEN, 0)), BooleanClause.Occur.SHOULD);
       presearcherQuery = bq.build();
       if (filterFields.isEmpty() == false) {
         bq = new BooleanQuery.Builder();
@@ -186,7 +187,9 @@ public class TermFilteredPresearcher extends Presearcher {
                 + field
                 + ":"
                 + Term.toString(term));
-      bq.add(new TermQuery(new Term(field, BytesRef.deepCopyOf(term))), BooleanClause.Occur.SHOULD);
+      bq.add(
+          new TermQuery(new QueryTerm(field, BytesRef.deepCopyOf(term), 0)),
+          BooleanClause.Occur.SHOULD);
     }
 
     BooleanQuery built = bq.build();

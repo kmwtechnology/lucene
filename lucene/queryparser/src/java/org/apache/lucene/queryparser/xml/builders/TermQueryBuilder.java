@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -32,7 +32,7 @@ public class TermQueryBuilder implements QueryBuilder {
   public Query getQuery(Element e) throws ParserException {
     String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
     String value = DOMUtils.getNonBlankTextOrFail(e);
-    Query tq = new TermQuery(new Term(field, value));
+    Query tq = new TermQuery(new QueryTerm(field, value, 0));
     float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
     if (boost != 1f) {
       tq = new BoostQuery(tq, boost);

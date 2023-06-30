@@ -32,7 +32,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -120,12 +120,12 @@ public class TestTokenSources extends BaseTokenStreamTestCase {
       final DisjunctionMaxQuery query =
           new DisjunctionMaxQuery(
               Arrays.asList(
-                  new SpanTermQuery(new Term(FIELD, "{fox}")),
-                  new SpanTermQuery(new Term(FIELD, "fox"))),
+                  new SpanTermQuery(new QueryTerm(FIELD, "{fox}", 0)),
+                  new SpanTermQuery(new QueryTerm(FIELD, "fox", 0))),
               1);
       // final Query phraseQuery = new SpanNearQuery(new SpanQuery[] {
       // new SpanTermQuery(new Term(FIELD, "{fox}")),
-      // new SpanTermQuery(new Term(FIELD, "fox")) }, 0, true);
+      // new SpanTermQuery(new QueryTerm(FIELD, "fox", 0)) }, 0, true);
 
       TopDocs hits = indexSearcher.search(query, 1);
       assertEquals(1, hits.totalHits.value);
@@ -163,12 +163,12 @@ public class TestTokenSources extends BaseTokenStreamTestCase {
       final DisjunctionMaxQuery query =
           new DisjunctionMaxQuery(
               Arrays.asList(
-                  new SpanTermQuery(new Term(FIELD, "{fox}")),
-                  new SpanTermQuery(new Term(FIELD, "fox"))),
+                  new SpanTermQuery(new QueryTerm(FIELD, "{fox}", 0)),
+                  new SpanTermQuery(new QueryTerm(FIELD, "fox", 0))),
               1);
       // final Query phraseQuery = new SpanNearQuery(new SpanQuery[] {
       // new SpanTermQuery(new Term(FIELD, "{fox}")),
-      // new SpanTermQuery(new Term(FIELD, "fox")) }, 0, true);
+      // new SpanTermQuery(new QueryTerm(FIELD, "fox", 0)) }, 0, true);
 
       TopDocs hits = indexSearcher.search(query, 1);
       assertEquals(1, hits.totalHits.value);
@@ -205,11 +205,12 @@ public class TestTokenSources extends BaseTokenStreamTestCase {
       final IndexSearcher indexSearcher = newSearcher(indexReader);
       // final DisjunctionMaxQuery query = new DisjunctionMaxQuery(1);
       // query.add(new SpanTermQuery(new Term(FIELD, "{fox}")));
-      // query.add(new SpanTermQuery(new Term(FIELD, "fox")));
+      // query.add(new SpanTermQuery(new QueryTerm(FIELD, "fox", 0)));
       final Query phraseQuery =
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term(FIELD, "the")), new SpanTermQuery(new Term(FIELD, "fox"))
+                new SpanTermQuery(new QueryTerm(FIELD, "the", 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, "fox", 0))
               },
               0,
               true);
@@ -249,12 +250,13 @@ public class TestTokenSources extends BaseTokenStreamTestCase {
       assertEquals(1, indexReader.numDocs());
       final IndexSearcher indexSearcher = newSearcher(indexReader);
       // final DisjunctionMaxQuery query = new DisjunctionMaxQuery(1);
-      // query.add(new SpanTermQuery(new Term(FIELD, "the")));
-      // query.add(new SpanTermQuery(new Term(FIELD, "fox")));
+      // query.add(new SpanTermQuery(new QueryTerm(FIELD, "the", 0)));
+      // query.add(new SpanTermQuery(new QueryTerm(FIELD, "fox", 0)));
       final Query phraseQuery =
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term(FIELD, "the")), new SpanTermQuery(new Term(FIELD, "fox"))
+                new SpanTermQuery(new QueryTerm(FIELD, "the", 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, "fox", 0))
               },
               0,
               true);

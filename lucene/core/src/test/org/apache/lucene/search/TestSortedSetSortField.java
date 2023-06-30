@@ -21,7 +21,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -31,7 +31,7 @@ public class TestSortedSetSortField extends LuceneTestCase {
 
   public void testEmptyIndex() throws Exception {
     IndexSearcher empty = newSearcher(new MultiReader());
-    Query query = new TermQuery(new Term("contents", "foo"));
+    Query query = new TermQuery(new QueryTerm("contents", "foo", 0));
     TopDocs td =
         empty.search(query, 10, new Sort(new SortedSetSortField("sortedset", false)), true);
     assertEquals(0, td.totalHits.value);

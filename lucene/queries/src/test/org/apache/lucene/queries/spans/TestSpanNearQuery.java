@@ -21,7 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -32,9 +32,9 @@ import org.apache.lucene.tests.util.LuceneTestCase;
 public class TestSpanNearQuery extends LuceneTestCase {
 
   public void testHashcodeEquals() {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field", "bar"));
-    SpanTermQuery q3 = new SpanTermQuery(new Term("field", "baz"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm("field", "foo", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm("field", "bar", 0));
+    SpanTermQuery q3 = new SpanTermQuery(new QueryTerm("field", "baz", 0));
 
     SpanNearQuery near1 = new SpanNearQuery(new SpanQuery[] {q1, q2}, 10, true);
     SpanNearQuery near2 = new SpanNearQuery(new SpanQuery[] {q2, q3}, 10, true);
@@ -44,8 +44,8 @@ public class TestSpanNearQuery extends LuceneTestCase {
   }
 
   public void testDifferentField() throws Exception {
-    SpanTermQuery q1 = new SpanTermQuery(new Term("field1", "foo"));
-    SpanTermQuery q2 = new SpanTermQuery(new Term("field2", "bar"));
+    SpanTermQuery q1 = new SpanTermQuery(new QueryTerm("field1", "foo", 0));
+    SpanTermQuery q2 = new SpanTermQuery(new QueryTerm("field2", "bar", 0));
     IllegalArgumentException expected =
         expectThrows(
             IllegalArgumentException.class,
@@ -66,8 +66,8 @@ public class TestSpanNearQuery extends LuceneTestCase {
     iw.close();
 
     IndexSearcher is = new IndexSearcher(ir);
-    SpanTermQuery query = new SpanTermQuery(new Term("foo", "bar"));
-    SpanTermQuery query2 = new SpanTermQuery(new Term("foo", "baz"));
+    SpanTermQuery query = new SpanTermQuery(new QueryTerm("foo", "bar", 0));
+    SpanTermQuery query2 = new SpanTermQuery(new QueryTerm("foo", "baz", 0));
 
     IllegalStateException expected =
         expectThrows(
@@ -88,7 +88,7 @@ public class TestSpanNearQuery extends LuceneTestCase {
         IllegalArgumentException.class,
         () -> {
           SpanNearQuery.newOrderedNearQuery("field1")
-              .addClause(new SpanTermQuery(new Term("field2", "term")));
+              .addClause(new SpanTermQuery(new QueryTerm("field2", "term", 0)));
         });
 
     // Can't add gaps to unordered queries

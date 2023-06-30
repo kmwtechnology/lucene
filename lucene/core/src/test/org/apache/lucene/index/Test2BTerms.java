@@ -267,7 +267,7 @@ public class Test2BTerms extends LuceneTestCase {
       final BytesRef term = terms.get(random().nextInt(terms.size()));
       System.out.println("TEST: search " + term);
       final long t0 = System.nanoTime();
-      final long count = s.count(new TermQuery(new Term("field", term)));
+      final long count = s.count(new TermQuery(new QueryTerm("field", term, 0)));
       if (count <= 0) {
         System.out.println("  FAILED: count=" + count);
         failed = true;

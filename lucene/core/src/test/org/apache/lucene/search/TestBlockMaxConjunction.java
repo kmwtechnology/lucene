@@ -23,7 +23,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.search.AssertingQuery;
@@ -74,7 +74,8 @@ public class TestBlockMaxConjunction extends LuceneTestCase {
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (int i = 0; i < numClauses; ++i) {
         builder.add(
-            maybeWrap(new TermQuery(new Term("foo", Integer.toString(start + i)))), Occur.MUST);
+            maybeWrap(new TermQuery(new QueryTerm("foo", Integer.toString(start + i), 0))),
+            Occur.MUST);
       }
       Query query = builder.build();
 
@@ -84,7 +85,9 @@ public class TestBlockMaxConjunction extends LuceneTestCase {
       Query filteredQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       CheckHits.checkTopScores(random(), filteredQuery, searcher);
@@ -92,14 +95,16 @@ public class TestBlockMaxConjunction extends LuceneTestCase {
       builder = new BooleanQuery.Builder();
       for (int i = 0; i < numClauses; ++i) {
         builder.add(
-            maybeWrapTwoPhase(new TermQuery(new Term("foo", Integer.toString(start + i)))),
+            maybeWrapTwoPhase(new TermQuery(new QueryTerm("foo", Integer.toString(start + i), 0))),
             Occur.MUST);
       }
 
       Query twoPhaseQuery =
           new BooleanQuery.Builder()
               .add(query, Occur.MUST)
-              .add(new TermQuery(new Term("foo", Integer.toString(filterTerm))), Occur.FILTER)
+              .add(
+                  new TermQuery(new QueryTerm("foo", Integer.toString(filterTerm), 0)),
+                  Occur.FILTER)
               .build();
 
       CheckHits.checkTopScores(random(), twoPhaseQuery, searcher);

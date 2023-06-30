@@ -25,7 +25,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.tests.search.ShardSearchingTestBase;
 import org.apache.lucene.tests.util.LuceneTestCase.SuppressCodecs;
@@ -205,7 +205,9 @@ public class TestShardSearching extends ShardSearchingTestBase {
 
           if (terms != null) {
             if (random().nextBoolean()) {
-              query = new TermQuery(new Term("body", terms.get(random().nextInt(terms.size()))));
+              query =
+                  new TermQuery(
+                      new QueryTerm("body", terms.get(random().nextInt(terms.size())), 0));
             } else {
               final String t = terms.get(random().nextInt(terms.size())).utf8ToString();
               final String prefix;
@@ -214,7 +216,7 @@ public class TestShardSearching extends ShardSearchingTestBase {
               } else {
                 prefix = t.substring(0, TestUtil.nextInt(random(), 1, 2));
               }
-              query = new PrefixQuery(new Term("body", prefix));
+              query = new PrefixQuery(new QueryTerm("body", prefix, 0));
             }
 
             if (random().nextBoolean()) {

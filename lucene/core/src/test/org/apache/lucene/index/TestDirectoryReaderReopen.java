@@ -284,7 +284,8 @@ public class TestDirectoryReaderReopen extends LuceneTestCase {
                     ScoreDoc[] hits =
                         searcher.search(
                                 new TermQuery(
-                                    new Term("field1", "a" + rnd.nextInt(refreshed.maxDoc()))),
+                                    new QueryTerm(
+                                        "field1", "a" + rnd.nextInt(refreshed.maxDoc()), 0)),
                                 1000)
                             .scoreDocs;
                     if (hits.length > 0) {
@@ -707,7 +708,7 @@ public class TestDirectoryReaderReopen extends LuceneTestCase {
         });
 
     IndexSearcher s = newSearcher(r);
-    assertEquals(1, s.count(new TermQuery(new Term("id", "id"))));
+    assertEquals(1, s.count(new TermQuery(new QueryTerm("id", "id", 0))));
 
     r.close();
     w.close();

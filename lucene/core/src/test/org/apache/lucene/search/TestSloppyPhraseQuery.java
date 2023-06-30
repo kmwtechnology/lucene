@@ -23,7 +23,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -141,7 +141,7 @@ public class TestSloppyPhraseQuery extends LuceneTestCase {
   private float checkPhraseQuery(Document doc, PhraseQuery query, int slop, int expectedNumResults)
       throws Exception {
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    Term[] terms = query.getTerms();
+    QueryTerm[] terms = query.getTerms();
     int[] positions = query.getPositions();
     for (int i = 0; i < terms.length; ++i) {
       builder.add(terms[i], positions[i]);
@@ -186,7 +186,8 @@ public class TestSloppyPhraseQuery extends LuceneTestCase {
 
   private static PhraseQuery makePhraseQuery(String terms) {
     String[] t = terms.split(" +");
-    return new PhraseQuery("f", t);
+
+    return new PhraseQuery("f", new int[t.length], t);
   }
 
   static class Result {
@@ -295,8 +296,8 @@ public class TestSloppyPhraseQuery extends LuceneTestCase {
     IndexSearcher is = newSearcher(ir);
 
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("lyrics", "drug"), 1);
-    builder.add(new Term("lyrics", "drug"), 4);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 1);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 4);
     PhraseQuery pq = builder.build();
     // "drug the drug"~1
     assertEquals(1, is.search(pq, 4).totalHits.value);
@@ -324,8 +325,8 @@ public class TestSloppyPhraseQuery extends LuceneTestCase {
 
     IndexSearcher is = newSearcher(ir);
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("lyrics", "drug"), 1);
-    builder.add(new Term("lyrics", "drug"), 3);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 1);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 3);
     builder.setSlop(1);
     PhraseQuery pq = builder.build();
     // "drug the drug"~1
@@ -379,8 +380,8 @@ public class TestSloppyPhraseQuery extends LuceneTestCase {
     IndexSearcher is = newSearcher(ir);
 
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term("lyrics", "drug"), 1);
-    builder.add(new Term("lyrics", "drug"), 4);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 1);
+    builder.add(new QueryTerm("lyrics", "drug", 0), 4);
     builder.setSlop(5);
     PhraseQuery pq = builder.build();
     // "drug the drug"~5

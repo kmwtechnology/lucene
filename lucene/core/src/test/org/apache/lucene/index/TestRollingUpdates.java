@@ -78,7 +78,7 @@ public class TestRollingUpdates extends LuceneTestCase {
       }
       ((Field) doc.getField("docid")).setStringValue(myID);
 
-      Term idTerm = new Term("docid", myID);
+      QueryTerm idTerm = new QueryTerm("docid", myID, 0);
 
       final boolean doUpdate;
       if (s != null && updateCount < SIZE) {
@@ -217,7 +217,7 @@ public class TestRollingUpdates extends LuceneTestCase {
           Document doc = new Document(); // docs.nextDoc();
           BytesRef br = new BytesRef("test");
           doc.add(newStringField("id", br, Field.Store.NO));
-          writer.updateDocument(new Term("id", br), doc);
+          writer.updateDocument(new QueryTerm("id", br, 0), doc);
           if (random().nextInt(3) == 0) {
             if (open == null) {
               open = DirectoryReader.open(writer);

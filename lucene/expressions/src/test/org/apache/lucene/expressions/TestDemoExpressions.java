@@ -26,7 +26,7 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.expressions.js.JavascriptCompiler;
 import org.apache.lucene.expressions.js.VariableContext;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
@@ -99,7 +99,7 @@ public class TestDemoExpressions extends LuceneTestCase {
 
     // create a sort field and sort by it (reverse order)
     Sort sort = new Sort(expr.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     searcher.search(query, 3, sort);
   }
 
@@ -111,7 +111,7 @@ public class TestDemoExpressions extends LuceneTestCase {
     bindings.add("_score", DoubleValuesSource.SCORES);
 
     Sort sort = new Sort(expr.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     TopFieldDocs td = searcher.search(query, 3, sort, true);
     for (int i = 0; i < 3; i++) {
       FieldDoc d = (FieldDoc) td.scoreDocs[i];
@@ -129,7 +129,7 @@ public class TestDemoExpressions extends LuceneTestCase {
     bindings.add("_score", DoubleValuesSource.SCORES);
 
     Sort sort = new Sort(expr.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     TopFieldDocs td = searcher.search(query, 3, sort, true);
     for (int i = 0; i < 3; i++) {
       FieldDoc d = (FieldDoc) td.scoreDocs[i];
@@ -148,7 +148,7 @@ public class TestDemoExpressions extends LuceneTestCase {
     bindings.add("$score", DoubleValuesSource.SCORES);
 
     Sort sort = new Sort(expr.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     TopFieldDocs td = searcher.search(query, 3, sort, true);
     for (int i = 0; i < 3; i++) {
       FieldDoc d = (FieldDoc) td.scoreDocs[i];
@@ -168,7 +168,7 @@ public class TestDemoExpressions extends LuceneTestCase {
     bindings.add("expr1", expr1);
 
     Sort sort = new Sort(expr2.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     TopFieldDocs td = searcher.search(query, 3, sort, true);
     for (int i = 0; i < 3; i++) {
       FieldDoc d = (FieldDoc) td.scoreDocs[i];
@@ -201,7 +201,7 @@ public class TestDemoExpressions extends LuceneTestCase {
 
     Expression expr = JavascriptCompiler.compile(sb.toString());
     Sort sort = new Sort(expr.getSortField(bindings, true));
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     TopFieldDocs td = searcher.search(query, 3, sort, true);
     for (int i = 0; i < 3; i++) {
       FieldDoc d = (FieldDoc) td.scoreDocs[i];

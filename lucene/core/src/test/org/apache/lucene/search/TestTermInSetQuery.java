@@ -35,6 +35,7 @@ import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.index.FilterLeafReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -120,7 +121,7 @@ public class TestTermInSetQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (numTerms > 1 && random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term(field, allTerms.get(0))));
+        iw.deleteDocuments(new TermQuery(new QueryTerm(field, allTerms.get(0), 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -143,7 +144,7 @@ public class TestTermInSetQuery extends LuceneTestCase {
         }
         final BooleanQuery.Builder bq = new BooleanQuery.Builder();
         for (BytesRef t : queryTerms) {
-          bq.add(new TermQuery(new Term(field, t)), Occur.SHOULD);
+          bq.add(new TermQuery(new QueryTerm(field, t, 0)), Occur.SHOULD);
         }
         final Query q1 = new ConstantScoreQuery(bq.build());
         final Query q2 = new TermInSetQuery(field, queryTerms);

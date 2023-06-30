@@ -29,7 +29,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
@@ -461,17 +461,17 @@ public class TestTopDocsCollector extends LuceneTestCase {
         IndexSearcher searcher = new IndexSearcher(reader);
         CollectorManager<TopScoreDocCollector, TopDocs> manager =
             TopScoreDocCollector.createSharedManager(2, null, 10);
-        TopDocs topDocs = searcher.search(new TermQuery(new Term("f", "foo")), manager);
+        TopDocs topDocs = searcher.search(new TermQuery(new QueryTerm("f", "foo", 0)), manager);
         assertEquals(10, topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.EQUAL_TO, topDocs.totalHits.relation);
 
         manager = TopScoreDocCollector.createSharedManager(2, null, 2);
-        topDocs = searcher.search(new TermQuery(new Term("f", "foo")), manager);
+        topDocs = searcher.search(new TermQuery(new QueryTerm("f", "foo", 0)), manager);
         assertTrue(10 >= topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, topDocs.totalHits.relation);
 
         manager = TopScoreDocCollector.createSharedManager(10, null, 2);
-        topDocs = searcher.search(new TermQuery(new Term("f", "foo")), manager);
+        topDocs = searcher.search(new TermQuery(new QueryTerm("f", "foo", 0)), manager);
         assertEquals(10, topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.EQUAL_TO, topDocs.totalHits.relation);
       }
@@ -628,12 +628,12 @@ public class TestTopDocsCollector extends LuceneTestCase {
     w.close();
     Query[] queries =
         new Query[] {
-          new TermQuery(new Term("f", "A")),
-          new TermQuery(new Term("f", "B")),
-          new TermQuery(new Term("f", "C")),
+          new TermQuery(new QueryTerm("f", "A", 0)),
+          new TermQuery(new QueryTerm("f", "B", 0)),
+          new TermQuery(new QueryTerm("f", "C", 0)),
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term("f", "A")), BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term("f", "B")), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm("f", "A", 0)), BooleanClause.Occur.MUST)
+              .add(new TermQuery(new QueryTerm("f", "B", 0)), BooleanClause.Occur.SHOULD)
               .build()
         };
     for (Query query : queries) {
@@ -676,7 +676,7 @@ public class TestTopDocsCollector extends LuceneTestCase {
     while (termsEnum.next() != null) {
       if (random().nextDouble() <= chance) {
         BytesRef term = BytesRef.deepCopyOf(termsEnum.term());
-        Query query = new TermQuery(new Term("body", term));
+        Query query = new TermQuery(new QueryTerm("body", term, 0));
 
         TopDocs tdc2 = doSearchWithThreshold(5, 0, query, reader);
         TopDocs tdc = doConcurrentSearchWithThreshold(5, 0, query, reader);

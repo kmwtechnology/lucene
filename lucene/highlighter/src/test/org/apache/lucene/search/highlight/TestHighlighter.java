@@ -48,7 +48,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.TermVectors;
 import org.apache.lucene.queries.CommonTermsQuery;
 import org.apache.lucene.queries.function.FunctionScoreQuery;
@@ -148,7 +148,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testFunctionScoreQuery() throws Exception {
-    TermQuery termQuery = new TermQuery(new Term(FIELD_NAME, "very"));
+    TermQuery termQuery = new TermQuery(new QueryTerm(FIELD_NAME, "very", 0));
     FunctionScoreQuery query = new FunctionScoreQuery(termQuery, DoubleValuesSource.constant(1));
 
     searcher = newSearcher(reader);
@@ -171,7 +171,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testQueryScorerHits() throws Exception {
-    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, "very", "long");
+    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, new int[] {0, 0}, "very", "long");
 
     query = phraseQuery;
     searcher = newSearcher(reader);
@@ -199,9 +199,9 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
   public void testHighlightingCommonTermsQuery() throws Exception {
     CommonTermsQuery query = new CommonTermsQuery(Occur.MUST, Occur.SHOULD, 3);
-    query.add(new Term(FIELD_NAME, "this")); // stop-word
-    query.add(new Term(FIELD_NAME, "long"));
-    query.add(new Term(FIELD_NAME, "very"));
+    query.add(new QueryTerm(FIELD_NAME, "this", 0)); // stop-word
+    query.add(new QueryTerm(FIELD_NAME, "long", 0));
+    query.add(new QueryTerm(FIELD_NAME, "very", 0));
 
     searcher = newSearcher(reader);
     TopDocs hits = searcher.search(query, 10, new Sort(SortField.FIELD_DOC, SortField.FIELD_SCORE));
@@ -237,8 +237,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     searcher = newSearcher(reader);
     Query query =
         new SynonymQuery.Builder(FIELD_NAME)
-            .addTerm(new Term(FIELD_NAME, "jfk"))
-            .addTerm(new Term(FIELD_NAME, "kennedy"))
+            .addTerm(new QueryTerm(FIELD_NAME, "jfk", 0))
+            .addTerm(new QueryTerm(FIELD_NAME, "kennedy", 0))
             .build();
     QueryScorer scorer = new QueryScorer(query, FIELD_NAME);
     Highlighter highlighter = new Highlighter(scorer);
@@ -263,9 +263,9 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public Query rewrite(IndexReader reader) throws IOException {
             CommonTermsQuery query = new CommonTermsQuery(Occur.MUST, Occur.SHOULD, 3);
-            query.add(new Term(FIELD_NAME, "this")); // stop-word
-            query.add(new Term(FIELD_NAME, "long"));
-            query.add(new Term(FIELD_NAME, "very"));
+            query.add(new QueryTerm(FIELD_NAME, "this", 0)); // stop-word
+            query.add(new QueryTerm(FIELD_NAME, "long", 0));
+            query.add(new QueryTerm(FIELD_NAME, "very", 0));
             return query;
           }
 
@@ -326,7 +326,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     // highlighted
     // regardless of the field name.
 
-    PhraseQuery q = new PhraseQuery(3, FIELD_NAME, "world", "flatland");
+    PhraseQuery q = new PhraseQuery(3, FIELD_NAME, new int[] {0, 0}, "world", "flatland");
 
     String expected = "I call our <B>world</B> <B>Flatland</B>, not because we call it so,";
     String observed = highlightField(q, "SOME_FIELD_NAME", s1);
@@ -341,7 +341,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     // when the query field name differs from the name of the field being
     // highlighted,
     // which in this example happens to be the default field name.
-    q = new PhraseQuery(3, "text", "world", "flatland");
+    q = new PhraseQuery(3, "text", new int[] {0, 0}, "world", "flatland");
 
     expected = s1;
     observed = highlightField(q, FIELD_NAME, s1);
@@ -367,7 +367,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testSimpleSpanHighlighter() throws Exception {
-    doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+    doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
 
     int maxNumFragmentsRequired = 2;
 
@@ -391,7 +391,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   // LUCENE-2229
   public void testSimpleSpanHighlighterWithStopWordsStraddlingFragmentBoundaries()
       throws Exception {
-    doSearching(new PhraseQuery(FIELD_NAME, "all", "tokens"));
+    doSearching(new PhraseQuery(FIELD_NAME, new int[] {0, 0}, "all", "tokens"));
 
     int maxNumFragmentsRequired = 1;
 
@@ -419,13 +419,13 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     String f1 = "f1";
     String f2 = "f2";
 
-    PhraseQuery f1ph1 = new PhraseQuery(f1, "a", "b", "c", "d");
+    PhraseQuery f1ph1 = new PhraseQuery(f1, new int[] {0, 0, 0, 0}, "a", "b", "c", "d");
 
-    PhraseQuery f2ph1 = new PhraseQuery(f2, "a", "b", "c", "d");
+    PhraseQuery f2ph1 = new PhraseQuery(f2, new int[] {0, 0, 0, 0}, "a", "b", "c", "d");
 
-    PhraseQuery f1ph2 = new PhraseQuery(f1, "b", "c", "g");
+    PhraseQuery f1ph2 = new PhraseQuery(f1, new int[] {0, 0, 0}, "b", "c", "g");
 
-    PhraseQuery f2ph2 = new PhraseQuery(f2, "b", "c", "g");
+    PhraseQuery f2ph2 = new PhraseQuery(f2, new int[] {0, 0, 0}, "b", "c", "g");
 
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
     BooleanQuery.Builder leftChild = new BooleanQuery.Builder();
@@ -454,9 +454,9 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
   public void testSimpleQueryScorerPhraseHighlighting() throws Exception {
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term(FIELD_NAME, "very"), 0);
-    builder.add(new Term(FIELD_NAME, "long"), 1);
-    builder.add(new Term(FIELD_NAME, "contains"), 3);
+    builder.add(new QueryTerm(FIELD_NAME, "very", 0), 0);
+    builder.add(new QueryTerm(FIELD_NAME, "long", 0), 1);
+    builder.add(new QueryTerm(FIELD_NAME, "contains", 0), 3);
     PhraseQuery phraseQuery = builder.build();
     doSearching(phraseQuery);
 
@@ -485,10 +485,10 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     numHighlights = 0;
 
     builder = new PhraseQuery.Builder();
-    builder.add(new Term(FIELD_NAME, "piece"), 1);
-    builder.add(new Term(FIELD_NAME, "text"), 3);
-    builder.add(new Term(FIELD_NAME, "refers"), 4);
-    builder.add(new Term(FIELD_NAME, "kennedy"), 6);
+    builder.add(new QueryTerm(FIELD_NAME, "piece", 0), 1);
+    builder.add(new QueryTerm(FIELD_NAME, "text", 0), 3);
+    builder.add(new QueryTerm(FIELD_NAME, "refers", 0), 4);
+    builder.add(new QueryTerm(FIELD_NAME, "kennedy", 0), 6);
     phraseQuery = builder.build();
 
     doSearching(phraseQuery);
@@ -518,10 +518,10 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     numHighlights = 0;
 
     builder = new PhraseQuery.Builder();
-    builder.add(new Term(FIELD_NAME, "lets"), 0);
-    builder.add(new Term(FIELD_NAME, "lets"), 4);
-    builder.add(new Term(FIELD_NAME, "lets"), 8);
-    builder.add(new Term(FIELD_NAME, "lets"), 12);
+    builder.add(new QueryTerm(FIELD_NAME, "lets", 0), 0);
+    builder.add(new QueryTerm(FIELD_NAME, "lets", 0), 4);
+    builder.add(new QueryTerm(FIELD_NAME, "lets", 0), 8);
+    builder.add(new QueryTerm(FIELD_NAME, "lets", 0), 12);
     phraseQuery = builder.build();
 
     doSearching(phraseQuery);
@@ -552,7 +552,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   public void testSpanRegexQuery() throws Exception {
     query =
         new SpanOrQuery(
-            new SpanMultiTermQueryWrapper<>(new RegexpQuery(new Term(FIELD_NAME, "ken.*"))));
+            new SpanMultiTermQueryWrapper<>(
+                new RegexpQuery(new QueryTerm(FIELD_NAME, "ken.*", 0))));
     searcher = newSearcher(reader);
     hits = searcher.search(query, 100);
     int maxNumFragmentsRequired = 2;
@@ -579,7 +580,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testRegexQuery() throws Exception {
-    query = new RegexpQuery(new Term(FIELD_NAME, "ken.*"));
+    query = new RegexpQuery(new QueryTerm(FIELD_NAME, "ken.*", 0));
     searcher = newSearcher(reader);
     hits = searcher.search(query, 100);
     int maxNumFragmentsRequired = 2;
@@ -606,7 +607,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testExternalReader() throws Exception {
-    query = new RegexpQuery(new Term(FIELD_NAME, "ken.*"));
+    query = new RegexpQuery(new QueryTerm(FIELD_NAME, "ken.*", 0));
     searcher = newSearcher(reader);
     hits = searcher.search(query, 100);
     int maxNumFragmentsRequired = 2;
@@ -627,7 +628,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
       if (VERBOSE) System.out.println("\t" + result);
     }
 
-    assertTrue(reader.docFreq(new Term(FIELD_NAME, "hello")) > 0);
+    assertTrue(reader.docFreq(new QueryTerm(FIELD_NAME, "hello", 0)) > 0);
     assertTrue(
         "Failed to find correct number of highlights " + numHighlights + " found",
         numHighlights == 5);
@@ -662,7 +663,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testSimpleQueryScorerPhraseHighlighting2() throws Exception {
-    PhraseQuery phraseQuery = new PhraseQuery(5, FIELD_NAME, "text", "piece", "long");
+    PhraseQuery phraseQuery =
+        new PhraseQuery(5, FIELD_NAME, new int[] {0, 0, 0}, "text", "piece", "long");
     doSearching(phraseQuery);
 
     int maxNumFragmentsRequired = 2;
@@ -688,7 +690,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testSimpleQueryScorerPhraseHighlighting3() throws Exception {
-    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, "x", "y", "z");
+    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, new int[] {0, 0, 0}, "x", "y", "z");
     doSearching(phraseQuery);
 
     int maxNumFragmentsRequired = 2;
@@ -715,10 +717,10 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
   public void testSimpleSpanFragmenter() throws Exception {
     Builder builder = new PhraseQuery.Builder();
-    builder.add(new Term(FIELD_NAME, "piece"), 0);
-    builder.add(new Term(FIELD_NAME, "text"), 2);
-    builder.add(new Term(FIELD_NAME, "very"), 5);
-    builder.add(new Term(FIELD_NAME, "long"), 6);
+    builder.add(new QueryTerm(FIELD_NAME, "piece", 0), 0);
+    builder.add(new QueryTerm(FIELD_NAME, "text", 0), 2);
+    builder.add(new QueryTerm(FIELD_NAME, "very", 0), 5);
+    builder.add(new QueryTerm(FIELD_NAME, "long", 0), 6);
     PhraseQuery phraseQuery = builder.build();
     doSearching(phraseQuery);
 
@@ -740,7 +742,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
       if (VERBOSE) System.out.println("\t" + result);
     }
 
-    phraseQuery = new PhraseQuery(FIELD_NAME, "been", "shot");
+    phraseQuery = new PhraseQuery(FIELD_NAME, new int[] {0, 0}, "been", "shot");
 
     doSearching(query);
 
@@ -764,9 +766,9 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   // position sensitive query added after position insensitive query
   public void testPosTermStdTerm() throws Exception {
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
-    booleanQuery.add(new TermQuery(new Term(FIELD_NAME, "y")), Occur.SHOULD);
+    booleanQuery.add(new TermQuery(new QueryTerm(FIELD_NAME, "y", 0)), Occur.SHOULD);
 
-    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, "x", "y", "z");
+    PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, new int[] {0, 0, 0}, "x", "y", "z");
     booleanQuery.add(phraseQuery, Occur.SHOULD);
 
     doSearching(booleanQuery.build());
@@ -797,8 +799,11 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   public void testQueryScorerMultiPhraseQueryHighlighting() throws Exception {
     MultiPhraseQuery.Builder mpqb = new MultiPhraseQuery.Builder();
 
-    mpqb.add(new Term[] {new Term(FIELD_NAME, "wordx"), new Term(FIELD_NAME, "wordb")});
-    mpqb.add(new Term(FIELD_NAME, "wordy"));
+    mpqb.add(
+        new QueryTerm[] {
+          new QueryTerm(FIELD_NAME, "wordx", 0), new QueryTerm(FIELD_NAME, "wordb", 0)
+        });
+    mpqb.add(new QueryTerm(FIELD_NAME, "wordy", 0));
 
     doSearching(mpqb.build());
 
@@ -814,8 +819,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
      * out-of-order additions, but the Query itself seems to match accurately.
      */
 
-    mpqb.add(new Term[] {new Term(FIELD_NAME, "wordz")}, 2);
-    mpqb.add(new Term[] {new Term(FIELD_NAME, "wordx")}, 0);
+    mpqb.add(new QueryTerm[] {new QueryTerm(FIELD_NAME, "wordz", 0)}, 2);
+    mpqb.add(new QueryTerm[] {new QueryTerm(FIELD_NAME, "wordx", 0)}, 0);
 
     doSearching(mpqb.build());
 
@@ -829,8 +834,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     doSearching(
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD_NAME, "beginning")),
-              new SpanTermQuery(new Term(FIELD_NAME, "kennedy"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "beginning", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0))
             },
             3,
             false));
@@ -853,7 +858,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   }
 
   public void testSimpleQueryTermScorerHighlighter() throws Exception {
-    doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+    doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
     Highlighter highlighter = new Highlighter(new QueryTermScorer(query));
     highlighter.setTextFragmenter(new SimpleFragmenter(40));
     int maxNumFragmentsRequired = 2;
@@ -875,16 +880,16 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     Query query1 =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD_NAME, "wordx")),
-              new SpanTermQuery(new Term(FIELD_NAME, "wordy"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "wordx", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "wordy", 0))
             },
             1,
             false);
     Query query2 =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD_NAME, "wordy")),
-              new SpanTermQuery(new Term(FIELD_NAME, "wordc"))
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "wordy", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "wordc", 0))
             },
             1,
             false);
@@ -913,12 +918,12 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
         new SpanNotQuery(
             new SpanNearQuery(
                 new SpanQuery[] {
-                  new SpanTermQuery(new Term(FIELD_NAME, "shot")),
-                  new SpanTermQuery(new Term(FIELD_NAME, "kennedy"))
+                  new SpanTermQuery(new QueryTerm(FIELD_NAME, "shot", 0)),
+                  new SpanTermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0))
                 },
                 3,
                 false),
-            new SpanTermQuery(new Term(FIELD_NAME, "john"))));
+            new SpanTermQuery(new QueryTerm(FIELD_NAME, "john", 0))));
     TestHighlightRunner helper =
         new TestHighlightRunner() {
 
@@ -942,7 +947,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             numHighlights = 0;
-            doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+            doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
             doStandardHighlights(analyzer, searcher, hits, query, TestHighlighter.this);
             assertTrue(
                 "Failed to find correct number of highlights " + numHighlights + " found",
@@ -963,14 +968,15 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             if (random().nextBoolean()) {
               BooleanQuery.Builder bq = new BooleanQuery.Builder();
               bq.add(
-                  new ConstantScoreQuery(new TermQuery(new Term(FIELD_NAME, "kennedy"))),
+                  new ConstantScoreQuery(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0))),
                   Occur.MUST);
               bq.add(
-                  new ConstantScoreQuery(new TermQuery(new Term(FIELD_NAME, "kennedy"))),
+                  new ConstantScoreQuery(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0))),
                   Occur.MUST);
               doSearching(bq.build());
             } else {
-              doSearching(new ConstantScoreQuery(new TermQuery(new Term(FIELD_NAME, "kennedy"))));
+              doSearching(
+                  new ConstantScoreQuery(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0))));
             }
             doStandardHighlights(analyzer, searcher, hits, query, TestHighlighter.this);
             assertTrue(
@@ -991,7 +997,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             numHighlights = 0;
             FuzzyQuery fuzzyQuery =
                 new FuzzyQuery(
-                    new Term(FIELD_NAME, "kinnedy"),
+                    new QueryTerm(FIELD_NAME, "kinnedy", 0),
                     2,
                     FuzzyQuery.defaultPrefixLength,
                     FuzzyQuery.defaultMaxExpansions,
@@ -1017,7 +1023,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             numHighlights = 0;
             WildcardQuery wildcardQuery =
                 new WildcardQuery(
-                    new Term(FIELD_NAME, "k?nnedy"),
+                    new QueryTerm(FIELD_NAME, "k?nnedy", 0),
                     Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
                     MultiTermQuery.SCORING_BOOLEAN_REWRITE);
             doSearching(wildcardQuery);
@@ -1040,7 +1046,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             numHighlights = 0;
             WildcardQuery wildcardQuery =
                 new WildcardQuery(
-                    new Term(FIELD_NAME, "k*dy"),
+                    new QueryTerm(FIELD_NAME, "k*dy", 0),
                     Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
                     MultiTermQuery.SCORING_BOOLEAN_REWRITE);
             doSearching(wildcardQuery);
@@ -1092,7 +1098,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
     query =
         new WildcardQuery(
-            new Term(FIELD_NAME, "ken*"),
+            new QueryTerm(FIELD_NAME, "ken*", 0),
             Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
             MultiTermQuery.CONSTANT_SCORE_REWRITE);
     searcher = newSearcher(reader);
@@ -1188,7 +1194,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             numHighlights = 0;
-            PhraseQuery phraseQuery = new PhraseQuery(FIELD_NAME, "john", "kennedy");
+            PhraseQuery phraseQuery =
+                new PhraseQuery(FIELD_NAME, new int[] {0, 0}, "john", "kennedy");
             doSearching(phraseQuery);
             doStandardHighlights(analyzer, searcher, hits, query, TestHighlighter.this);
             // Currently highlights "John" and "Kennedy" separately
@@ -1209,8 +1216,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           public void run() throws Exception {
             numHighlights = 0;
             SpanQuery[] clauses = {
-              new SpanTermQuery(new Term("contents", "john")),
-              new SpanTermQuery(new Term("contents", "kennedy")),
+              new SpanTermQuery(new QueryTerm("contents", "john", 0)),
+              new SpanTermQuery(new QueryTerm("contents", "kennedy", 0)),
             };
 
             SpanNearQuery snq = new SpanNearQuery(clauses, 1, true);
@@ -1232,7 +1239,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
           @Override
           public void run() throws Exception {
-            TermQuery query = new TermQuery(new Term("data", "help"));
+            TermQuery query = new TermQuery(new QueryTerm("data", "help", 0));
             Highlighter hg = new Highlighter(new SimpleHTMLFormatter(), new QueryTermScorer(query));
             hg.setTextFragmenter(new NullFragmenter());
 
@@ -1252,8 +1259,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           public void run() throws Exception {
             numHighlights = 0;
             SpanQuery[] clauses = {
-              new SpanTermQuery(new Term("contents", "john")),
-              new SpanTermQuery(new Term("contents", "kennedy")),
+              new SpanTermQuery(new QueryTerm("contents", "john", 0)),
+              new SpanTermQuery(new QueryTerm("contents", "kennedy", 0)),
             };
             SpanNearQuery snq = new SpanNearQuery(clauses, 1, true);
             BooleanQuery.Builder bq = new BooleanQuery.Builder();
@@ -1281,7 +1288,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             numHighlights = 0;
-            PhraseQuery pq = new PhraseQuery("contents", "john", "kennedy");
+            PhraseQuery pq = new PhraseQuery("contents", new int[] {0, 0}, "john", "kennedy");
             BooleanQuery.Builder bq = new BooleanQuery.Builder();
             bq.add(pq, Occur.MUST);
             bq.add(
@@ -1308,10 +1315,10 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           public void run() throws Exception {
             numHighlights = 0;
             BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
-            booleanQuery.add(new TermQuery(new Term(FIELD_NAME, "john")), Occur.SHOULD);
+            booleanQuery.add(new TermQuery(new QueryTerm(FIELD_NAME, "john", 0)), Occur.SHOULD);
             PrefixQuery prefixQuery =
                 new PrefixQuery(
-                    new Term(FIELD_NAME, "kenn"), MultiTermQuery.SCORING_BOOLEAN_REWRITE);
+                    new QueryTerm(FIELD_NAME, "kenn", 0), MultiTermQuery.SCORING_BOOLEAN_REWRITE);
             booleanQuery.add(prefixQuery, Occur.SHOULD);
 
             doSearching(booleanQuery.build());
@@ -1334,8 +1341,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             numHighlights = 0;
 
             BooleanQuery.Builder query = new BooleanQuery.Builder();
-            query.add(new TermQuery(new Term(FIELD_NAME, "jfk")), Occur.SHOULD);
-            query.add(new TermQuery(new Term(FIELD_NAME, "kennedy")), Occur.SHOULD);
+            query.add(new TermQuery(new QueryTerm(FIELD_NAME, "jfk", 0)), Occur.SHOULD);
+            query.add(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)), Occur.SHOULD);
 
             doSearching(query.build());
             doStandardHighlights(analyzer, searcher, hits, query.build(), TestHighlighter.this);
@@ -1354,7 +1361,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
           @Override
           public void run() throws Exception {
-            doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+            doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
             numHighlights = 0;
             for (int i = 0; i < hits.totalHits.value; i++) {
               final int docId = hits.scoreDocs[i].doc;
@@ -1428,7 +1435,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   public void testFieldExistsQuery() throws IOException {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("field", "term")), Occur.MUST)
+            .add(new TermQuery(new QueryTerm("field", "term", 0)), Occur.MUST)
             .add(new FieldExistsQuery("field"), Occur.MUST)
             .build();
 
@@ -1497,9 +1504,9 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
               String s = "football-soccer in the euro 2004 footie competition";
 
               BooleanQuery.Builder query = new BooleanQuery.Builder();
-              query.add(new TermQuery(new Term("bookid", "football")), Occur.SHOULD);
-              query.add(new TermQuery(new Term("bookid", "soccer")), Occur.SHOULD);
-              query.add(new TermQuery(new Term("bookid", "footie")), Occur.SHOULD);
+              query.add(new TermQuery(new QueryTerm("bookid", "football", 0)), Occur.SHOULD);
+              query.add(new TermQuery(new QueryTerm("bookid", "soccer", 0)), Occur.SHOULD);
+              query.add(new TermQuery(new QueryTerm("bookid", "footie", 0)), Occur.SHOULD);
 
               Highlighter highlighter = getHighlighter(query.build(), null, TestHighlighter.this);
 
@@ -1529,7 +1536,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             numHighlights = 0;
-            doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+            doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
             // new Highlighter(TestHighlighter.this, new QueryTermScorer(query));
 
             for (int i = 0; i < hits.totalHits.value; i++) {
@@ -1554,7 +1561,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
 
-            doSearching(new TermQuery(new Term(FIELD_NAME, "kennedy")));
+            doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "kennedy", 0)));
 
             for (int i = 0; i < hits.totalHits.value; i++) {
               final int docId = hits.scoreDocs[i].doc;
@@ -1603,7 +1610,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             numHighlights = 0;
-            doSearching(new TermQuery(new Term(FIELD_NAME, "meat")));
+            doSearching(new TermQuery(new QueryTerm(FIELD_NAME, "meat", 0)));
             TokenStream tokenStream = analyzer.tokenStream(FIELD_NAME, texts[0]);
             Highlighter highlighter =
                 getHighlighter(
@@ -1638,7 +1645,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             final MockAnalyzer analyzer =
                 new MockAnalyzer(random(), MockTokenizer.SIMPLE, true, stopWords);
             analyzer.setEnableChecks(false);
-            TermQuery query = new TermQuery(new Term("data", goodWord));
+            TermQuery query = new TermQuery(new QueryTerm("data", goodWord, 0));
 
             String match;
             StringBuilder sb = new StringBuilder();
@@ -1683,7 +1690,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           public void run() throws Exception {
             CharacterRunAutomaton stopWords =
                 new CharacterRunAutomaton(new RegExp("i[nt]").toAutomaton());
-            TermQuery query = new TermQuery(new Term("text", "searchterm"));
+            TermQuery query = new TermQuery(new QueryTerm("text", "searchterm", 0));
 
             String text = "this is a text with searchterm in it";
             SimpleHTMLFormatter fm = new SimpleHTMLFormatter();
@@ -1706,7 +1713,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
   public void testHighlighterWithPhraseQuery() throws IOException, InvalidTokenOffsetsException {
     final String fieldName = "substring";
 
-    final PhraseQuery query = new PhraseQuery(fieldName, new BytesRef[] {new BytesRef("uchu")});
+    final PhraseQuery query = new PhraseQuery(fieldName, new int[] {0}, new BytesRef("uchu"));
 
     assertHighlighting(
         query, new SimpleHTMLFormatter("<b>", "</b>"), "Buchung", "B<b>uchu</b>ng", fieldName);
@@ -1717,7 +1724,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     final String fieldName = "substring";
 
     final MultiPhraseQuery mpq =
-        new MultiPhraseQuery.Builder().add(new Term(fieldName, "uchu")).build();
+        new MultiPhraseQuery.Builder().add(new QueryTerm(fieldName, "uchu", 0)).build();
 
     assertHighlighting(
         mpq, new SimpleHTMLFormatter("<b>", "</b>"), "Buchung", "B<b>uchu</b>ng", fieldName);
@@ -1754,8 +1761,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             searcher = newSearcher(reader);
 
             BooleanQuery.Builder query = new BooleanQuery.Builder();
-            query.add(new WildcardQuery(new Term(FIELD_NAME, "jf?")), Occur.SHOULD);
-            query.add(new WildcardQuery(new Term(FIELD_NAME, "kenned*")), Occur.SHOULD);
+            query.add(new WildcardQuery(new QueryTerm(FIELD_NAME, "jf?", 0)), Occur.SHOULD);
+            query.add(new WildcardQuery(new QueryTerm(FIELD_NAME, "kenned*", 0)), Occur.SHOULD);
 
             if (VERBOSE) System.out.println("Searching with primitive query");
             // forget to set this and...
@@ -1804,7 +1811,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
           @Override
           public void run() throws Exception {
             doSearching(
-                new TermQuery(new Term(FIELD_NAME, "aninvalidquerywhichshouldyieldnoresults")));
+                new TermQuery(
+                    new QueryTerm(FIELD_NAME, "aninvalidquerywhichshouldyieldnoresults", 0)));
 
             for (String text : texts) {
               TokenStream tokenStream = analyzer.tokenStream(FIELD_NAME, text);
@@ -1889,8 +1897,8 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             String docMainText = "fred is one of the people";
 
             BooleanQuery.Builder query = new BooleanQuery.Builder();
-            query.add(new TermQuery(new Term(FIELD_NAME, "fred")), Occur.SHOULD);
-            query.add(new TermQuery(new Term("category", "people")), Occur.SHOULD);
+            query.add(new TermQuery(new QueryTerm(FIELD_NAME, "fred", 0)), Occur.SHOULD);
+            query.add(new TermQuery(new QueryTerm("category", "people", 0)), Occur.SHOULD);
 
             // highlighting respects fieldnames used in query
 
@@ -2045,34 +2053,34 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             Highlighter highlighter;
             String result;
 
-            query = new TermQuery(new Term("text", "foo"));
+            query = new TermQuery(new QueryTerm("text", "foo", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2(), s, 3, "...");
             assertEquals("Hi-Speed10 <B>foo</B>", result);
 
-            query = new TermQuery(new Term("text", "10"));
+            query = new TermQuery(new QueryTerm("text", "10", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2(), s, 3, "...");
             assertEquals("Hi-Speed<B>10</B> foo", result);
 
-            query = new TermQuery(new Term("text", "hi"));
+            query = new TermQuery(new QueryTerm("text", "hi", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2(), s, 3, "...");
             assertEquals("<B>Hi</B>-Speed10 foo", result);
 
-            query = new TermQuery(new Term("text", "speed"));
+            query = new TermQuery(new QueryTerm("text", "speed", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2(), s, 3, "...");
             assertEquals("Hi-<B>Speed</B>10 foo", result);
 
-            query = new TermQuery(new Term("text", "hispeed"));
+            query = new TermQuery(new QueryTerm("text", "hispeed", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2(), s, 3, "...");
             assertEquals("<B>Hi-Speed</B>10 foo", result);
 
             BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
-            booleanQuery.add(new TermQuery(new Term("text", "hi")), Occur.SHOULD);
-            booleanQuery.add(new TermQuery(new Term("text", "speed")), Occur.SHOULD);
+            booleanQuery.add(new TermQuery(new QueryTerm("text", "hi", 0)), Occur.SHOULD);
+            booleanQuery.add(new TermQuery(new QueryTerm("text", "speed", 0)), Occur.SHOULD);
 
             query = booleanQuery.build();
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
@@ -2081,27 +2089,27 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
 
             // ///////////////// same tests, just put the bigger overlapping token
             // first
-            query = new TermQuery(new Term("text", "foo"));
+            query = new TermQuery(new QueryTerm("text", "foo", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2a(), s, 3, "...");
             assertEquals("Hi-Speed10 <B>foo</B>", result);
 
-            query = new TermQuery(new Term("text", "10"));
+            query = new TermQuery(new QueryTerm("text", "10", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2a(), s, 3, "...");
             assertEquals("Hi-Speed<B>10</B> foo", result);
 
-            query = new TermQuery(new Term("text", "hi"));
+            query = new TermQuery(new QueryTerm("text", "hi", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2a(), s, 3, "...");
             assertEquals("<B>Hi</B>-Speed10 foo", result);
 
-            query = new TermQuery(new Term("text", "speed"));
+            query = new TermQuery(new QueryTerm("text", "speed", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2a(), s, 3, "...");
             assertEquals("Hi-<B>Speed</B>10 foo", result);
 
-            query = new TermQuery(new Term("text", "hispeed"));
+            query = new TermQuery(new QueryTerm("text", "hispeed", 0));
             highlighter = getHighlighter(query, "text", TestHighlighter.this);
             result = highlighter.getBestFragments(getTS2a(), s, 3, "...");
             assertEquals("<B>Hi-Speed</B>10 foo", result);
@@ -2144,14 +2152,14 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
             dir1,
             new IndexWriterConfig(new MockAnalyzer(random(), MockTokenizer.WHITESPACE, false))
                 .setOpenMode(OpenMode.APPEND));
-    writer.deleteDocuments(new Term("t_text1", "del"));
+    writer.deleteDocuments(new QueryTerm("t_text1", "del", 0));
     // To see negative idf, keep comment the following line
     // writer.forceMerge(1);
     writer.close();
   }
 
   private void searchIndex() throws IOException, InvalidTokenOffsetsException {
-    Query query = new TermQuery(new Term("t_text1", "random"));
+    Query query = new TermQuery(new QueryTerm("t_text1", "random", 0));
     IndexReader reader = DirectoryReader.open(dir1);
     IndexSearcher searcher = newSearcher(reader);
     // This scorer can return negative idf -> null fragment
@@ -2190,7 +2198,7 @@ public class TestHighlighter extends BaseTokenStreamTestCase implements Formatte
     try (IndexReader reader = DirectoryReader.open(dir1)) {
       Query query =
           new SpanPayloadCheckQuery(
-              new SpanTermQuery(new Term(FIELD_NAME, "words")),
+              new SpanTermQuery(new QueryTerm(FIELD_NAME, "words", 0)),
               Collections.singletonList(
                   new BytesRef("pos: 1"))); // just match the first "word" occurrence
       IndexSearcher searcher = newSearcher(reader);

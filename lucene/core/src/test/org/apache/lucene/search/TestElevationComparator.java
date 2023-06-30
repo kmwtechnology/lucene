@@ -27,8 +27,8 @@ import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
@@ -86,7 +86,7 @@ public class TestElevationComparator extends LuceneTestCase {
   private void runTest(boolean reversed) throws Throwable {
 
     BooleanQuery.Builder newq = new BooleanQuery.Builder();
-    TermQuery query = new TermQuery(new Term("title", "ipod"));
+    TermQuery query = new TermQuery(new QueryTerm("title", "ipod", 0));
 
     newq.add(query, BooleanClause.Occur.SHOULD);
     newq.add(getElevatedQuery(new String[] {"id", "a", "id", "x"}), BooleanClause.Occur.SHOULD);
@@ -133,7 +133,7 @@ public class TestElevationComparator extends LuceneTestCase {
     BooleanQuery.Builder b = new BooleanQuery.Builder();
     int max = (vals.length / 2) + 5;
     for (int i = 0; i < vals.length - 1; i += 2) {
-      b.add(new TermQuery(new Term(vals[i], vals[i + 1])), BooleanClause.Occur.SHOULD);
+      b.add(new TermQuery(new QueryTerm(vals[i], vals[i + 1], 0)), BooleanClause.Occur.SHOULD);
       priority.put(new BytesRef(vals[i + 1]), Integer.valueOf(max--));
       // System.out.println(" pri doc=" + vals[i+1] + " pri=" + (1+max));
     }

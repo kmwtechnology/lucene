@@ -24,8 +24,8 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
@@ -203,7 +203,7 @@ public class TestDocument extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     // search for something that does exist
-    Query query = new TermQuery(new Term("keyword", "test1"));
+    Query query = new TermQuery(new QueryTerm("keyword", "test1", 0));
 
     // ensure that queries return expected results without DateFilter first
     ScoreDoc[] hits = searcher.search(query, 1000).scoreDocs;
@@ -230,7 +230,8 @@ public class TestDocument extends LuceneTestCase {
     IndexReader reader = writer.getReader();
 
     IndexSearcher searcher = newSearcher(reader);
-    PhraseQuery query = new PhraseQuery("indexed_not_tokenized", "test1", "test2");
+    PhraseQuery query =
+        new PhraseQuery("indexed_not_tokenized", new int[] {0, 0}, "test1", "test2");
 
     ScoreDoc[] hits = searcher.search(query, 1000).scoreDocs;
     assertEquals(1, hits.length);
@@ -308,7 +309,7 @@ public class TestDocument extends LuceneTestCase {
     IndexReader reader = writer.getReader();
     IndexSearcher searcher = newSearcher(reader);
 
-    Query query = new TermQuery(new Term("keyword", "test"));
+    Query query = new TermQuery(new QueryTerm("keyword", "test", 0));
 
     // ensure that queries return expected results without DateFilter first
     ScoreDoc[] hits = searcher.search(query, 1000).scoreDocs;

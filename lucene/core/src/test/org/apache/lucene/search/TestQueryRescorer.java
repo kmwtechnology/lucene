@@ -27,7 +27,7 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
@@ -88,7 +88,7 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Construct a query that will get numDocs hits.
     String wordOne = dictionary.get(0);
-    TermQuery termQuery = new TermQuery(new Term(fieldName, wordOne));
+    TermQuery termQuery = new TermQuery(new QueryTerm(fieldName, wordOne, 0));
     IndexSearcher searcher = getSearcher(reader);
     searcher.setSimilarity(new BM25Similarity());
     TopDocs hits = searcher.search(termQuery, numDocs);
@@ -96,7 +96,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     // Next, use a more specific phrase query that will return different scores
     // from the above term query
     String wordTwo = RandomPicks.randomFrom(random(), dictionary);
-    PhraseQuery phraseQuery = new PhraseQuery(1, fieldName, wordOne, wordTwo);
+    PhraseQuery phraseQuery = new PhraseQuery(1, fieldName, new int[] {0, 0}, wordOne, wordTwo);
 
     // rescore, requesting a smaller topN
     int topN = random().nextInt(numDocs - 1);
@@ -118,7 +118,7 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Construct a query that will get numDocs hits.
     String wordOne = dictionary.get(0);
-    TermQuery termQuery = new TermQuery(new Term(fieldName, wordOne));
+    TermQuery termQuery = new TermQuery(new QueryTerm(fieldName, wordOne, 0));
     IndexSearcher searcher = getSearcher(reader);
     searcher.setSimilarity(new BM25Similarity());
     TopDocs hits1 = searcher.search(termQuery, numDocs);
@@ -127,7 +127,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     // Next, use a more specific phrase query that will return different scores
     // from the above term query
     String wordTwo = RandomPicks.randomFrom(random(), dictionary);
-    PhraseQuery phraseQuery = new PhraseQuery(1, fieldName, wordOne, wordTwo);
+    PhraseQuery phraseQuery = new PhraseQuery(1, fieldName, new int[] {0, 0}, wordOne, wordTwo);
 
     // rescore, requesting the same hits as topN
     int topN = numDocs;
@@ -163,8 +163,8 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
     searcher.setSimilarity(new ClassicSimilarity());
 
@@ -174,7 +174,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Now, resort using PhraseQuery:
-    PhraseQuery pq = new PhraseQuery(5, "field", "wizard", "oz");
+    PhraseQuery pq = new PhraseQuery(5, "field", new int[] {0, 0}, "wizard", "oz");
 
     TopDocs hits2 = QueryRescorer.rescore(searcher, hits, pq, 2.0, 10);
 
@@ -206,8 +206,8 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
     searcher.setSimilarity(new ClassicSimilarity());
 
@@ -217,7 +217,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Now, resort using TermQuery on term that does not exist.
-    TermQuery tq = new TermQuery(new Term("field", "gold"));
+    TermQuery tq = new TermQuery(new QueryTerm("field", "gold", 0));
     TopDocs hits2 = QueryRescorer.rescore(searcher, hits, tq, 2.0, 10);
 
     // Just testing that null scorer is handled.
@@ -245,8 +245,8 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
 
     TopDocs hits = searcher.search(bq.build(), 10);
@@ -256,7 +256,7 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Now, resort using PhraseQuery, but with an
     // opposite-world combine:
-    PhraseQuery pq = new PhraseQuery(5, "field", "wizard", "oz");
+    PhraseQuery pq = new PhraseQuery(5, "field", new int[] {0, 0}, "wizard", "oz");
 
     TopDocs hits2 =
         new QueryRescorer(pq) {
@@ -298,8 +298,8 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
 
     TopDocs hits = searcher.search(bq.build(), 10);
@@ -308,7 +308,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Now, resort using PhraseQuery:
-    PhraseQuery pq = new PhraseQuery("field", "wizard", "oz");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "wizard", "oz");
 
     Rescorer rescorer =
         new QueryRescorer(pq) {
@@ -371,8 +371,8 @@ public class TestQueryRescorer extends LuceneTestCase {
 
     // Do ordinary BooleanQuery:
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
-    bq.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "wizard", 0)), Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("field", "oz", 0)), Occur.SHOULD);
     IndexSearcher searcher = getSearcher(r);
 
     TopDocs hits = searcher.search(bq.build(), 10);
@@ -381,7 +381,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     assertEquals("1", searcher.storedFields().document(hits.scoreDocs[1].doc).get("id"));
 
     // Now, resort using PhraseQuery, no slop:
-    PhraseQuery pq = new PhraseQuery("field", "wizard", "oz");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "wizard", "oz");
 
     TopDocs hits2 = QueryRescorer.rescore(searcher, hits, pq, 2.0, 10);
 
@@ -422,7 +422,7 @@ public class TestQueryRescorer extends LuceneTestCase {
     boolean reverse = random().nextBoolean();
 
     // System.out.println("numHits=" + numHits + " reverse=" + reverse);
-    TopDocs hits = s.search(new TermQuery(new Term("field", "a")), numHits);
+    TopDocs hits = s.search(new TermQuery(new QueryTerm("field", "a", 0)), numHits);
 
     TopDocs hits2 =
         new QueryRescorer(new FixedScoreQuery(idToNum, reverse)) {

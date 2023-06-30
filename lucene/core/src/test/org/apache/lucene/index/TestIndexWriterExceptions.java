@@ -1526,10 +1526,10 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
     w.close();
 
     final IndexSearcher s = newSearcher(r);
-    PhraseQuery pq = new PhraseQuery("content", "silly", "good");
+    PhraseQuery pq = new PhraseQuery("content", new int[] {0, 0}, "silly", "good");
     assertEquals(0, s.count(pq));
 
-    pq = new PhraseQuery("content", "good", "content");
+    pq = new PhraseQuery("content", new int[] {0, 0}, "good", "content");
     assertEquals(numDocs1 + numDocs2, s.count(pq));
     r.close();
     dir.close();
@@ -1602,10 +1602,10 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
     w.close();
 
     final IndexSearcher s = newSearcher(r);
-    PhraseQuery pq = new PhraseQuery("content", "silly", "content");
+    PhraseQuery pq = new PhraseQuery("content", new int[] {0, 0}, "silly", "content");
     assertEquals(numDocs2, s.count(pq));
 
-    pq = new PhraseQuery("content", "good", "content");
+    pq = new PhraseQuery("content", new int[] {0, 0}, "good", "content");
     assertEquals(numDocs1 + numDocs3 + numDocs4, s.count(pq));
     r.close();
     dir.close();

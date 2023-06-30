@@ -27,6 +27,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -456,7 +457,7 @@ public class TermAutomatonQuery extends Query implements Accountable {
 
     IntsRef single = Operations.getSingleton(det);
     if (single != null && single.length == 1) {
-      return new TermQuery(new Term(field, idToTerm.get(single.ints[single.offset])));
+      return new TermQuery(new QueryTerm(field, idToTerm.get(single.ints[single.offset]), 0));
     }
 
     // TODO: can PhraseQuery really handle multiple terms at the same position?  If so, why do we
@@ -485,7 +486,7 @@ public class TermAutomatonQuery extends Query implements Accountable {
         break;
       }
       int dest = -1;
-      List<Term> terms = new ArrayList<>();
+      List<QueryTerm> terms = new ArrayList<>();
       boolean matchesAny = false;
       for (int i = 0; i < count; i++) {
         det.getNextTransition(t);
@@ -501,12 +502,12 @@ public class TermAutomatonQuery extends Query implements Accountable {
 
         if (matchesAny == false) {
           for (int termID = t.min; termID <= t.max; termID++) {
-            terms.add(new Term(field, idToTerm.get(termID)));
+            terms.add(new QueryTerm(field, idToTerm.get(termID), 0));
           }
         }
       }
       if (matchesAny == false) {
-        mpq.add(terms.toArray(new Term[terms.size()]), pos);
+        mpq.add(terms.toArray(new QueryTerm[terms.size()]), pos);
         if (pq != null) {
           if (terms.size() == 1) {
             pq.add(terms.get(0), pos);

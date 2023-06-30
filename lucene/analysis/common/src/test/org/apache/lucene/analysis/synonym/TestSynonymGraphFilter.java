@@ -786,16 +786,19 @@ public class TestSynonymGraphFilter extends BaseTokenStreamTestCase {
     IndexSearcher s = newSearcher(r);
 
     // Good (this should not match, and doesn't):
-    assertEquals(0, s.count(new PhraseQuery("field", "what", "happened")));
+    assertEquals(0, s.count(new PhraseQuery("field", new int[] {0, 0}, "what", "happened")));
 
     // Bad (this should match, but doesn't):
-    assertEquals(0, s.count(new PhraseQuery("field", "wtf", "happened")));
+    assertEquals(0, s.count(new PhraseQuery("field", new int[] {0, 0}, "wtf", "happened")));
 
     // Good (this should match, and does):
-    assertEquals(1, s.count(new PhraseQuery("field", "what", "the", "fudge", "happened")));
+    assertEquals(
+        1,
+        s.count(
+            new PhraseQuery("field", new int[] {0, 0, 0, 0}, "what", "the", "fudge", "happened")));
 
     // Bad (this should not match, but does):
-    assertEquals(1, s.count(new PhraseQuery("field", "wtf", "the")));
+    assertEquals(1, s.count(new PhraseQuery("field", new int[] {0, 0}, "wtf", "the")));
 
     IOUtils.close(r, dir);
   }

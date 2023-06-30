@@ -18,9 +18,10 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import java.util.Objects;
-import org.apache.lucene.index.FilteredTermsEnum; // javadocs
+import org.apache.lucene.index.FilteredTermsEnum;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.SingleTermsEnum; // javadocs
+import org.apache.lucene.index.QueryTerm;
+import org.apache.lucene.index.SingleTermsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -146,7 +147,8 @@ public abstract class MultiTermQuery extends Query {
     @Override
     protected void addClause(
         BooleanQuery.Builder topLevel, Term term, int docCount, float boost, TermStates states) {
-      final TermQuery tq = new TermQuery(term, states);
+      QueryTerm t = term instanceof QueryTerm ? (QueryTerm) term : new QueryTerm(term);
+      final TermQuery tq = new TermQuery(t, states);
       topLevel.add(new BoostQuery(tq, boost), BooleanClause.Occur.SHOULD);
     }
   }
@@ -239,7 +241,8 @@ public abstract class MultiTermQuery extends Query {
     @Override
     protected void addClause(
         BooleanQuery.Builder topLevel, Term term, int docFreq, float boost, TermStates states) {
-      final Query q = new ConstantScoreQuery(new TermQuery(term, states));
+      QueryTerm t = term instanceof QueryTerm ? (QueryTerm) term : new QueryTerm(term);
+      final Query q = new ConstantScoreQuery(new TermQuery(t, states));
       topLevel.add(new BoostQuery(q, boost), BooleanClause.Occur.SHOULD);
     }
   }

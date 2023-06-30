@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -47,8 +47,8 @@ import org.apache.lucene.search.TermQuery;
 public final class DrillDownQuery extends Query {
 
   /** Creates a drill-down term. */
-  public static Term term(String field, String dim, String... path) {
-    return new Term(field, FacetsConfig.pathToString(dim, path));
+  public static QueryTerm term(String field, String dim, String... path) {
+    return new QueryTerm(field, FacetsConfig.pathToString(dim, path), 0);
   }
 
   private final FacetsConfig config;

@@ -19,7 +19,7 @@ package org.apache.lucene.classification;
 import org.apache.lucene.classification.utils.ConfusionMatrixGenerator;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.TermQuery;
@@ -54,7 +54,7 @@ public class TestKNearestFuzzyClassifier extends ClassificationTestBase<BytesRef
     try {
       MockAnalyzer analyzer = new MockAnalyzer(random());
       leafReader = getSampleIndex(analyzer);
-      TermQuery query = new TermQuery(new Term(textFieldName, "not"));
+      TermQuery query = new TermQuery(new QueryTerm(textFieldName, "not", 0));
       Classifier<BytesRef> classifier =
           new KNearestFuzzyClassifier(
               leafReader, null, analyzer, query, 3, categoryFieldName, textFieldName);

@@ -29,7 +29,7 @@ public class TestBufferedUpdates extends LuceneTestCase {
     int queries = atLeast(1);
     for (int i = 0; i < queries; i++) {
       final int docIDUpto = random().nextBoolean() ? Integer.MAX_VALUE : random().nextInt();
-      final Term term = new Term("id", Integer.toString(random().nextInt(100)));
+      final QueryTerm term = new QueryTerm("id", Integer.toString(random().nextInt(100)), 0);
       bu.addQuery(new TermQuery(term), docIDUpto);
     }
 

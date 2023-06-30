@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.sandbox.queries;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +30,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -257,7 +260,7 @@ public class FuzzyLikeThisQuery extends Query {
     }
   }
 
-  private Query newTermQuery(IndexReader reader, Term term) throws IOException {
+  private Query newTermQuery(IndexReader reader, QueryTerm term) throws IOException {
     if (ignoreTF) {
       return new ConstantScoreQuery(new TermQuery(term));
     } else {
@@ -312,7 +315,7 @@ public class FuzzyLikeThisQuery extends Query {
       if (variants.size() == 1) {
         // optimize where only one selected variant
         ScoreTerm st = variants.get(0);
-        Query tq = newTermQuery(reader, st.term);
+        Query tq = newTermQuery(reader, asQueryTerm(st.term));
         // set the boost to a mix of IDF and score
         bq.add(new BoostQuery(tq, st.score), BooleanClause.Occur.SHOULD);
       } else {
@@ -320,7 +323,7 @@ public class FuzzyLikeThisQuery extends Query {
         for (Iterator<ScoreTerm> iterator2 = variants.iterator(); iterator2.hasNext(); ) {
           ScoreTerm st = iterator2.next();
           // found a match
-          Query tq = newTermQuery(reader, st.term);
+          Query tq = newTermQuery(reader, asQueryTerm(st.term));
           // set the boost using the ScoreTerm's score
           termVariants.add(
               new BoostQuery(tq, st.score), BooleanClause.Occur.SHOULD); // add to query

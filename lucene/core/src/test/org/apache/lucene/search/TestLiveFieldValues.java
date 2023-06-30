@@ -32,6 +32,7 @@ import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -62,7 +63,7 @@ public class TestLiveFieldValues extends LuceneTestCase {
         new LiveFieldValues<IndexSearcher, Integer>(mgr, missing) {
           @Override
           protected Integer lookupFromSearcher(IndexSearcher s, String id) throws IOException {
-            TermQuery tq = new TermQuery(new Term("id", id));
+            TermQuery tq = new TermQuery(new QueryTerm("id", id, 0));
             TopDocs hits = s.search(tq, 1);
             assertTrue(hits.totalHits.value <= 1);
             if (hits.totalHits.value == 0) {

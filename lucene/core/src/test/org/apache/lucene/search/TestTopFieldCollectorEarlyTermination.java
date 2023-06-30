@@ -30,6 +30,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
@@ -141,7 +142,7 @@ public class TestTopFieldCollectorEarlyTermination extends LuceneTestCase {
 
         final Query query;
         if (random().nextBoolean()) {
-          query = new TermQuery(new Term("s", RandomPicks.randomFrom(random(), terms)));
+          query = new TermQuery(new QueryTerm("s", RandomPicks.randomFrom(random(), terms), 0));
         } else {
           query = new MatchAllDocsQuery();
         }

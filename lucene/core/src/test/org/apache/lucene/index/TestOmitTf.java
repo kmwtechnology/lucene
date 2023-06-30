@@ -196,16 +196,16 @@ public class TestOmitTf extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     searcher.setSimilarity(new SimpleSimilarity());
 
-    Term a = new Term("noTf", term);
-    Term b = new Term("tf", term);
-    Term c = new Term("noTf", "notf");
-    Term d = new Term("tf", "tf");
+    QueryTerm a = new QueryTerm("noTf", term, 0);
+    QueryTerm b = new QueryTerm("tf", term, 0);
+    QueryTerm c = new QueryTerm("noTf", "notf", 0);
+    QueryTerm d = new QueryTerm("tf", "tf", 0);
     TermQuery q1 = new TermQuery(a);
     TermQuery q2 = new TermQuery(b);
     TermQuery q3 = new TermQuery(c);
     TermQuery q4 = new TermQuery(d);
 
-    PhraseQuery pq = new PhraseQuery(a.field(), a.bytes(), c.bytes());
+    PhraseQuery pq = new PhraseQuery(a.field(), new int[] {0, 0}, a.bytes(), c.bytes());
     Exception expected =
         expectThrows(
             Exception.class,

@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.search.join;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -24,6 +26,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
@@ -211,12 +214,13 @@ public class TestBlockJoinSorting extends LuceneTestCase {
     IndexSearcher searcher = new IndexSearcher(DirectoryReader.open(w.w));
     w.close();
     BitSetProducer parentFilter =
-        new QueryBitSetProducer(new TermQuery(new Term("__type", "parent")));
+        new QueryBitSetProducer(new TermQuery(new QueryTerm("__type", "parent", 0)));
     CheckJoinIndex.check(searcher.getIndexReader(), parentFilter);
-    BitSetProducer childFilter = new QueryBitSetProducer(new PrefixQuery(new Term("field2")));
+    BitSetProducer childFilter =
+        new QueryBitSetProducer(new PrefixQuery(asQueryTerm(new Term("field2"))));
     ToParentBlockJoinQuery query =
         new ToParentBlockJoinQuery(
-            new PrefixQuery(new Term("field2")), parentFilter, ScoreMode.None);
+            new PrefixQuery(asQueryTerm(new Term("field2"))), parentFilter, ScoreMode.None);
 
     // Sort by field ascending, order first
     ToParentBlockJoinSortField sortField =
@@ -284,10 +288,10 @@ public class TestBlockJoinSorting extends LuceneTestCase {
 
     // Sort by field descending, order last, sort filter (filter_1:T)
     BitSetProducer childFilter1T =
-        new QueryBitSetProducer(new TermQuery((new Term("filter_1", "T"))));
+        new QueryBitSetProducer(new TermQuery((new QueryTerm("filter_1", "T", 0))));
     query =
         new ToParentBlockJoinQuery(
-            new TermQuery((new Term("filter_1", "T"))), parentFilter, ScoreMode.None);
+            new TermQuery((new QueryTerm("filter_1", "T", 0))), parentFilter, ScoreMode.None);
 
     sortField =
         notEqual(
@@ -319,7 +323,7 @@ public class TestBlockJoinSorting extends LuceneTestCase {
                     "field2",
                     SortField.Type.STRING,
                     true,
-                    new QueryBitSetProducer(new TermQuery(new Term("__type", "another"))),
+                    new QueryBitSetProducer(new TermQuery(new QueryTerm("__type", "another", 0))),
                     childFilter1T));
 
     searcher.getIndexReader().close();

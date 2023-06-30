@@ -19,8 +19,9 @@ package org.apache.lucene.queryparser.xml.builders;
 import java.io.IOException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -52,10 +53,13 @@ public class TermsQueryBuilder implements QueryBuilder {
     bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
     try (TokenStream ts = analyzer.tokenStream(fieldName, text)) {
       TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
-      Term term = null;
+      OffsetAttribute offsetAtt = ts.addAttribute(OffsetAttribute.class);
+      QueryTerm term;
       ts.reset();
       while (ts.incrementToken()) {
-        term = new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()));
+        term =
+            new QueryTerm(
+                fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()), offsetAtt.startOffset());
         bq.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.SHOULD));
       }
       ts.end();

@@ -19,7 +19,7 @@ package org.apache.lucene.queryparser.surround.query;
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -48,8 +48,8 @@ public class SrndPrefixQuery extends SimpleTerm {
     return truncator;
   }
 
-  public Term getLucenePrefixTerm(String fieldName) {
-    return new Term(fieldName, getPrefix());
+  public QueryTerm getLucenePrefixTerm(String fieldName) {
+    return new QueryTerm(fieldName, getPrefix(), 0);
   }
 
   @Override
@@ -76,7 +76,7 @@ public class SrndPrefixQuery extends SimpleTerm {
         mtv.visitMatchingTerm(getLucenePrefixTerm(fieldName));
       } else if (status == TermsEnum.SeekStatus.NOT_FOUND) {
         if (StringHelper.startsWith(termsEnum.term(), prefixRef)) {
-          mtv.visitMatchingTerm(new Term(fieldName, termsEnum.term().utf8ToString()));
+          mtv.visitMatchingTerm(new QueryTerm(fieldName, termsEnum.term().utf8ToString(), 0));
         } else {
           skip = true;
         }
@@ -89,7 +89,7 @@ public class SrndPrefixQuery extends SimpleTerm {
         while (true) {
           BytesRef text = termsEnum.next();
           if (text != null && StringHelper.startsWith(text, prefixRef)) {
-            mtv.visitMatchingTerm(new Term(fieldName, text.utf8ToString()));
+            mtv.visitMatchingTerm(new QueryTerm(fieldName, text.utf8ToString(), 0));
           } else {
             break;
           }

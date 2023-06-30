@@ -19,6 +19,7 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.util.Objects;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 
 /**
@@ -69,7 +70,9 @@ public class NGramPhraseQuery extends Query {
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     for (int i = 0; i < terms.length; ++i) {
       if (i % n == 0 || i == terms.length - 1) {
-        builder.add(terms[i], i);
+        QueryTerm t =
+            terms[i] instanceof QueryTerm ? (QueryTerm) terms[i] : new QueryTerm(terms[i]);
+        builder.add(t, i);
       }
     }
     return builder.build();

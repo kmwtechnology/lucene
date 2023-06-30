@@ -29,8 +29,8 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.FilterLeafReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.tests.search.AssertingMatches;
@@ -52,7 +52,7 @@ public class TestMatchesIterator extends MatchesTestBase {
   }
 
   public void testTermQuery() throws IOException {
-    Term t = new Term(FIELD_WITH_OFFSETS, "w1");
+    QueryTerm t = new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0);
     Query q = NamedMatches.wrapQuery("q", new TermQuery(t));
     checkMatches(
         q,
@@ -70,7 +70,7 @@ public class TestMatchesIterator extends MatchesTestBase {
   }
 
   public void testTermQueryNoStoredOffsets() throws IOException {
-    Query q = new TermQuery(new Term(FIELD_NO_OFFSETS, "w1"));
+    Query q = new TermQuery(new QueryTerm(FIELD_NO_OFFSETS, "w1", 0));
     checkMatches(
         q,
         FIELD_NO_OFFSETS,
@@ -85,14 +85,16 @@ public class TestMatchesIterator extends MatchesTestBase {
 
   public void testTermQueryNoPositions() throws IOException {
     for (String field : new String[] {FIELD_DOCS_ONLY, FIELD_FREQS}) {
-      Query q = new TermQuery(new Term(field, "w1"));
+      Query q = new TermQuery(new QueryTerm(field, "w1", 0));
       checkNoPositionsMatches(q, field, new boolean[] {true, true, true, true, false});
     }
   }
 
   public void testDisjunction() throws IOException {
-    Query w1 = NamedMatches.wrapQuery("w1", new TermQuery(new Term(FIELD_WITH_OFFSETS, "w1")));
-    Query w3 = NamedMatches.wrapQuery("w3", new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")));
+    Query w1 =
+        NamedMatches.wrapQuery("w1", new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0)));
+    Query w3 =
+        NamedMatches.wrapQuery("w3", new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)));
     Query q =
         new BooleanQuery.Builder()
             .add(w1, BooleanClause.Occur.SHOULD)
@@ -117,8 +119,8 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_DOCS_ONLY, FIELD_FREQS}) {
       Query q =
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term(field, "w1")), BooleanClause.Occur.SHOULD)
-              .add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm(field, "w1", 0)), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.SHOULD)
               .build();
       checkNoPositionsMatches(q, field, new boolean[] {true, true, true, true, false});
     }
@@ -127,8 +129,11 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testReqOpt() throws IOException {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w1")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")), BooleanClause.Occur.MUST)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0)),
+                BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)), BooleanClause.Occur.MUST)
             .build();
     checkMatches(
         q,
@@ -147,18 +152,21 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_DOCS_ONLY, FIELD_FREQS}) {
       Query q =
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term(field, "w1")), BooleanClause.Occur.SHOULD)
-              .add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST)
+              .add(new TermQuery(new QueryTerm(field, "w1", 0)), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST)
               .build();
       checkNoPositionsMatches(q, field, new boolean[] {true, true, false, true, false});
     }
   }
 
   public void testMinShouldMatch() throws IOException {
-    Query w1 = NamedMatches.wrapQuery("w1", new TermQuery(new Term(FIELD_WITH_OFFSETS, "w1")));
-    Query w3 = NamedMatches.wrapQuery("w3", new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")));
-    Query w4 = new TermQuery(new Term(FIELD_WITH_OFFSETS, "w4"));
-    Query xx = NamedMatches.wrapQuery("xx", new TermQuery(new Term(FIELD_WITH_OFFSETS, "xx")));
+    Query w1 =
+        NamedMatches.wrapQuery("w1", new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0)));
+    Query w3 =
+        NamedMatches.wrapQuery("w3", new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)));
+    Query w4 = new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w4", 0));
+    Query xx =
+        NamedMatches.wrapQuery("xx", new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "xx", 0)));
     Query q =
         new BooleanQuery.Builder()
             .add(w3, BooleanClause.Occur.SHOULD)
@@ -190,12 +198,12 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_FREQS, FIELD_DOCS_ONLY}) {
       Query q =
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.SHOULD)
               .add(
                   new BooleanQuery.Builder()
-                      .add(new TermQuery(new Term(field, "w1")), BooleanClause.Occur.SHOULD)
-                      .add(new TermQuery(new Term(field, "w4")), BooleanClause.Occur.SHOULD)
-                      .add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.SHOULD)
+                      .add(new TermQuery(new QueryTerm(field, "w1", 0)), BooleanClause.Occur.SHOULD)
+                      .add(new TermQuery(new QueryTerm(field, "w4", 0)), BooleanClause.Occur.SHOULD)
+                      .add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.SHOULD)
                       .setMinimumNumberShouldMatch(2)
                       .build(),
                   BooleanClause.Occur.SHOULD)
@@ -207,8 +215,12 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testExclusion() throws IOException {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "zz")), BooleanClause.Occur.MUST_NOT)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)),
+                BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "zz", 0)),
+                BooleanClause.Occur.MUST_NOT)
             .build();
     checkMatches(
         q,
@@ -226,8 +238,8 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_FREQS, FIELD_DOCS_ONLY}) {
       Query q =
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.SHOULD)
-              .add(new TermQuery(new Term(field, "zz")), BooleanClause.Occur.MUST_NOT)
+              .add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm(field, "zz", 0)), BooleanClause.Occur.MUST_NOT)
               .build();
       checkNoPositionsMatches(q, field, new boolean[] {true, false, false, true, false});
     }
@@ -236,8 +248,10 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testConjunction() throws IOException {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")), BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w4")), BooleanClause.Occur.MUST)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)), BooleanClause.Occur.MUST)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w4", 0)), BooleanClause.Occur.MUST)
             .build();
     checkMatches(
         q,
@@ -255,18 +269,18 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_FREQS, FIELD_DOCS_ONLY}) {
       Query q =
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term(field, "w4")), BooleanClause.Occur.MUST)
+              .add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST)
+              .add(new TermQuery(new QueryTerm(field, "w4", 0)), BooleanClause.Occur.MUST)
               .build();
       checkNoPositionsMatches(q, field, new boolean[] {true, false, false, true, false});
     }
   }
 
   public void testWildcards() throws IOException {
-    Query q = new PrefixQuery(new Term(FIELD_WITH_OFFSETS, "x"));
+    Query q = new PrefixQuery(new QueryTerm(FIELD_WITH_OFFSETS, "x", 0));
     checkMatches(q, FIELD_WITH_OFFSETS, new int[][] {{0}, {1}, {2, 1, 1, 3, 5}, {3}, {4}});
 
-    Query rq = new RegexpQuery(new Term(FIELD_WITH_OFFSETS, "w[1-2]"));
+    Query rq = new RegexpQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w[1-2]", 0));
     checkMatches(
         rq,
         FIELD_WITH_OFFSETS,
@@ -282,7 +296,7 @@ public class TestMatchesIterator extends MatchesTestBase {
   }
 
   public void testNoMatchWildcards() throws IOException {
-    Query nomatch = new PrefixQuery(new Term(FIELD_WITH_OFFSETS, "wibble"));
+    Query nomatch = new PrefixQuery(new QueryTerm(FIELD_WITH_OFFSETS, "wibble", 0));
     Matches matches =
         searcher
             .createWeight(searcher.rewrite(nomatch), ScoreMode.COMPLETE_NO_SCORES, 1)
@@ -292,7 +306,7 @@ public class TestMatchesIterator extends MatchesTestBase {
 
   public void testWildcardsNoPositions() throws IOException {
     for (String field : new String[] {FIELD_FREQS, FIELD_DOCS_ONLY}) {
-      Query q = new PrefixQuery(new Term(field, "x"));
+      Query q = new PrefixQuery(new QueryTerm(field, "x", 0));
       checkNoPositionsMatches(q, field, new boolean[] {false, false, true, false, false});
     }
   }
@@ -300,8 +314,8 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testSynonymQuery() throws IOException {
     Query q =
         new SynonymQuery.Builder(FIELD_WITH_OFFSETS)
-            .addTerm(new Term(FIELD_WITH_OFFSETS, "w1"))
-            .addTerm(new Term(FIELD_WITH_OFFSETS, "w2"))
+            .addTerm(new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0))
+            .addTerm(new QueryTerm(FIELD_WITH_OFFSETS, "w2", 0))
             .build();
     checkMatches(
         q,
@@ -320,8 +334,8 @@ public class TestMatchesIterator extends MatchesTestBase {
     for (String field : new String[] {FIELD_FREQS, FIELD_DOCS_ONLY}) {
       Query q =
           new SynonymQuery.Builder(field)
-              .addTerm(new Term(field, "w1"))
-              .addTerm(new Term(field, "w2"))
+              .addTerm(new QueryTerm(field, "w1", 0))
+              .addTerm(new QueryTerm(field, "w2", 0))
               .build();
       checkNoPositionsMatches(q, field, new boolean[] {true, true, true, true, false});
     }
@@ -330,8 +344,9 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testMultipleFields() throws IOException {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("id", "1")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FIELD_WITH_OFFSETS, "w3")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("id", "1", 0)), BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w3", 0)), BooleanClause.Occur.MUST)
             .build();
     Weight w = searcher.createWeight(searcher.rewrite(q), ScoreMode.COMPLETE, 1);
 
@@ -358,7 +373,9 @@ public class TestMatchesIterator extends MatchesTestBase {
   // "a phrase sentence with many phrase sentence iterations of a phrase sentence",
 
   public void testSloppyPhraseQueryWithRepeats() throws IOException {
-    PhraseQuery pq = new PhraseQuery(10, FIELD_WITH_OFFSETS, "phrase", "sentence", "sentence");
+    PhraseQuery pq =
+        new PhraseQuery(
+            10, FIELD_WITH_OFFSETS, new int[] {0, 0, 0}, "phrase", "sentence", "sentence");
     checkMatches(
         pq,
         FIELD_WITH_OFFSETS,
@@ -370,7 +387,7 @@ public class TestMatchesIterator extends MatchesTestBase {
   }
 
   public void testSloppyPhraseQuery() throws IOException {
-    PhraseQuery pq = new PhraseQuery(4, FIELD_WITH_OFFSETS, "a", "sentence");
+    PhraseQuery pq = new PhraseQuery(4, FIELD_WITH_OFFSETS, new int[] {0, 0}, "a", "sentence");
     checkMatches(
         pq,
         FIELD_WITH_OFFSETS,
@@ -379,14 +396,14 @@ public class TestMatchesIterator extends MatchesTestBase {
   }
 
   public void testExactPhraseQuery() throws IOException {
-    PhraseQuery pq = new PhraseQuery(FIELD_WITH_OFFSETS, "phrase", "sentence");
+    PhraseQuery pq = new PhraseQuery(FIELD_WITH_OFFSETS, new int[] {0, 0}, "phrase", "sentence");
     checkMatches(
         pq,
         FIELD_WITH_OFFSETS,
         new int[][] {{0}, {1}, {2}, {3}, {4, 1, 2, 2, 17, 5, 6, 28, 43, 10, 11, 60, 75}});
 
-    Term a = new Term(FIELD_WITH_OFFSETS, "a");
-    Term s = new Term(FIELD_WITH_OFFSETS, "sentence");
+    QueryTerm a = new QueryTerm(FIELD_WITH_OFFSETS, "a", 0);
+    QueryTerm s = new QueryTerm(FIELD_WITH_OFFSETS, "sentence", 0);
     PhraseQuery pq2 = new PhraseQuery.Builder().add(a).add(s, 2).build();
     checkMatches(
         pq2, FIELD_WITH_OFFSETS, new int[][] {{0}, {1}, {2}, {3}, {4, 0, 2, 0, 17, 9, 11, 58, 75}});
@@ -397,11 +414,11 @@ public class TestMatchesIterator extends MatchesTestBase {
   // "a phrase sentence with many phrase sentence iterations of a phrase sentence",
 
   public void testSloppyMultiPhraseQuery() throws IOException {
-    Term p = new Term(FIELD_WITH_OFFSETS, "phrase");
-    Term s = new Term(FIELD_WITH_OFFSETS, "sentence");
-    Term i = new Term(FIELD_WITH_OFFSETS, "iterations");
+    QueryTerm p = new QueryTerm(FIELD_WITH_OFFSETS, "phrase", 0);
+    QueryTerm s = new QueryTerm(FIELD_WITH_OFFSETS, "sentence", 0);
+    QueryTerm i = new QueryTerm(FIELD_WITH_OFFSETS, "iterations", 0);
     MultiPhraseQuery mpq =
-        new MultiPhraseQuery.Builder().add(p).add(new Term[] {s, i}).setSlop(4).build();
+        new MultiPhraseQuery.Builder().add(p).add(new QueryTerm[] {s, i}).setSlop(4).build();
     checkMatches(
         mpq,
         FIELD_WITH_OFFSETS,
@@ -414,10 +431,11 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testExactMultiPhraseQuery() throws IOException {
     MultiPhraseQuery mpq =
         new MultiPhraseQuery.Builder()
-            .add(new Term(FIELD_WITH_OFFSETS, "sentence"))
+            .add(new QueryTerm(FIELD_WITH_OFFSETS, "sentence", 0))
             .add(
-                new Term[] {
-                  new Term(FIELD_WITH_OFFSETS, "with"), new Term(FIELD_WITH_OFFSETS, "iterations")
+                new QueryTerm[] {
+                  new QueryTerm(FIELD_WITH_OFFSETS, "with", 0),
+                  new QueryTerm(FIELD_WITH_OFFSETS, "iterations", 0)
                 })
             .build();
     checkMatches(
@@ -426,10 +444,11 @@ public class TestMatchesIterator extends MatchesTestBase {
     MultiPhraseQuery mpq2 =
         new MultiPhraseQuery.Builder()
             .add(
-                new Term[] {
-                  new Term(FIELD_WITH_OFFSETS, "a"), new Term(FIELD_WITH_OFFSETS, "many")
+                new QueryTerm[] {
+                  new QueryTerm(FIELD_WITH_OFFSETS, "a", 0),
+                  new QueryTerm(FIELD_WITH_OFFSETS, "many", 0)
                 })
-            .add(new Term(FIELD_WITH_OFFSETS, "phrase"))
+            .add(new QueryTerm(FIELD_WITH_OFFSETS, "phrase", 0))
             .build();
     checkMatches(
         mpq2,
@@ -446,7 +465,7 @@ public class TestMatchesIterator extends MatchesTestBase {
         new IndexOrDocValuesQuery(
             IntPoint.newExactQuery(FIELD_POINT, 10),
             NumericDocValuesField.newSlowExactQuery(FIELD_POINT, 10));
-    Term t = new Term(FIELD_WITH_OFFSETS, "w1");
+    QueryTerm t = new QueryTerm(FIELD_WITH_OFFSETS, "w1", 0);
     Query query =
         new BooleanQuery.Builder()
             .add(new TermQuery(t), BooleanClause.Occur.MUST)
@@ -498,7 +517,7 @@ public class TestMatchesIterator extends MatchesTestBase {
   public void testMinimalSeekingWithWildcards() throws IOException {
     SeekCountingLeafReader reader = new SeekCountingLeafReader(getOnlyLeafReader(this.reader));
     this.searcher = new IndexSearcher(reader);
-    Query query = new PrefixQuery(new Term(FIELD_WITH_OFFSETS, "w"));
+    Query query = new PrefixQuery(new QueryTerm(FIELD_WITH_OFFSETS, "w", 0));
     Weight w = searcher.createWeight(query.rewrite(reader), ScoreMode.COMPLETE, 1);
 
     // docs 0-3 match several different terms here, but we only seek to the first term and

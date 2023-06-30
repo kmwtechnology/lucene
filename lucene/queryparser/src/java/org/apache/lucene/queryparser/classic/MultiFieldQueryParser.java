@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
@@ -80,11 +81,12 @@ public class MultiFieldQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getFieldQuery(String field, String queryText, int slop) throws ParseException {
+  protected Query getFieldQuery(String field, String queryText, int slop, int beginColumn)
+      throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       for (int i = 0; i < fields.length; i++) {
-        Query q = super.getFieldQuery(fields[i], queryText, true);
+        Query q = super.getFieldQuery(fields[i], queryText, true, beginColumn);
         if (q != null) {
           // If the user passes a map of boosts
           if (boosts != null) {
@@ -102,7 +104,7 @@ public class MultiFieldQueryParser extends QueryParser {
       return null;
       return getMultiFieldQuery(clauses);
     }
-    Query q = super.getFieldQuery(field, queryText, true);
+    Query q = super.getFieldQuery(field, queryText, true, beginColumn);
     q = applySlop(q, slop);
     return q;
   }
@@ -112,7 +114,7 @@ public class MultiFieldQueryParser extends QueryParser {
       PhraseQuery.Builder builder = new PhraseQuery.Builder();
       builder.setSlop(slop);
       PhraseQuery pq = (PhraseQuery) q;
-      org.apache.lucene.index.Term[] terms = pq.getTerms();
+      QueryTerm[] terms = pq.getTerms();
       int[] positions = pq.getPositions();
       for (int i = 0; i < terms.length; ++i) {
         builder.add(terms[i], positions[i]);
@@ -129,14 +131,14 @@ public class MultiFieldQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getFieldQuery(String field, String queryText, boolean quoted)
+  protected Query getFieldQuery(String field, String queryText, boolean quoted, int beginColumn)
       throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       Query[] fieldQueries = new Query[fields.length];
       int maxTerms = 0;
       for (int i = 0; i < fields.length; i++) {
-        Query q = super.getFieldQuery(fields[i], queryText, quoted);
+        Query q = super.getFieldQuery(fields[i], queryText, quoted, beginColumn);
         if (q != null) {
           if (q instanceof BooleanQuery) {
             maxTerms = Math.max(maxTerms, ((BooleanQuery) q).clauses().size());
@@ -187,45 +189,47 @@ public class MultiFieldQueryParser extends QueryParser {
       return null;
       return getMultiFieldQuery(clauses);
     }
-    Query q = super.getFieldQuery(field, queryText, quoted);
+    Query q = super.getFieldQuery(field, queryText, quoted, beginColumn);
     return q;
   }
 
   @Override
-  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity)
+  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity, int beginColumn)
       throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       for (int i = 0; i < fields.length; i++) {
-        clauses.add(getFuzzyQuery(fields[i], termStr, minSimilarity));
+        clauses.add(getFuzzyQuery(fields[i], termStr, minSimilarity, beginColumn));
       }
       return getMultiFieldQuery(clauses);
     }
-    return super.getFuzzyQuery(field, termStr, minSimilarity);
+    return super.getFuzzyQuery(field, termStr, minSimilarity, beginColumn);
   }
 
   @Override
-  protected Query getPrefixQuery(String field, String termStr) throws ParseException {
+  protected Query getPrefixQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       for (int i = 0; i < fields.length; i++) {
-        clauses.add(getPrefixQuery(fields[i], termStr));
+        clauses.add(getPrefixQuery(fields[i], termStr, beginColumn));
       }
       return getMultiFieldQuery(clauses);
     }
-    return super.getPrefixQuery(field, termStr);
+    return super.getPrefixQuery(field, termStr, beginColumn);
   }
 
   @Override
-  protected Query getWildcardQuery(String field, String termStr) throws ParseException {
+  protected Query getWildcardQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       for (int i = 0; i < fields.length; i++) {
-        clauses.add(getWildcardQuery(fields[i], termStr));
+        clauses.add(getWildcardQuery(fields[i], termStr, beginColumn));
       }
       return getMultiFieldQuery(clauses);
     }
-    return super.getWildcardQuery(field, termStr);
+    return super.getWildcardQuery(field, termStr, beginColumn);
   }
 
   @Override
@@ -243,15 +247,16 @@ public class MultiFieldQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getRegexpQuery(String field, String termStr) throws ParseException {
+  protected Query getRegexpQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if (field == null) {
       List<Query> clauses = new ArrayList<>();
       for (int i = 0; i < fields.length; i++) {
-        clauses.add(getRegexpQuery(fields[i], termStr));
+        clauses.add(getRegexpQuery(fields[i], termStr, beginColumn));
       }
       return getMultiFieldQuery(clauses);
     }
-    return super.getRegexpQuery(field, termStr);
+    return super.getRegexpQuery(field, termStr, beginColumn);
   }
 
   /** Creates a multifield query */

@@ -26,7 +26,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FloatVectorValues;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.VectorSimilarityFunction;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
@@ -594,7 +594,7 @@ public class TestField extends LuceneTestCase {
     IndexReader r = w.getReader();
 
     IndexSearcher s = newSearcher(r);
-    TopDocs hits = s.search(new TermQuery(new Term("binary", br)), 1);
+    TopDocs hits = s.search(new TermQuery(new QueryTerm("binary", br, 0)), 1);
     assertEquals(1, hits.totalHits.value);
     Document storedDoc = s.storedFields().document(hits.scoreDocs[0].doc);
     assertEquals(br, storedDoc.getField("binary").binaryValue());

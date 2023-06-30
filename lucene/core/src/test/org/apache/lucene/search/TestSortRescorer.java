@@ -24,7 +24,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -79,7 +79,7 @@ public class TestSortRescorer extends LuceneTestCase {
   public void testBasic() throws Exception {
 
     // create a sort field and sort by it (reverse order)
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     IndexReader r = searcher.getIndexReader();
 
     // Just first pass query
@@ -115,7 +115,7 @@ public class TestSortRescorer extends LuceneTestCase {
 
   public void testDoubleValuesSourceSort() throws Exception {
     // create a sort field and sort by it (reverse order)
-    Query query = new TermQuery(new Term("body", "contents"));
+    Query query = new TermQuery(new QueryTerm("body", "contents", 0));
     IndexReader r = searcher.getIndexReader();
 
     // Just first pass query
@@ -178,7 +178,7 @@ public class TestSortRescorer extends LuceneTestCase {
     int numHits = TestUtil.nextInt(random(), 1, numDocs);
     boolean reverse = random().nextBoolean();
 
-    TopDocs hits = s.search(new TermQuery(new Term("field", "a")), numHits);
+    TopDocs hits = s.search(new TermQuery(new QueryTerm("field", "a", 0)), numHits);
 
     Rescorer rescorer =
         new SortRescorer(new Sort(new SortField("num", SortField.Type.INT, reverse)));

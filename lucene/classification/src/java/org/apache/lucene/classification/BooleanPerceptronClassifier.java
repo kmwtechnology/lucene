@@ -28,8 +28,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermVectors;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -130,7 +130,7 @@ public class BooleanPerceptronClassifier implements Classifier<Boolean> {
     BooleanQuery.Builder q = new BooleanQuery.Builder();
     q.add(
         new BooleanClause(
-            new WildcardQuery(new Term(classFieldName, "*")), BooleanClause.Occur.MUST));
+            new WildcardQuery(new QueryTerm(classFieldName, "*", 0)), BooleanClause.Occur.MUST));
     if (query != null) {
       q.add(new BooleanClause(query, BooleanClause.Occur.MUST));
     }

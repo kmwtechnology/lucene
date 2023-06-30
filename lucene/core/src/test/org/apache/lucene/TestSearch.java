@@ -30,8 +30,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -131,25 +131,25 @@ public class TestSearch extends LuceneTestCase {
     List<Query> queries = new ArrayList<>();
 
     BooleanQuery.Builder booleanAB = new BooleanQuery.Builder();
-    booleanAB.add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD);
-    booleanAB.add(new TermQuery(new Term("contents", "b")), BooleanClause.Occur.SHOULD);
+    booleanAB.add(new TermQuery(new QueryTerm("contents", "a", 0)), BooleanClause.Occur.SHOULD);
+    booleanAB.add(new TermQuery(new QueryTerm("contents", "b", 0)), BooleanClause.Occur.SHOULD);
     queries.add(booleanAB.build());
 
-    PhraseQuery phraseAB = new PhraseQuery("contents", "a", "b");
+    PhraseQuery phraseAB = new PhraseQuery("contents", new int[] {0, 0}, "a", "b");
     queries.add(phraseAB);
 
-    PhraseQuery phraseABC = new PhraseQuery("contents", "a", "b", "c");
+    PhraseQuery phraseABC = new PhraseQuery("contents", new int[] {0, 0, 0}, "a", "b", "c");
     queries.add(phraseABC);
 
     BooleanQuery.Builder booleanAC = new BooleanQuery.Builder();
-    booleanAC.add(new TermQuery(new Term("contents", "a")), BooleanClause.Occur.SHOULD);
-    booleanAC.add(new TermQuery(new Term("contents", "c")), BooleanClause.Occur.SHOULD);
+    booleanAC.add(new TermQuery(new QueryTerm("contents", "a", 0)), BooleanClause.Occur.SHOULD);
+    booleanAC.add(new TermQuery(new QueryTerm("contents", "c", 0)), BooleanClause.Occur.SHOULD);
     queries.add(booleanAC.build());
 
-    PhraseQuery phraseAC = new PhraseQuery("contents", "a", "c");
+    PhraseQuery phraseAC = new PhraseQuery("contents", new int[] {0, 0}, "a", "c");
     queries.add(phraseAC);
 
-    PhraseQuery phraseACE = new PhraseQuery("contents", "a", "c", "e");
+    PhraseQuery phraseACE = new PhraseQuery("contents", new int[] {0, 0, 0}, "a", "c", "e");
     queries.add(phraseACE);
 
     return queries;

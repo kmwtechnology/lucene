@@ -27,8 +27,8 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
@@ -66,9 +66,9 @@ public class TestDemo extends LuceneTestCase {
       try (IndexReader reader = DirectoryReader.open(dir)) {
         IndexSearcher searcher = newSearcher(reader);
 
-        assertEquals(1, searcher.count(new TermQuery(new Term("fieldname", longTerm))));
+        assertEquals(1, searcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
 
-        Query query = new TermQuery(new Term("fieldname", "text"));
+        Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
         TopDocs hits = searcher.search(query, 1);
         assertEquals(1, hits.totalHits.value);
 
@@ -80,7 +80,7 @@ public class TestDemo extends LuceneTestCase {
         }
 
         // Test simple phrase query.
-        PhraseQuery phraseQuery = new PhraseQuery("fieldname", "to", "be");
+        PhraseQuery phraseQuery = new PhraseQuery("fieldname", new int[] {0, 0}, "to", "be");
         assertEquals(1, searcher.count(phraseQuery));
       }
     }

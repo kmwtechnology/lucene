@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.reverse.ReverseStringFilter;
 import org.apache.lucene.classification.utils.ConfusionMatrixGenerator;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.TermQuery;
@@ -57,7 +57,7 @@ public class TestBM25NBClassifier extends ClassificationTestBase<BytesRef> {
     try {
       MockAnalyzer analyzer = new MockAnalyzer(random());
       leafReader = getSampleIndex(analyzer);
-      TermQuery query = new TermQuery(new Term(textFieldName, "not"));
+      TermQuery query = new TermQuery(new QueryTerm(textFieldName, "not", 0));
       BM25NBClassifier classifier =
           new BM25NBClassifier(leafReader, analyzer, query, categoryFieldName, textFieldName);
       checkCorrectClassification(classifier, TECHNOLOGY_INPUT, TECHNOLOGY_RESULT);

@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.flexible.spans;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanTermQuery;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.FieldQueryNode;
@@ -31,6 +31,6 @@ public class SpanTermQueryNodeBuilder implements StandardQueryBuilder {
     FieldQueryNode fieldQueryNode = (FieldQueryNode) node;
 
     return new SpanTermQuery(
-        new Term(fieldQueryNode.getFieldAsString(), fieldQueryNode.getTextAsString()));
+        new QueryTerm(fieldQueryNode.getFieldAsString(), fieldQueryNode.getTextAsString(), 0));
   }
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queries.payloads;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanOrQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
@@ -34,7 +34,7 @@ public class TestPayloadExplanations extends BaseExplanationTestCase {
   /** macro for payloadscorequery */
   private SpanQuery pt(String s, PayloadFunction fn) {
     return new PayloadScoreQuery(
-        new SpanTermQuery(new Term(FIELD, s)),
+        new SpanTermQuery(new QueryTerm(FIELD, s, 0)),
         fn,
         PayloadDecoder.FLOAT_DECODER,
         random().nextBoolean());
@@ -72,14 +72,15 @@ public class TestPayloadExplanations extends BaseExplanationTestCase {
   }
 
   public void testSimpleTerm() throws Exception {
-    SpanTermQuery q = new SpanTermQuery(new Term(FIELD, "w2"));
+    SpanTermQuery q = new SpanTermQuery(new QueryTerm(FIELD, "w2", 0));
     testAllFunctions(q, new int[] {0, 1, 2, 3});
   }
 
   public void testOrTerm() throws Exception {
     SpanOrQuery q =
         new SpanOrQuery(
-            new SpanTermQuery(new Term(FIELD, "xx")), new SpanTermQuery(new Term(FIELD, "yy")));
+            new SpanTermQuery(new QueryTerm(FIELD, "xx", 0)),
+            new SpanTermQuery(new QueryTerm(FIELD, "yy", 0)));
     testAllFunctions(q, new int[] {2, 3});
   }
 
@@ -87,7 +88,8 @@ public class TestPayloadExplanations extends BaseExplanationTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD, "w3")), new SpanTermQuery(new Term(FIELD, "w2"))
+              new SpanTermQuery(new QueryTerm(FIELD, "w3", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD, "w2", 0))
             },
             1,
             true);
@@ -98,7 +100,8 @@ public class TestPayloadExplanations extends BaseExplanationTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term(FIELD, "w2")), new SpanTermQuery(new Term(FIELD, "w3"))
+              new SpanTermQuery(new QueryTerm(FIELD, "w2", 0)),
+              new SpanTermQuery(new QueryTerm(FIELD, "w3", 0))
             },
             1,
             false);

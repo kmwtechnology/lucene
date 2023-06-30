@@ -16,6 +16,7 @@
  */
 package org.apache.lucene.queryparser.flexible.standard.builders;
 
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.builders.QueryTreeBuilder;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
@@ -46,7 +47,7 @@ public class SlopQueryNodeBuilder implements StandardQueryBuilder {
       PhraseQuery.Builder builder = new PhraseQuery.Builder();
       builder.setSlop(phraseSlopNode.getValue());
       PhraseQuery pq = (PhraseQuery) query;
-      org.apache.lucene.index.Term[] terms = pq.getTerms();
+      QueryTerm[] terms = pq.getTerms();
       int[] positions = pq.getPositions();
       for (int i = 0; i < terms.length; ++i) {
         builder.add(terms[i], positions[i]);

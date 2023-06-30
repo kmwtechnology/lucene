@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -172,13 +173,14 @@ public class TestRamUsageEstimator extends LuceneTestCase {
     DisjunctionMaxQuery dismax =
         new DisjunctionMaxQuery(
             Arrays.asList(
-                new TermQuery(new Term("foo1", "bar1")), new TermQuery(new Term("baz1", "bam1"))),
+                new TermQuery(new QueryTerm("foo1", "bar1", 0)),
+                new TermQuery(new QueryTerm("baz1", "bam1", 0))),
             1.0f);
     BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("foo2", "bar2")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo2", "bar2", 0)), BooleanClause.Occur.SHOULD)
             .add(
-                new PhraseQuery.Builder().add(new Term("foo3", "baz3")).build(),
+                new PhraseQuery.Builder().add(new QueryTerm("foo3", "baz3", 0)).build(),
                 BooleanClause.Occur.MUST_NOT)
             .add(dismax, BooleanClause.Occur.MUST)
             .build();

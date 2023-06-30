@@ -56,7 +56,7 @@ public class TestBinaryTerms extends LuceneTestCase {
       bytes.bytes[0] = (byte) i;
       bytes.bytes[1] = (byte) (255 - i);
       bytes.length = 2;
-      TopDocs docs = is.search(new TermQuery(new Term("bytes", bytes)), 5);
+      TopDocs docs = is.search(new TermQuery(new QueryTerm("bytes", bytes, 0)), 5);
       assertEquals(1, docs.totalHits.value);
       assertEquals("" + i, is.storedFields().document(docs.scoreDocs[0].doc).get("id"));
     }

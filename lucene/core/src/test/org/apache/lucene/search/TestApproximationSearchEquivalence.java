@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.search;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.tests.search.RandomApproximationQuery;
 import org.apache.lucene.tests.search.SearchEquivalenceTestBase;
@@ -25,8 +25,8 @@ import org.apache.lucene.tests.search.SearchEquivalenceTestBase;
 public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBase {
 
   public void testConjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
 
@@ -42,12 +42,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testNestedConjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);
@@ -72,8 +72,8 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testDisjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
 
@@ -89,12 +89,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testNestedDisjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);
@@ -119,12 +119,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testDisjunctionInConjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);
@@ -149,12 +149,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testConjunctionInDisjunction() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);
@@ -179,8 +179,8 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testConstantScore() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
 
@@ -196,8 +196,8 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testExclusion() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
 
@@ -213,12 +213,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testNestedExclusion() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);
@@ -266,12 +266,12 @@ public class TestApproximationSearchEquivalence extends SearchEquivalenceTestBas
   }
 
   public void testReqOpt() throws Exception {
-    Term t1 = randomTerm();
-    Term t2;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2;
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     TermQuery q2 = new TermQuery(t2);
     TermQuery q3 = new TermQuery(t3);

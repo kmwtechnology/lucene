@@ -17,7 +17,7 @@
 package org.apache.lucene.search;
 
 import java.io.IOException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.Accountable;
@@ -51,7 +51,7 @@ public class AutomatonQuery extends MultiTermQuery implements Accountable {
 
   protected final CompiledAutomaton compiled;
   /** term containing the field, and possibly some pattern structure */
-  protected final Term term;
+  protected final QueryTerm term;
 
   protected final boolean automatonIsBinary;
 
@@ -64,7 +64,7 @@ public class AutomatonQuery extends MultiTermQuery implements Accountable {
    *     ignored.
    * @param automaton Automaton to run, terms that are accepted are considered a match.
    */
-  public AutomatonQuery(final Term term, Automaton automaton) {
+  public AutomatonQuery(final QueryTerm term, Automaton automaton) {
     this(term, automaton, Operations.DEFAULT_DETERMINIZE_WORK_LIMIT);
   }
 
@@ -78,7 +78,7 @@ public class AutomatonQuery extends MultiTermQuery implements Accountable {
    *     automaton would need more than this much effort, TooComplexToDeterminizeException is
    *     thrown. Higher numbers require more space but can process more complex automata.
    */
-  public AutomatonQuery(final Term term, Automaton automaton, int determinizeWorkLimit) {
+  public AutomatonQuery(final QueryTerm term, Automaton automaton, int determinizeWorkLimit) {
     this(term, automaton, determinizeWorkLimit, false);
   }
 
@@ -95,7 +95,7 @@ public class AutomatonQuery extends MultiTermQuery implements Accountable {
    *     UTF32ToUTF8 conversion
    */
   public AutomatonQuery(
-      final Term term, Automaton automaton, int determinizeWorkLimit, boolean isBinary) {
+      final QueryTerm term, Automaton automaton, int determinizeWorkLimit, boolean isBinary) {
     this(term, automaton, determinizeWorkLimit, isBinary, CONSTANT_SCORE_REWRITE);
   }
 
@@ -110,7 +110,7 @@ public class AutomatonQuery extends MultiTermQuery implements Accountable {
    * @param rewriteMethod the rewriteMethod to use to build the final query from the automaton
    */
   public AutomatonQuery(
-      final Term term,
+      final QueryTerm term,
       Automaton automaton,
       int determinizeWorkLimit,
       boolean isBinary,

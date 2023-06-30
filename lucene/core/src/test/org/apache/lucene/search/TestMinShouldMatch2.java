@@ -29,6 +29,7 @@ import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -115,7 +116,7 @@ public class TestMinShouldMatch2 extends LuceneTestCase {
   private Scorer scorer(String[] values, int minShouldMatch, Mode mode) throws Exception {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     for (String value : values) {
-      bq.add(new TermQuery(new Term("field", value)), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("field", value, 0)), BooleanClause.Occur.SHOULD);
     }
     bq.setMinimumNumberShouldMatch(minShouldMatch);
 

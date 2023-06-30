@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanNotQuery;
 import org.apache.lucene.queries.spans.SpanOrQuery;
@@ -83,7 +83,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getFieldQuery(String field, String queryText, int slop) {
+  protected Query getFieldQuery(String field, String queryText, int slop, int beginColumn) {
     ComplexPhraseQuery cpq = new ComplexPhraseQuery(field, queryText, slop, inOrder);
     complexPhrases.add(cpq); // add to list of phrases to be parsed once
     // we
@@ -140,7 +140,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
   // to throw a runtime exception here if a term for another field is embedded
   // in phrase query
   @Override
-  protected Query newTermQuery(Term term, float boost) {
+  protected Query newTermQuery(QueryTerm term, float boost) {
     if (isPass2ResolvingPhrases) {
       try {
         checkPhraseClauseIsForSameField(term.field());
@@ -165,11 +165,12 @@ public class ComplexPhraseQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getWildcardQuery(String field, String termStr) throws ParseException {
+  protected Query getWildcardQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if (isPass2ResolvingPhrases) {
       checkPhraseClauseIsForSameField(field);
     }
-    return super.getWildcardQuery(field, termStr);
+    return super.getWildcardQuery(field, termStr, beginColumn);
   }
 
   @Override
@@ -197,12 +198,12 @@ public class ComplexPhraseQueryParser extends QueryParser {
   }
 
   @Override
-  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity)
+  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity, int beginColumn)
       throws ParseException {
     if (isPass2ResolvingPhrases) {
       checkPhraseClauseIsForSameField(field);
     }
-    return super.getFuzzyQuery(field, termStr, minSimilarity);
+    return super.getFuzzyQuery(field, termStr, minSimilarity, beginColumn);
   }
 
   /*
@@ -306,7 +307,8 @@ public class ComplexPhraseQueryParser extends QueryParser {
             // prevent match on just "Fred".
             allSpanClauses[i] =
                 new SpanTermQuery(
-                    new Term(field, "Dummy clause because no terms found - must match nothing"));
+                    new QueryTerm(
+                        field, "Dummy clause because no terms found - must match nothing", 0));
           }
         } else if (qc instanceof MatchNoDocsQuery) {
           // Insert fake term e.g. phrase query was for "Fred Smithe*" and
@@ -314,7 +316,8 @@ public class ComplexPhraseQueryParser extends QueryParser {
           // prevent match on just "Fred".
           allSpanClauses[i] =
               new SpanTermQuery(
-                  new Term(field, "Dummy clause because no terms found - must match nothing"));
+                  new QueryTerm(
+                      field, "Dummy clause because no terms found - must match nothing", 0));
         } else {
           if (qc instanceof TermQuery) {
             TermQuery tq = (TermQuery) qc;
@@ -365,7 +368,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
 
     private BooleanQuery convert(SynonymQuery qc) {
       BooleanQuery.Builder bqb = new BooleanQuery.Builder();
-      for (Term t : qc.getTerms()) {
+      for (QueryTerm t : qc.getTerms()) {
         bqb.add(new BooleanClause(new TermQuery(t), Occur.SHOULD));
       }
       return bqb.build();
@@ -403,7 +406,8 @@ public class ComplexPhraseQueryParser extends QueryParser {
           // prevent match on just "Fred".
           SpanQuery stq =
               new SpanTermQuery(
-                  new Term(field, "Dummy clause because no terms found - must match nothing"));
+                  new QueryTerm(
+                      field, "Dummy clause because no terms found - must match nothing", 0));
           chosenList.add(stq);
         } else {
           // TODO alternatively could call extract terms here?

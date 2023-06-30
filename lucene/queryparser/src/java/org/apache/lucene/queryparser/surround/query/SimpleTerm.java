@@ -18,7 +18,7 @@ package org.apache.lucene.queryparser.surround.query;
 
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Query;
 
 /** Base class for queries that expand to sets of simple terms. */
@@ -63,9 +63,11 @@ public abstract class SimpleTerm extends SrndQuery implements DistanceSubQuery {
   public abstract void visitMatchingTerms(
       IndexReader reader, String fieldName, MatchingTermVisitor mtv) throws IOException;
 
-  /** Callback to visit each matching term during "rewrite" in {@link #visitMatchingTerm(Term)} */
+  /**
+   * Callback to visit each matching term during "rewrite" in {@link #visitMatchingTerm(QueryTerm)}
+   */
   public interface MatchingTermVisitor {
-    void visitMatchingTerm(Term t) throws IOException;
+    void visitMatchingTerm(QueryTerm t) throws IOException;
   }
 
   @Override
@@ -80,7 +82,7 @@ public abstract class SimpleTerm extends SrndQuery implements DistanceSubQuery {
         sncf.getFieldName(),
         new MatchingTermVisitor() {
           @Override
-          public void visitMatchingTerm(Term term) throws IOException {
+          public void visitMatchingTerm(QueryTerm term) throws IOException {
             sncf.addTermWeighted(term, getWeight());
           }
         });

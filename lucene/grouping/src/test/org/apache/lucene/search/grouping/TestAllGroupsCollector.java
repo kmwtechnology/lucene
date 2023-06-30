@@ -22,7 +22,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queries.function.valuesource.BytesRefFieldSource;
 import org.apache.lucene.search.IndexSearcher;
@@ -101,15 +101,15 @@ public class TestAllGroupsCollector extends LuceneTestCase {
     w.close();
 
     AllGroupsCollector<?> allGroupsCollector = createRandomCollector(groupField);
-    indexSearcher.search(new TermQuery(new Term("content", "random")), allGroupsCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "random", 0)), allGroupsCollector);
     assertEquals(4, allGroupsCollector.getGroupCount());
 
     allGroupsCollector = createRandomCollector(groupField);
-    indexSearcher.search(new TermQuery(new Term("content", "some")), allGroupsCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "some", 0)), allGroupsCollector);
     assertEquals(3, allGroupsCollector.getGroupCount());
 
     allGroupsCollector = createRandomCollector(groupField);
-    indexSearcher.search(new TermQuery(new Term("content", "blob")), allGroupsCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "blob", 0)), allGroupsCollector);
     assertEquals(2, allGroupsCollector.getGroupCount());
 
     indexSearcher.getIndexReader().close();

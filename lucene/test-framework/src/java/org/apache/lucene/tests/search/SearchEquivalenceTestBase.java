@@ -24,7 +24,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -84,7 +84,7 @@ public abstract class SearchEquivalenceTestBase extends LuceneTestCase {
     // delete some docs
     int numDeletes = numDocs / 20;
     for (int i = 0; i < numDeletes; i++) {
-      Term toDelete = new Term("id", Integer.toString(random.nextInt(numDocs)));
+      QueryTerm toDelete = new QueryTerm("id", Integer.toString(random.nextInt(numDocs)), 0);
       if (random.nextBoolean()) {
         iw.deleteDocuments(toDelete);
       } else {
@@ -132,8 +132,8 @@ public abstract class SearchEquivalenceTestBase extends LuceneTestCase {
   }
 
   /** returns a term suitable for searching. terms are single characters in lowercase (a-z) */
-  protected Term randomTerm() {
-    return new Term("field", "" + randomChar());
+  protected QueryTerm randomTerm() {
+    return new QueryTerm("field", "" + randomChar(), 0);
   }
 
   /** Returns a random filter over the document set */
@@ -143,7 +143,8 @@ public abstract class SearchEquivalenceTestBase extends LuceneTestCase {
       query = TermRangeQuery.newStringRange("field", "a", "" + randomChar(), true, true);
     } else {
       // use a query with a two-phase approximation
-      PhraseQuery phrase = new PhraseQuery(100, "field", "" + randomChar(), "" + randomChar());
+      PhraseQuery phrase =
+          new PhraseQuery(100, "field", new int[] {0, 2}, "" + randomChar(), "" + randomChar());
       query = phrase;
     }
     return query;

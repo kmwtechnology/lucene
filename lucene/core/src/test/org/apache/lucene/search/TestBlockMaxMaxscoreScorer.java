@@ -27,7 +27,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.util.LuceneTestCase;
 
@@ -68,10 +68,10 @@ public class TestBlockMaxMaxscoreScorer extends LuceneTestCase {
                 new BooleanQuery.Builder()
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                         BooleanClause.Occur.SHOULD)
                     .add(
-                        new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                         BooleanClause.Occur.SHOULD)
                     .build());
 
@@ -112,14 +112,14 @@ public class TestBlockMaxMaxscoreScorer extends LuceneTestCase {
                 new BooleanQuery.Builder()
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "A", 0))), 2),
                         BooleanClause.Occur.SHOULD)
                     .add(
-                        new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                        new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                         BooleanClause.Occur.SHOULD)
                     .add(
                         new BoostQuery(
-                            new ConstantScoreQuery(new TermQuery(new Term("foo", "C"))), 3),
+                            new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "C", 0))), 3),
                         BooleanClause.Occur.SHOULD)
                     .build());
 
@@ -162,14 +162,16 @@ public class TestBlockMaxMaxscoreScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 BooleanClause.Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 BooleanClause.Occur.SHOULD)
                             .build()),
                     BooleanClause.Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), BooleanClause.Occur.FILTER)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), BooleanClause.Occur.FILTER)
                 .build();
 
         Scorer scorer =
@@ -214,14 +216,16 @@ public class TestBlockMaxMaxscoreScorer extends LuceneTestCase {
                         new BooleanQuery.Builder()
                             .add(
                                 new BoostQuery(
-                                    new ConstantScoreQuery(new TermQuery(new Term("foo", "A"))), 2),
+                                    new ConstantScoreQuery(
+                                        new TermQuery(new QueryTerm("foo", "A", 0))),
+                                    2),
                                 BooleanClause.Occur.SHOULD)
                             .add(
-                                new ConstantScoreQuery(new TermQuery(new Term("foo", "B"))),
+                                new ConstantScoreQuery(new TermQuery(new QueryTerm("foo", "B", 0))),
                                 BooleanClause.Occur.SHOULD)
                             .build()),
                     BooleanClause.Occur.MUST)
-                .add(new TermQuery(new Term("foo", "C")), BooleanClause.Occur.MUST_NOT)
+                .add(new TermQuery(new QueryTerm("foo", "C", 0)), BooleanClause.Occur.MUST_NOT)
                 .build();
 
         Scorer scorer =

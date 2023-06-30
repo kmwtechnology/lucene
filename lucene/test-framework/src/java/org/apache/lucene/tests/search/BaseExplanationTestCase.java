@@ -21,7 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -104,7 +104,7 @@ public abstract class BaseExplanationTestCase extends LuceneTestCase {
     if (random().nextBoolean()) {
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       bq.add(q, BooleanClause.Occur.SHOULD);
-      bq.add(new TermQuery(new Term("NEVER", "MATCH")), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("NEVER", "MATCH", 0)), BooleanClause.Occur.SHOULD);
       q = bq.build();
     }
     CheckHits.checkHitCollector(random(), q, FIELD, searcher, expDocNrs);
@@ -127,16 +127,17 @@ public abstract class BaseExplanationTestCase extends LuceneTestCase {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
     for (int term : terms) {
       query.add(
-          new BooleanClause(new TermQuery(new Term(KEY, "" + term)), BooleanClause.Occur.SHOULD));
+          new BooleanClause(
+              new TermQuery(new QueryTerm(KEY, "" + term, 0)), BooleanClause.Occur.SHOULD));
     }
     return query.build();
   }
 
   /** helper for generating MultiPhraseQueries */
-  public static Term[] ta(String[] s) {
-    Term[] t = new Term[s.length];
+  public static QueryTerm[] ta(String[] s) {
+    QueryTerm[] t = new QueryTerm[s.length];
     for (int i = 0; i < s.length; i++) {
-      t[i] = new Term(FIELD, s[i]);
+      t[i] = new QueryTerm(FIELD, s[i], 0);
     }
     return t;
   }
@@ -148,7 +149,7 @@ public abstract class BaseExplanationTestCase extends LuceneTestCase {
   public Query optB(Query q) throws Exception {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(q, BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("NEVER", "MATCH")), BooleanClause.Occur.MUST_NOT);
+    bq.add(new TermQuery(new QueryTerm("NEVER", "MATCH", 0)), BooleanClause.Occur.MUST_NOT);
     return bq.build();
   }
 
@@ -159,7 +160,7 @@ public abstract class BaseExplanationTestCase extends LuceneTestCase {
   public Query reqB(Query q) throws Exception {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(q, BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term(FIELD, "w1")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm(FIELD, "w1", 0)), BooleanClause.Occur.SHOULD);
     return bq.build();
   }
 }

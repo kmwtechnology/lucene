@@ -39,7 +39,7 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.FunctionQuery;
 import org.apache.lucene.queries.function.valuesource.LongFieldSource;
 import org.apache.lucene.search.BoostQuery;
@@ -692,7 +692,8 @@ public class TestTaxonomyFacetValueSource extends FacetTestCase {
         System.out.println("\nTEST: iter content=" + searchToken);
       }
       FacetsCollector fc = new FacetsCollector();
-      FacetsCollector.search(searcher, new TermQuery(new Term("content", searchToken)), 10, fc);
+      FacetsCollector.search(
+          searcher, new TermQuery(new QueryTerm("content", searchToken, 0)), 10, fc);
 
       checkResults(
           numDims,

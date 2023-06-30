@@ -33,6 +33,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
@@ -138,7 +139,7 @@ public class WeightedSpanTermExtractor {
       }
     } else if (query instanceof PhraseQuery) {
       PhraseQuery phraseQuery = ((PhraseQuery) query);
-      Term[] phraseQueryTerms = phraseQuery.getTerms();
+      QueryTerm[] phraseQueryTerms = phraseQuery.getTerms();
       if (phraseQueryTerms.length == 1) {
         extractWeightedSpanTerms(terms, new SpanTermQuery(phraseQueryTerms[0]), boost);
       } else {
@@ -182,7 +183,7 @@ public class WeightedSpanTermExtractor {
       }
     } else if (query instanceof MultiPhraseQuery) {
       final MultiPhraseQuery mpq = (MultiPhraseQuery) query;
-      final Term[][] termArrays = mpq.getTermArrays();
+      final QueryTerm[][] termArrays = mpq.getTermArrays();
       final int[] positions = mpq.getPositions();
       if (positions.length > 0) {
 
@@ -198,13 +199,13 @@ public class WeightedSpanTermExtractor {
         int distinctPositions = 0;
 
         for (int i = 0; i < termArrays.length; ++i) {
-          final Term[] termArray = termArrays[i];
+          final QueryTerm[] termArray = termArrays[i];
           List<SpanQuery> disjuncts = disjunctLists[positions[i]];
           if (disjuncts == null) {
             disjuncts = (disjunctLists[positions[i]] = new ArrayList<>(termArray.length));
             ++distinctPositions;
           }
-          for (Term aTermArray : termArray) {
+          for (QueryTerm aTermArray : termArray) {
             disjuncts.add(new SpanTermQuery(aTermArray));
           }
         }

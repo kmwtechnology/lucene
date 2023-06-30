@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.search.vectorhighlight;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -25,14 +25,14 @@ public class TestSingleFragListBuilder extends AbstractTestCase {
   public void testNullFieldFragList() throws Exception {
     SingleFragListBuilder sflb = new SingleFragListBuilder();
     FieldFragList ffl =
-        sflb.createFieldFragList(fpl(new TermQuery(new Term(F, "a")), "b c d"), 100);
+        sflb.createFieldFragList(fpl(new TermQuery(new QueryTerm(F, "a", 0)), "b c d"), 100);
     assertEquals(0, ffl.getFragInfos().size());
   }
 
   public void testShortFieldFragList() throws Exception {
     SingleFragListBuilder sflb = new SingleFragListBuilder();
     FieldFragList ffl =
-        sflb.createFieldFragList(fpl(new TermQuery(new Term(F, "a")), "a b c d"), 100);
+        sflb.createFieldFragList(fpl(new TermQuery(new QueryTerm(F, "a", 0)), "a b c d"), 100);
     assertEquals(1, ffl.getFragInfos().size());
     assertEquals("subInfos=(a((0,1)))/1.0(0,2147483647)", ffl.getFragInfos().get(0).toString());
   }
@@ -42,7 +42,7 @@ public class TestSingleFragListBuilder extends AbstractTestCase {
     FieldFragList ffl =
         sflb.createFieldFragList(
             fpl(
-                new TermQuery(new Term(F, "a")),
+                new TermQuery(new QueryTerm(F, "a", 0)),
                 "a b c d",
                 "a b c d e f g h i",
                 "j k l m n o p q r s t u v w x y z a b c",

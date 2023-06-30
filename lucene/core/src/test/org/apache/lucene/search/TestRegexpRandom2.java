@@ -25,6 +25,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.FilteredTermsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -169,8 +170,8 @@ public class TestRegexpRandom2 extends LuceneTestCase {
 
   /** check that the # of hits is the same as from a very simple regexpquery implementation. */
   protected void assertSame(String regexp) throws IOException {
-    RegexpQuery smart = new RegexpQuery(new Term(fieldName, regexp), RegExp.NONE);
-    DumbRegexpQuery dumb = new DumbRegexpQuery(new Term(fieldName, regexp), RegExp.NONE);
+    RegexpQuery smart = new RegexpQuery(new QueryTerm(fieldName, regexp, 0), RegExp.NONE);
+    DumbRegexpQuery dumb = new DumbRegexpQuery(new QueryTerm(fieldName, regexp, 0), RegExp.NONE);
 
     TopDocs smartDocs = searcher1.search(smart, 25);
     TopDocs dumbDocs = searcher2.search(dumb, 25);

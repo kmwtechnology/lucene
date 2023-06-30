@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.ScoreDoc;
@@ -249,7 +249,7 @@ class SimpleReplicaNode extends ReplicaNode {
             IndexSearcher searcher = mgr.acquire();
             try {
               long version = ((DirectoryReader) searcher.getIndexReader()).getVersion();
-              int hitCount = searcher.count(new TermQuery(new Term("body", "the")));
+              int hitCount = searcher.count(new TermQuery(new QueryTerm("body", "the", 0)));
               // node.message("version=" + version + " searcher=" + searcher);
               out.writeVLong(version);
               out.writeVInt(hitCount);
@@ -284,7 +284,7 @@ class SimpleReplicaNode extends ReplicaNode {
             IndexSearcher searcher = mgr.acquire();
             try {
               long version = ((DirectoryReader) searcher.getIndexReader()).getVersion();
-              int hitCount = searcher.count(new TermQuery(new Term("marker", "marker")));
+              int hitCount = searcher.count(new TermQuery(new QueryTerm("marker", "marker", 0)));
               if (hitCount < expectedAtLeastCount) {
                 message(
                     "marker search: expectedAtLeastCount="
@@ -293,7 +293,7 @@ class SimpleReplicaNode extends ReplicaNode {
                         + hitCount);
                 TopDocs hits =
                     searcher.search(
-                        new TermQuery(new Term("marker", "marker")), expectedAtLeastCount);
+                        new TermQuery(new QueryTerm("marker", "marker", 0)), expectedAtLeastCount);
                 StoredFields storedFields = searcher.storedFields();
                 List<Integer> seen = new ArrayList<>();
                 for (ScoreDoc hit : hits.scoreDocs) {

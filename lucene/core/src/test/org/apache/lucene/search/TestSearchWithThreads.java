@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.search.DummyTotalHitCountCollector;
@@ -70,8 +70,10 @@ public class TestSearchWithThreads extends LuceneTestCase {
                 long totHits = 0;
                 long totSearch = 0;
                 for (; totSearch < numSearches & !failed.get(); totSearch++) {
-                  totHits += s.search(new TermQuery(new Term("body", "aaa")), collectorManager);
-                  totHits += s.search(new TermQuery(new Term("body", "bbb")), collectorManager);
+                  totHits +=
+                      s.search(new TermQuery(new QueryTerm("body", "aaa", 0)), collectorManager);
+                  totHits +=
+                      s.search(new TermQuery(new QueryTerm("body", "bbb", 0)), collectorManager);
                 }
                 assertTrue(totSearch > 0 && totHits > 0);
                 netSearch.addAndGet(totSearch);

@@ -27,7 +27,7 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexNotFoundException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.junit.Test;
@@ -70,7 +70,7 @@ public class TestMonitorReadonly extends MonitorTestBase {
                 MonitorQuerySerializer.fromParser(MonitorTestBase::parse),
                 true);
     try (Monitor monitor = new Monitor(ANALYZER, config)) {
-      TermQuery query = new TermQuery(new Term(FIELD, "test"));
+      TermQuery query = new TermQuery(new QueryTerm(FIELD, "test", 0));
       assertThrows(
           UnsupportedOperationException.class,
           () -> {
@@ -105,10 +105,10 @@ public class TestMonitorReadonly extends MonitorTestBase {
                 MonitorQuerySerializer.fromParser(MonitorTestBase::parse));
 
     try (Monitor writeMonitor = new Monitor(ANALYZER, writeConfig)) {
-      TermQuery query = new TermQuery(new Term(FIELD, "test"));
+      TermQuery query = new TermQuery(new QueryTerm(FIELD, "test", 0));
       writeMonitor.register(
           new MonitorQuery("query1", query, query.toString(), Collections.emptyMap()));
-      TermQuery query2 = new TermQuery(new Term(FIELD, "Foobar"));
+      TermQuery query2 = new TermQuery(new QueryTerm(FIELD, "Foobar", 0));
       writeMonitor.register(
           new MonitorQuery("query2", query2, query.toString(), Collections.emptyMap()));
       MatchingQueries<QueryMatch> matches = writeMonitor.match(doc, QueryMatch.SIMPLE_MATCHER);
@@ -131,7 +131,7 @@ public class TestMonitorReadonly extends MonitorTestBase {
                 MonitorQuerySerializer.fromParser(MonitorTestBase::parse));
 
     try (Monitor writeMonitor = new Monitor(ANALYZER, writeConfig)) {
-      TermQuery query = new TermQuery(new Term(FIELD, "test"));
+      TermQuery query = new TermQuery(new QueryTerm(FIELD, "test", 0));
       writeMonitor.register(
           new MonitorQuery("query1", query, query.toString(), Collections.emptyMap()));
     }
@@ -156,7 +156,7 @@ public class TestMonitorReadonly extends MonitorTestBase {
       assertEquals(1, matches.getMatchCount());
       assertNotNull(matches.matches("query1"));
 
-      TermQuery query = new TermQuery(new Term(FIELD, "test"));
+      TermQuery query = new TermQuery(new QueryTerm(FIELD, "test", 0));
       assertThrows(
           UnsupportedOperationException.class,
           () -> {
@@ -179,7 +179,7 @@ public class TestMonitorReadonly extends MonitorTestBase {
                 MonitorQuerySerializer.fromParser(MonitorTestBase::parse));
 
     try (Monitor writeMonitor = new Monitor(ANALYZER, writeConfig)) {
-      TermQuery query = new TermQuery(new Term(FIELD, "test"));
+      TermQuery query = new TermQuery(new QueryTerm(FIELD, "test", 0));
       writeMonitor.register(
           new MonitorQuery("query1", query, query.toString(), Collections.emptyMap()));
 
@@ -197,7 +197,7 @@ public class TestMonitorReadonly extends MonitorTestBase {
         assertEquals(1, matches.getMatchCount());
         assertNotNull(matches.matches("query1"));
 
-        TermQuery query2 = new TermQuery(new Term(FIELD, "test"));
+        TermQuery query2 = new TermQuery(new QueryTerm(FIELD, "test", 0));
         writeMonitor.register(
             new MonitorQuery("query2", query2, query2.toString(), Collections.emptyMap()));
 

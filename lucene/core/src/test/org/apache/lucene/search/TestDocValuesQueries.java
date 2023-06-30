@@ -31,7 +31,7 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.search.QueryUtils;
@@ -363,7 +363,7 @@ public class TestDocValuesQueries extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (numNumbers > 1 && random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("text", allNumbers.get(0).toString())));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("text", allNumbers.get(0).toString(), 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -391,7 +391,9 @@ public class TestDocValuesQueries extends LuceneTestCase {
         long[] queryNumbersX2Array = queryNumbersX2.stream().mapToLong(Long::longValue).toArray();
         final BooleanQuery.Builder bq = new BooleanQuery.Builder();
         for (Long number : queryNumbers) {
-          bq.add(new TermQuery(new Term("text", number.toString())), BooleanClause.Occur.SHOULD);
+          bq.add(
+              new TermQuery(new QueryTerm("text", number.toString(), 0)),
+              BooleanClause.Occur.SHOULD);
         }
         Query q1 = new BoostQuery(new ConstantScoreQuery(bq.build()), boost);
 

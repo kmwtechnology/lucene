@@ -18,7 +18,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -139,7 +139,8 @@ public class TestScoreCachingWrappingScorer extends LuceneTestCase {
     writer.close();
     IndexSearcher searcher = newSearcher(ir);
     Weight fake =
-        new TermQuery(new Term("fake", "weight")).createWeight(searcher, ScoreMode.COMPLETE, 1f);
+        new TermQuery(new QueryTerm("fake", "weight", 0))
+            .createWeight(searcher, ScoreMode.COMPLETE, 1f);
     Scorer s = new SimpleScorer(fake);
     ScoreCachingCollector scc = new ScoreCachingCollector(scores.length);
     scc.setScorer(s);

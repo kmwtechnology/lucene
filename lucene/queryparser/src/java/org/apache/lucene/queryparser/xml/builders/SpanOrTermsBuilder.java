@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanOrQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -52,7 +52,8 @@ public class SpanOrTermsBuilder extends SpanBuilderBase {
       ts.reset();
       while (ts.incrementToken()) {
         SpanTermQuery stq =
-            new SpanTermQuery(new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef())));
+            new SpanTermQuery(
+                new QueryTerm(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()), 0));
         clausesList.add(stq);
       }
       ts.end();

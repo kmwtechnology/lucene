@@ -27,6 +27,7 @@ import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -154,7 +155,7 @@ public class TestDrillDownQuery extends FacetTestCase {
     assertEquals(5, docs.totalHits.value);
     // Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
     // would gather together 10 results (10%..)
-    Query fooQuery = new TermQuery(new Term("content", "foo"));
+    Query fooQuery = new TermQuery(new QueryTerm("content", "foo", 0));
     DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
     q4.add("b");
     docs = searcher.search(q4, 100);
@@ -177,7 +178,7 @@ public class TestDrillDownQuery extends FacetTestCase {
 
     // Check that content:foo (which yields 50% results) and facet/b (which yields 20%)
     // would gather together 10 results (10%..)
-    Query fooQuery = new TermQuery(new Term("content", "foo"));
+    Query fooQuery = new TermQuery(new QueryTerm("content", "foo", 0));
     DrillDownQuery q4 = new DrillDownQuery(config, fooQuery);
     q4.add("b");
     docs = searcher.search(q4, 100);
@@ -203,7 +204,7 @@ public class TestDrillDownQuery extends FacetTestCase {
 
     float[] scores = new float[reader.maxDoc()];
 
-    Query q = new TermQuery(new Term("content", "foo"));
+    Query q = new TermQuery(new QueryTerm("content", "foo", 0));
     TopDocs docs = searcher.search(q, reader.maxDoc()); // fetch all available docs to this query
     for (ScoreDoc sd : docs.scoreDocs) {
       scores[sd.doc] = sd.score;
@@ -233,11 +234,11 @@ public class TestDrillDownQuery extends FacetTestCase {
   public void testTermNonDefault() {
     String aField = config.getDimConfig("a").indexFieldName;
     Term termA = DrillDownQuery.term(aField, "a");
-    assertEquals(new Term(aField, "a"), termA);
+    assertEquals(new QueryTerm(aField, "a", 0), termA);
 
     String bField = config.getDimConfig("b").indexFieldName;
     Term termB = DrillDownQuery.term(bField, "b");
-    assertEquals(new Term(bField, "b"), termB);
+    assertEquals(new QueryTerm(bField, "b", 0), termB);
   }
 
   public void testClone() throws Exception {

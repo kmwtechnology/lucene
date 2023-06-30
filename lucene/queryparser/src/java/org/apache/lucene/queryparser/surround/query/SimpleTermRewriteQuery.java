@@ -16,11 +16,13 @@
  */
 package org.apache.lucene.queryparser.surround.query;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.Query;
@@ -40,8 +42,8 @@ class SimpleTermRewriteQuery extends RewriteQuery<SimpleTerm> {
         fieldName,
         new SimpleTerm.MatchingTermVisitor() {
           @Override
-          public void visitMatchingTerm(Term term) throws IOException {
-            luceneSubQueries.add(qf.newTermQuery(term));
+          public void visitMatchingTerm(QueryTerm term) throws IOException {
+            luceneSubQueries.add(qf.newTermQuery(asQueryTerm(term)));
           }
         });
     return (luceneSubQueries.size() == 0)

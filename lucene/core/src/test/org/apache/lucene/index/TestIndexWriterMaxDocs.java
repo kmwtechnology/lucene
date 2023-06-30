@@ -69,13 +69,13 @@ public class TestIndexWriterMaxDocs extends LuceneTestCase {
       IndexSearcher searcher = new IndexSearcher(ir);
       CollectorManager<TopScoreDocCollector, TopDocs> manager =
           TopScoreDocCollector.createSharedManager(10, null, Integer.MAX_VALUE);
-      TopDocs hits = searcher.search(new TermQuery(new Term("field", "text")), manager);
+      TopDocs hits = searcher.search(new TermQuery(new QueryTerm("field", "text", 0)), manager);
       assertEquals(IndexWriter.MAX_DOCS, hits.totalHits.value);
 
       // Sort by docID reversed:
       hits =
           searcher.search(
-              new TermQuery(new Term("field", "text")),
+              new TermQuery(new QueryTerm("field", "text", 0)),
               10,
               new Sort(new SortField(null, SortField.Type.DOC, true)));
       assertEquals(IndexWriter.MAX_DOCS, hits.totalHits.value);
@@ -149,7 +149,7 @@ public class TestIndexWriterMaxDocs extends LuceneTestCase {
       expectThrows(
           IllegalArgumentException.class,
           () -> {
-            w.updateDocument(new Term("field", "foo"), new Document());
+            w.updateDocument(new QueryTerm("field", "foo", 0), new Document());
           });
 
       w.close();
@@ -172,7 +172,8 @@ public class TestIndexWriterMaxDocs extends LuceneTestCase {
       expectThrows(
           IllegalArgumentException.class,
           () -> {
-            w.updateDocuments(new Term("field", "foo"), Collections.singletonList(new Document()));
+            w.updateDocuments(
+                new QueryTerm("field", "foo", 0), Collections.singletonList(new Document()));
           });
 
       w.close();

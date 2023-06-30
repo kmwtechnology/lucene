@@ -36,6 +36,7 @@ import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
@@ -474,8 +475,12 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     IndexSearcher s = newSearcher(r);
 
     // Used to match ANY using MultiPhraseQuery:
-    Term[] allTerms =
-        new Term[] {new Term("field", "a"), new Term("field", "b"), new Term("field", "c")};
+    QueryTerm[] allTerms =
+        new QueryTerm[] {
+          new QueryTerm("field", "a", 0),
+          new QueryTerm("field", "b", 0),
+          new QueryTerm("field", "c", 0)
+        };
     int numIters = atLeast(1000);
     for (int iter = 0; iter < numIters; iter++) {
 
@@ -501,7 +506,7 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
           if (string.charAt(j) == '*') {
             mpqb.add(allTerms);
           } else {
-            mpqb.add(new Term("field", "" + string.charAt(j)));
+            mpqb.add(new QueryTerm("field", "" + string.charAt(j), 0));
           }
         }
         bq.add(mpqb.build(), BooleanClause.Occur.SHOULD);
@@ -808,7 +813,7 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     IndexReader r = w.getReader();
     Query rewrite = q.rewrite(r);
     assertTrue(rewrite instanceof TermQuery);
-    assertEquals(new Term("field", "foo"), ((TermQuery) rewrite).getTerm());
+    assertEquals(new QueryTerm("field", "foo", 0), ((TermQuery) rewrite).getTerm());
     IOUtils.close(w, r, dir);
   }
 
@@ -832,8 +837,8 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     Query rewrite = q.rewrite(r);
     assertTrue(rewrite instanceof PhraseQuery);
     Term[] terms = ((PhraseQuery) rewrite).getTerms();
-    assertEquals(new Term("field", "foo"), terms[0]);
-    assertEquals(new Term("field", "bar"), terms[1]);
+    assertEquals(new QueryTerm("field", "foo", 0), terms[0]);
+    assertEquals(new QueryTerm("field", "bar", 0), terms[1]);
 
     int[] positions = ((PhraseQuery) rewrite).getPositions();
     assertEquals(0, positions[0]);
@@ -864,8 +869,8 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     Query rewrite = q.rewrite(r);
     assertTrue(rewrite instanceof PhraseQuery);
     Term[] terms = ((PhraseQuery) rewrite).getTerms();
-    assertEquals(new Term("field", "foo"), terms[0]);
-    assertEquals(new Term("field", "bar"), terms[1]);
+    assertEquals(new QueryTerm("field", "foo", 0), terms[0]);
+    assertEquals(new QueryTerm("field", "bar", 0), terms[1]);
 
     int[] positions = ((PhraseQuery) rewrite).getPositions();
     assertEquals(0, positions[0]);
@@ -895,8 +900,8 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     Term[][] terms = ((MultiPhraseQuery) rewrite).getTermArrays();
     assertEquals(1, terms.length);
     assertEquals(2, terms[0].length);
-    assertEquals(new Term("field", "foo"), terms[0][0]);
-    assertEquals(new Term("field", "bar"), terms[0][1]);
+    assertEquals(new QueryTerm("field", "foo", 0), terms[0][0]);
+    assertEquals(new QueryTerm("field", "bar", 0), terms[0][1]);
 
     int[] positions = ((MultiPhraseQuery) rewrite).getPositions();
     assertEquals(1, positions.length);
@@ -930,10 +935,10 @@ public class TestTermAutomatonQuery extends LuceneTestCase {
     Term[][] terms = ((MultiPhraseQuery) rewrite).getTermArrays();
     assertEquals(2, terms.length);
     assertEquals(2, terms[0].length);
-    assertEquals(new Term("field", "foo"), terms[0][0]);
-    assertEquals(new Term("field", "bar"), terms[0][1]);
+    assertEquals(new QueryTerm("field", "foo", 0), terms[0][0]);
+    assertEquals(new QueryTerm("field", "bar", 0), terms[0][1]);
     assertEquals(1, terms[1].length);
-    assertEquals(new Term("field", "baz"), terms[1][0]);
+    assertEquals(new QueryTerm("field", "baz", 0), terms[1][0]);
 
     int[] positions = ((MultiPhraseQuery) rewrite).getPositions();
     assertEquals(2, positions.length);

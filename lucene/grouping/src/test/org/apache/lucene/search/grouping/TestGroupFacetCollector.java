@@ -37,7 +37,7 @@ import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
@@ -315,7 +315,7 @@ public class TestGroupFacetCollector extends AbstractGroupingTestCase {
     w.addDocument(doc);
 
     w.commit();
-    w.deleteDocuments(new TermQuery(new Term("airport", "ams")));
+    w.deleteDocuments(new TermQuery(new QueryTerm("airport", "ams", 0)));
 
     // 2
     doc = new Document();
@@ -424,7 +424,8 @@ public class TestGroupFacetCollector extends AbstractGroupingTestCase {
                 searchTerm, context, offset, limit, minCount, orderByCount, facetPrefix);
         GroupFacetCollector groupFacetCollector =
             createRandomCollector("group", "facet", facetPrefix, multipleFacetsPerDocument);
-        searcher.search(new TermQuery(new Term("content", searchTerm)), groupFacetCollector);
+        searcher.search(
+            new TermQuery(new QueryTerm("content", searchTerm, 0)), groupFacetCollector);
         TermGroupFacetCollector.GroupedFacetResult actualFacetResult =
             groupFacetCollector.mergeSegmentResults(size, minCount, orderByCount);
 

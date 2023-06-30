@@ -46,6 +46,7 @@ import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
@@ -459,7 +460,7 @@ public class TestDrillSideways extends FacetTestCase {
         r.facets.getTopChildren(10, "Publish Date").toString());
 
     // Test main query gets null scorer:
-    ddq = new DrillDownQuery(config, new TermQuery(new Term("foobar", "baz")));
+    ddq = new DrillDownQuery(config, new TermQuery(new QueryTerm("foobar", "baz", 0)));
     ddq.add("Author", "Lisa");
     r = ds.search(null, ddq, 10);
 
@@ -699,7 +700,7 @@ public class TestDrillSideways extends FacetTestCase {
         r.facets.getTopChildren(10, "Publish Date").toString());
 
     // Test main query gets null scorer:
-    ddq = new DrillDownQuery(config, new TermQuery(new Term("foobar", "baz")));
+    ddq = new DrillDownQuery(config, new TermQuery(new QueryTerm("foobar", "baz", 0)));
     ddq.add("Author", "Lisa");
     r = ds.search(ddq, manager);
     assertEquals(0, r.collectorResult.size());
@@ -732,7 +733,7 @@ public class TestDrillSideways extends FacetTestCase {
 
     // Test the case where the base query rewrites itself. See LUCENE-9988:
     Query baseQuery =
-        new TermQuery(new Term("content", "foo")) {
+        new TermQuery(new QueryTerm("content", "foo", 0)) {
           @Override
           public Query rewrite(IndexReader reader) {
             // return a new instance, forcing the DrillDownQuery to also rewrite itself, exposing
@@ -1171,7 +1172,7 @@ public class TestDrillSideways extends FacetTestCase {
       if (contentToken == null) {
         baseQuery = new MatchAllDocsQuery();
       } else {
-        baseQuery = new TermQuery(new Term("content", contentToken));
+        baseQuery = new TermQuery(new QueryTerm("content", contentToken, 0));
       }
 
       DrillDownQuery ddq = new DrillDownQuery(config, baseQuery);
@@ -1959,8 +1960,8 @@ public class TestDrillSideways extends FacetTestCase {
     DrillSideways ds = getNewDrillSideways(searcher, config, taxoReader);
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term("field", "foo")), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term("field", "bar")), BooleanClause.Occur.MUST_NOT);
+    bq.add(new TermQuery(new QueryTerm("field", "foo", 0)), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm("field", "bar", 0)), BooleanClause.Occur.MUST_NOT);
     DrillDownQuery ddq = new DrillDownQuery(config, bq.build());
     ddq.add("field", "foo");
     ddq.add("author", bq.build());

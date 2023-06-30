@@ -260,7 +260,7 @@ public class TestIndexableField extends LuceneTestCase {
             "TEST: verify doc id=" + id + " (" + fieldsPerDoc[id] + " fields) counter=" + counter);
       }
 
-      final TopDocs hits = s.search(new TermQuery(new Term("id", "" + id)), 1);
+      final TopDocs hits = s.search(new TermQuery(new QueryTerm("id", "" + id, 0)), 1);
       assertEquals(1, hits.totalHits.value);
       final int docID = hits.scoreDocs[0].doc;
       final Document doc = storedFields.document(docID);
@@ -328,15 +328,15 @@ public class TestIndexableField extends LuceneTestCase {
           }
 
           BooleanQuery.Builder bq = new BooleanQuery.Builder();
-          bq.add(new TermQuery(new Term("id", "" + id)), BooleanClause.Occur.MUST);
-          bq.add(new TermQuery(new Term(name, "text")), BooleanClause.Occur.MUST);
+          bq.add(new TermQuery(new QueryTerm("id", "" + id, 0)), BooleanClause.Occur.MUST);
+          bq.add(new TermQuery(new QueryTerm(name, "text", 0)), BooleanClause.Occur.MUST);
           final TopDocs hits2 = s.search(bq.build(), 1);
           assertEquals(1, hits2.totalHits.value);
           assertEquals(docID, hits2.scoreDocs[0].doc);
 
           bq = new BooleanQuery.Builder();
-          bq.add(new TermQuery(new Term("id", "" + id)), BooleanClause.Occur.MUST);
-          bq.add(new TermQuery(new Term(name, "" + counter)), BooleanClause.Occur.MUST);
+          bq.add(new TermQuery(new QueryTerm("id", "" + id, 0)), BooleanClause.Occur.MUST);
+          bq.add(new TermQuery(new QueryTerm(name, "" + counter, 0)), BooleanClause.Occur.MUST);
           final TopDocs hits3 = s.search(bq.build(), 1);
           assertEquals(1, hits3.totalHits.value);
           assertEquals(docID, hits3.scoreDocs[0].doc);

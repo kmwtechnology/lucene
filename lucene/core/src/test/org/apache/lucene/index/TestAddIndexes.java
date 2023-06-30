@@ -128,9 +128,9 @@ public class TestAddIndexes extends LuceneTestCase {
     // make sure the new index is correct
     verifyNumDocs(dir, 230);
 
-    verifyTermDocs(dir, new Term("content", "aaa"), 180);
+    verifyTermDocs(dir, new QueryTerm("content", "aaa", 0), 180);
 
-    verifyTermDocs(dir, new Term("content", "bbb"), 50);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 50);
 
     // now fully merge it.
     writer =
@@ -142,9 +142,9 @@ public class TestAddIndexes extends LuceneTestCase {
     // make sure the new index is correct
     verifyNumDocs(dir, 230);
 
-    verifyTermDocs(dir, new Term("content", "aaa"), 180);
+    verifyTermDocs(dir, new QueryTerm("content", "aaa", 0), 180);
 
-    verifyTermDocs(dir, new Term("content", "bbb"), 50);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 50);
 
     // now add a single document
     Directory aux4 = newDirectory();
@@ -162,7 +162,7 @@ public class TestAddIndexes extends LuceneTestCase {
 
     verifyNumDocs(dir, 231);
 
-    verifyTermDocs(dir, new Term("content", "bbb"), 51);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 51);
     dir.close();
     aux.close();
     aux2.close();
@@ -194,15 +194,15 @@ public class TestAddIndexes extends LuceneTestCase {
       writer.updateDocument(new Term("id", "" + (i % 10)), doc);
     }
     // Deletes one of the 10 added docs, leaving 9:
-    PhraseQuery q = new PhraseQuery("content", "bbb", "14");
+    PhraseQuery q = new PhraseQuery("content", new int[] {0, 0}, "bbb", "14");
     writer.deleteDocuments(q);
 
     writer.forceMerge(1);
     writer.commit();
 
     verifyNumDocs(dir, 1039);
-    verifyTermDocs(dir, new Term("content", "aaa"), 1030);
-    verifyTermDocs(dir, new Term("content", "bbb"), 9);
+    verifyTermDocs(dir, new QueryTerm("content", "aaa", 0), 1030);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 9);
 
     writer.close();
     dir.close();
@@ -235,15 +235,15 @@ public class TestAddIndexes extends LuceneTestCase {
     writer.addIndexes(aux);
 
     // Deletes one of the 10 added docs, leaving 9:
-    PhraseQuery q = new PhraseQuery("content", "bbb", "14");
+    PhraseQuery q = new PhraseQuery("content", new int[] {0, 0}, "bbb", "14");
     writer.deleteDocuments(q);
 
     writer.forceMerge(1);
     writer.commit();
 
     verifyNumDocs(dir, 1039);
-    verifyTermDocs(dir, new Term("content", "aaa"), 1030);
-    verifyTermDocs(dir, new Term("content", "bbb"), 9);
+    verifyTermDocs(dir, new QueryTerm("content", "aaa", 0), 1030);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 9);
 
     writer.close();
     dir.close();
@@ -274,7 +274,7 @@ public class TestAddIndexes extends LuceneTestCase {
     }
 
     // Deletes one of the 10 added docs, leaving 9:
-    PhraseQuery q = new PhraseQuery("content", "bbb", "14");
+    PhraseQuery q = new PhraseQuery("content", new int[] {0, 0}, "bbb", "14");
     writer.deleteDocuments(q);
 
     writer.addIndexes(aux);
@@ -283,8 +283,8 @@ public class TestAddIndexes extends LuceneTestCase {
     writer.commit();
 
     verifyNumDocs(dir, 1039);
-    verifyTermDocs(dir, new Term("content", "aaa"), 1030);
-    verifyTermDocs(dir, new Term("content", "bbb"), 9);
+    verifyTermDocs(dir, new QueryTerm("content", "aaa", 0), 1030);
+    verifyTermDocs(dir, new QueryTerm("content", "bbb", 0), 9);
 
     writer.close();
     dir.close();
@@ -1322,7 +1322,7 @@ public class TestAddIndexes extends LuceneTestCase {
     IndexWriter writer = new IndexWriter(dirs[0], conf);
 
     // Now delete the document
-    writer.deleteDocuments(new Term("id", "myid"));
+    writer.deleteDocuments(new QueryTerm("id", "myid", 0));
     try (DirectoryReader r = DirectoryReader.open(dirs[1])) {
       TestUtil.addIndexesSlowly(writer, r);
     }
@@ -1689,7 +1689,7 @@ public class TestAddIndexes extends LuceneTestCase {
     w1.addDocument(doc);
     w1.flush();
 
-    w1.updateDocValues(new Term("id", "1"), new NumericDocValuesField("soft_delete", 1));
+    w1.updateDocValues(new QueryTerm("id", "1", 0), new NumericDocValuesField("soft_delete", 1));
     w1.commit();
     w1.close();
 
@@ -1728,7 +1728,7 @@ public class TestAddIndexes extends LuceneTestCase {
     w1.addDocument(doc);
     w1.flush();
 
-    w1.updateDocValues(new Term("id", "1"), new NumericDocValuesField("soft_delete", 1));
+    w1.updateDocValues(new QueryTerm("id", "1", 0), new NumericDocValuesField("soft_delete", 1));
     w1.commit();
     w1.close();
 

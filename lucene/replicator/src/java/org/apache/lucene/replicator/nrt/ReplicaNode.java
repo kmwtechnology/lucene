@@ -37,8 +37,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SegmentInfos;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.TermQuery;
@@ -483,7 +483,7 @@ public abstract class ReplicaNode extends Node {
     int markerCount;
     IndexSearcher s = mgr.acquire();
     try {
-      markerCount = s.count(new TermQuery(new Term("marker", "marker")));
+      markerCount = s.count(new TermQuery(new QueryTerm("marker", "marker", 0)));
     } finally {
       mgr.release(s);
     }

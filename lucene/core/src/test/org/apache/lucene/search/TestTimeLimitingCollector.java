@@ -22,7 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.TimeLimitingCollector.TimeExceededException;
 import org.apache.lucene.search.TimeLimitingCollector.TimerThread;
 import org.apache.lucene.store.Directory;
@@ -93,13 +93,14 @@ public class TestTimeLimitingCollector extends LuceneTestCase {
     searcher = newSearcher(reader);
 
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
-    booleanQuery.add(new TermQuery(new Term(FIELD_NAME, "one")), BooleanClause.Occur.SHOULD);
+    booleanQuery.add(
+        new TermQuery(new QueryTerm(FIELD_NAME, "one", 0)), BooleanClause.Occur.SHOULD);
     // start from 1, so that the 0th doc never matches
     for (int i = 1; i < docText.length; i++) {
       String[] docTextParts = docText[i].split("\\s+");
       for (String docTextPart : docTextParts) { // large query so that search will be longer
         booleanQuery.add(
-            new TermQuery(new Term(FIELD_NAME, docTextPart)), BooleanClause.Occur.SHOULD);
+            new TermQuery(new QueryTerm(FIELD_NAME, docTextPart, 0)), BooleanClause.Occur.SHOULD);
       }
     }
 
@@ -305,9 +306,10 @@ public class TestTimeLimitingCollector extends LuceneTestCase {
               new BooleanQuery
                   .Builder(); // won't match - we only test if we check timeout when collectors are
           // pulled
-          booleanQuery.add(new TermQuery(new Term(FIELD_NAME, "one")), BooleanClause.Occur.MUST);
           booleanQuery.add(
-              new TermQuery(new Term(FIELD_NAME, "blueberry")), BooleanClause.Occur.MUST);
+              new TermQuery(new QueryTerm(FIELD_NAME, "one", 0)), BooleanClause.Occur.MUST);
+          booleanQuery.add(
+              new TermQuery(new QueryTerm(FIELD_NAME, "blueberry", 0)), BooleanClause.Occur.MUST);
           searcher.search(booleanQuery.build(), collector);
         });
     assertEquals(-1, myHc.getLastDocCollected());

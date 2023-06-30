@@ -31,7 +31,7 @@ import org.apache.lucene.benchmark.byTask.utils.Config;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
@@ -89,7 +89,7 @@ public class TestDocMaker extends BenchmarkTestCase {
 
     IndexReader reader = DirectoryReader.open(runData.getDirectory());
     IndexSearcher searcher = newSearcher(reader);
-    TopDocs td = searcher.search(new TermQuery(new Term("key", "value")), 10);
+    TopDocs td = searcher.search(new TermQuery(new QueryTerm("key", "value", 0)), 10);
     assertEquals(numExpectedResults, td.totalHits.value);
     reader.close();
   }

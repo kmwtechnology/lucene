@@ -31,7 +31,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PrefixQuery;
@@ -301,7 +301,7 @@ public class TestSpans extends LuceneTestCase {
 
   // LUCENE-1404
   private long hitCount(IndexSearcher searcher, String word) throws Throwable {
-    return searcher.count(new TermQuery(new Term("text", word)));
+    return searcher.count(new TermQuery(new QueryTerm("text", word, 0)));
   }
 
   // LUCENE-1404
@@ -365,7 +365,7 @@ public class TestSpans extends LuceneTestCase {
     SpanQuery q =
         spanNotQuery(
             spanTermQuery(field, "r1"),
-            new SpanMultiTermQueryWrapper<>(new PrefixQuery(new Term(field, "s1"))),
+            new SpanMultiTermQueryWrapper<>(new PrefixQuery(new QueryTerm(field, "s1", 0))),
             3,
             3);
     checkHits(q, new int[] {14});
@@ -373,14 +373,14 @@ public class TestSpans extends LuceneTestCase {
     q =
         spanNotQuery(
             spanTermQuery(field, "r1"),
-            new SpanMultiTermQueryWrapper<>(new FuzzyQuery(new Term(field, "s12"), 1, 2)),
+            new SpanMultiTermQueryWrapper<>(new FuzzyQuery(new QueryTerm(field, "s12", 0), 1, 2)),
             3,
             3);
     checkHits(q, new int[] {14});
 
     q =
         spanNotQuery(
-            new SpanMultiTermQueryWrapper<>(new PrefixQuery(new Term(field, "r"))),
+            new SpanMultiTermQueryWrapper<>(new PrefixQuery(new QueryTerm(field, "r", 0))),
             spanTermQuery(field, "s21"),
             3,
             3);

@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.flexible.standard.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.standard.nodes.RegexpQueryNode;
@@ -45,7 +45,9 @@ public class RegexpQueryNodeBuilder implements StandardQueryBuilder {
 
     // TODO: make the maxStates configurable w/ a reasonable default (QueryParserBase uses 10000)
     return new RegexpQuery(
-        new Term(regexpNode.getFieldAsString(), regexpNode.textToBytesRef()),
+        // creating a term with a zero offset is reasonable here because this is for the standard
+        // query parser which doesn't (yet) care about query term offsets
+        new QueryTerm(regexpNode.getFieldAsString(), regexpNode.textToBytesRef(), 0),
         RegExp.ALL,
         0,
         name -> null,

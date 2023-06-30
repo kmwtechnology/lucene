@@ -79,7 +79,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     modifier.forceMerge(1);
     modifier.commit();
 
-    Term term = new Term("city", "Amsterdam");
+    QueryTerm term = new QueryTerm("city", "Amsterdam", 0);
     long hitCount = getHitCount(dir, term);
     assertEquals(1, hitCount);
     if (VERBOSE) {
@@ -124,7 +124,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     assertEquals(7, reader.numDocs());
     reader.close();
 
-    modifier.deleteDocuments(new Term("value", String.valueOf(value)));
+    modifier.deleteDocuments(new QueryTerm("value", String.valueOf(value), 0));
 
     modifier.commit();
 
@@ -151,14 +151,16 @@ public class TestIndexWriterDelete extends LuceneTestCase {
       int value = 100;
 
       addDoc(modifier, ++id, value);
-      if (0 == t) modifier.deleteDocuments(new Term("value", String.valueOf(value)));
-      else modifier.deleteDocuments(new TermQuery(new Term("value", String.valueOf(value))));
+      if (0 == t) modifier.deleteDocuments(new QueryTerm("value", String.valueOf(value), 0));
+      else
+        modifier.deleteDocuments(new TermQuery(new QueryTerm("value", String.valueOf(value), 0)));
       addDoc(modifier, ++id, value);
       if (0 == t) {
-        modifier.deleteDocuments(new Term("value", String.valueOf(value)));
+        modifier.deleteDocuments(new QueryTerm("value", String.valueOf(value), 0));
         assertEquals(2, modifier.getNumBufferedDeleteTerms());
         assertEquals(1, modifier.getBufferedDeleteTermsSize());
-      } else modifier.deleteDocuments(new TermQuery(new Term("value", String.valueOf(value))));
+      } else
+        modifier.deleteDocuments(new TermQuery(new QueryTerm("value", String.valueOf(value), 0)));
 
       addDoc(modifier, ++id, value);
       assertEquals(0, modifier.getSegmentCount());
@@ -167,7 +169,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
       IndexReader reader = DirectoryReader.open(dir);
       assertEquals(1, reader.numDocs());
 
-      long hitCount = getHitCount(dir, new Term("id", String.valueOf(id)));
+      long hitCount = getHitCount(dir, new QueryTerm("id", String.valueOf(id), 0));
       assertEquals(1, hitCount);
       reader.close();
       modifier.close();
@@ -531,7 +533,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     doc.add(newStringField("id", String.valueOf(id), Field.Store.YES));
     doc.add(newStringField("value", String.valueOf(value), Field.Store.NO));
     doc.add(new NumericDocValuesField("dv", value));
-    modifier.updateDocument(new Term("id", String.valueOf(id)), doc);
+    modifier.updateDocument(new QueryTerm("id", String.valueOf(id), 0), doc);
   }
 
   private void addDoc(IndexWriter modifier, int id, int value) throws IOException {
@@ -543,7 +545,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     modifier.addDocument(doc);
   }
 
-  private long getHitCount(Directory dir, Term term) throws IOException {
+  private long getHitCount(Directory dir, QueryTerm term) throws IOException {
     IndexReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = newSearcher(reader);
     long hitCount = searcher.search(new TermQuery(term), 1000).totalHits.value;
@@ -571,7 +573,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
    */
   private void doTestOperationsOnDiskFull(boolean updates) throws IOException {
 
-    Term searchTerm = new Term("content", "aaa");
+    QueryTerm searchTerm = new QueryTerm("content", "aaa", 0);
     int START_COUNT = 157;
     int END_COUNT = 144;
 
@@ -667,9 +669,9 @@ public class TestIndexWriterDelete extends LuceneTestCase {
                 d.add(newStringField("id", Integer.toString(i), Field.Store.YES));
                 d.add(newTextField("content", "bbb " + i, Field.Store.NO));
                 d.add(new NumericDocValuesField("dv", i));
-                modifier.updateDocument(new Term("id", Integer.toString(docId)), d);
+                modifier.updateDocument(new QueryTerm("id", Integer.toString(docId), 0), d);
               } else { // deletes
-                modifier.deleteDocuments(new Term("id", Integer.toString(docId)));
+                modifier.deleteDocuments(new QueryTerm("id", Integer.toString(docId), 0));
                 // modifier.setNorm(docId, "contents", (float)2.0);
               }
               docId += 12;
@@ -889,7 +891,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
 
     // one of the two files hits
 
-    Term term = new Term("city", "Amsterdam");
+    QueryTerm term = new QueryTerm("city", "Amsterdam", 0);
     long hitCount = getHitCount(dir, term);
     assertEquals(1, hitCount);
 
@@ -1039,7 +1041,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
       addDoc(modifier, i, 2 * i);
     }
 
-    modifier.deleteDocuments(new TermQuery(new Term("nada", "nada")));
+    modifier.deleteDocuments(new TermQuery(new QueryTerm("nada", "nada", 0)));
     modifier.commit();
     assertEquals(5, modifier.getDocStats().numDocs);
     modifier.close();
@@ -1233,12 +1235,12 @@ public class TestIndexWriterDelete extends LuceneTestCase {
         sb.append(' ').append(TestUtil.randomRealisticUnicodeString(random()));
       }
       if (id == 500) {
-        w.deleteDocuments(new Term("id", "0"));
+        w.deleteDocuments(new QueryTerm("id", "0", 0));
       }
       Document doc = new Document();
       doc.add(newStringField("id", "" + id, Field.Store.NO));
       doc.add(newTextField("body", sb.toString(), Field.Store.NO));
-      w.updateDocument(new Term("id", "" + id), doc);
+      w.updateDocument(new QueryTerm("id", "" + id, 0), doc);
       docsInSegment.incrementAndGet();
       // TODO: fix this test
       if (slowFileExists(dir, "_0_1.del") || slowFileExists(dir, "_0_1.liv")) {
@@ -1272,7 +1274,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     w.commit();
     assertEquals(1, w.getSegmentCount());
 
-    w.deleteDocuments(new Term("field", "0"));
+    w.deleteDocuments(new QueryTerm("field", "0", 0));
     w.commit();
     assertEquals(1, w.getSegmentCount());
     w.close();
@@ -1350,7 +1352,7 @@ public class TestIndexWriterDelete extends LuceneTestCase {
     iwc.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
     w = new IndexWriter(d, iwc);
     IndexReader r = DirectoryReader.open(w, false, false);
-    w.deleteDocuments(new Term("id", "1"));
+    w.deleteDocuments(new QueryTerm("id", "1", 0));
     IndexReader r2 = DirectoryReader.open(w, true, true);
     assertFalse(((StandardDirectoryReader) r).isCurrent());
     assertTrue(((StandardDirectoryReader) r2).isCurrent());

@@ -22,7 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.valuesource.SortedSetFieldSource;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -45,6 +45,6 @@ public class TestValueSourceGroupSelector extends BaseGroupSelectorTestCase<Muta
 
   @Override
   protected Query filterQuery(MutableValue groupValue) {
-    return new TermQuery(new Term("groupField", groupValue.toObject().toString()));
+    return new TermQuery(new QueryTerm("groupField", groupValue.toObject().toString(), 0));
   }
 }

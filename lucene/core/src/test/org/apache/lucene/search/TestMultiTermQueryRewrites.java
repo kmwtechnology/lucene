@@ -23,6 +23,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FilteredTermsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -271,7 +272,7 @@ public class TestMultiTermQueryRewrites extends LuceneTestCase {
   }
 
   public void testHashCodeStability() {
-    PrefixQuery pq = new PrefixQuery(new Term("field", "test"));
+    PrefixQuery pq = new PrefixQuery(new QueryTerm("field", "test", 0));
     pq.setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_REWRITE);
     int hash = pq.hashCode();
     pq.setRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_REWRITE);

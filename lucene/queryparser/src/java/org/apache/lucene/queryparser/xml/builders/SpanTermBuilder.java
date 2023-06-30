@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
 import org.apache.lucene.queryparser.xml.DOMUtils;
@@ -30,6 +30,6 @@ public class SpanTermBuilder extends SpanBuilderBase {
   public SpanQuery getSpanQuery(Element e) throws ParserException {
     String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
     String value = DOMUtils.getNonBlankTextOrFail(e);
-    return new SpanTermQuery(new Term(fieldName, value));
+    return new SpanTermQuery(new QueryTerm(fieldName, value, 0));
   }
 }

@@ -33,7 +33,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.FieldValueHitQueue.Entry;
 import org.apache.lucene.store.Directory;
@@ -413,10 +413,10 @@ public class TestTopFieldCollector extends LuceneTestCase {
     text.setStringValue("baz");
     w.addDocument(doc);
     IndexReader reader = w.getReader();
-    Query foo = new TermQuery(new Term("text", "foo"));
-    Query bar = new TermQuery(new Term("text", "bar"));
+    Query foo = new TermQuery(new QueryTerm("text", "foo", 0));
+    Query bar = new TermQuery(new QueryTerm("text", "bar", 0));
     foo = new BoostQuery(foo, 2);
-    Query baz = new TermQuery(new Term("text", "baz"));
+    Query baz = new TermQuery(new QueryTerm("text", "baz", 0));
     baz = new BoostQuery(baz, 3);
     Query query =
         new BooleanQuery.Builder()
@@ -514,7 +514,7 @@ public class TestTopFieldCollector extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     for (String queryText : new String[] {"foo", "bar"}) {
-      Query query = new TermQuery(new Term("f", queryText));
+      Query query = new TermQuery(new QueryTerm("f", queryText, 0));
       for (boolean reverse : new boolean[] {false, true}) {
         ScoreDoc[] sortedByDoc = searcher.search(query, 10).scoreDocs;
         Arrays.sort(sortedByDoc, Comparator.comparingInt(sd -> sd.doc));
@@ -693,12 +693,12 @@ public class TestTopFieldCollector extends LuceneTestCase {
     w.close();
     Query[] queries =
         new Query[] {
-          new TermQuery(new Term("f", "A")),
-          new TermQuery(new Term("f", "B")),
-          new TermQuery(new Term("f", "C")),
+          new TermQuery(new QueryTerm("f", "A", 0)),
+          new TermQuery(new QueryTerm("f", "B", 0)),
+          new TermQuery(new QueryTerm("f", "C", 0)),
           new BooleanQuery.Builder()
-              .add(new TermQuery(new Term("f", "A")), BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term("f", "B")), BooleanClause.Occur.SHOULD)
+              .add(new TermQuery(new QueryTerm("f", "A", 0)), BooleanClause.Occur.MUST)
+              .add(new TermQuery(new QueryTerm("f", "B", 0)), BooleanClause.Occur.SHOULD)
               .build()
         };
     for (Query query : queries) {
@@ -731,21 +731,21 @@ public class TestTopFieldCollector extends LuceneTestCase {
         IndexSearcher searcher = new IndexSearcher(reader);
         TopFieldDocs topDocs =
             searcher.search(
-                new TermQuery(new Term("f", "foo")),
+                new TermQuery(new QueryTerm("f", "foo", 0)),
                 TopFieldCollector.createSharedManager(sort, 2, null, 10));
         assertEquals(10, topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.EQUAL_TO, topDocs.totalHits.relation);
 
         topDocs =
             searcher.search(
-                new TermQuery(new Term("f", "foo")),
+                new TermQuery(new QueryTerm("f", "foo", 0)),
                 TopFieldCollector.createSharedManager(sort, 2, null, 2));
         assertTrue(10 >= topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, topDocs.totalHits.relation);
 
         topDocs =
             searcher.search(
-                new TermQuery(new Term("f", "foo")),
+                new TermQuery(new QueryTerm("f", "foo", 0)),
                 TopFieldCollector.createSharedManager(sort, 10, null, 2));
         assertEquals(10, topDocs.totalHits.value);
         assertEquals(TotalHits.Relation.EQUAL_TO, topDocs.totalHits.relation);

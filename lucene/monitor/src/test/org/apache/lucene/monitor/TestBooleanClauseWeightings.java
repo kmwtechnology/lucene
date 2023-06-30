@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -38,31 +39,35 @@ public class TestBooleanClauseWeightings extends LuceneTestCase {
             .add(LongPoint.newRangeQuery("field2", 1, 2), BooleanClause.Occur.MUST)
             .add(
                 new BooleanQuery.Builder()
-                    .add(new TermQuery(new Term("field1", "term1")), BooleanClause.Occur.SHOULD)
-                    .add(new TermQuery(new Term("field1", "term2")), BooleanClause.Occur.SHOULD)
+                    .add(
+                        new TermQuery(new QueryTerm("field1", "term1", 0)),
+                        BooleanClause.Occur.SHOULD)
+                    .add(
+                        new TermQuery(new QueryTerm("field1", "term2", 0)),
+                        BooleanClause.Occur.SHOULD)
                     .build(),
                 BooleanClause.Occur.MUST)
             .build();
     QueryTree tree = treeBuilder.buildTree(bq, TermWeightor.DEFAULT);
     Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+    tree.collectTerms((f, b) -> terms.add(new QueryTerm(f, b, 0)));
     assertEquals(2, terms.size());
   }
 
   public void testLongerTermsPreferred() {
     Query q =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("field1", "a")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("field1", "a", 0)), BooleanClause.Occur.MUST)
             .add(
-                new TermQuery(new Term("field1", "supercalifragilisticexpialidocious")),
+                new TermQuery(new QueryTerm("field1", "supercalifragilisticexpialidocious", 0)),
                 BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term("field1", "b")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("field1", "b", 0)), BooleanClause.Occur.MUST)
             .build();
     Set<Term> expected =
-        Collections.singleton(new Term("field1", "supercalifragilisticexpialidocious"));
+        Collections.singleton(new QueryTerm("field1", "supercalifragilisticexpialidocious", 0));
     QueryTree tree = treeBuilder.buildTree(q, TermWeightor.DEFAULT);
     Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+    tree.collectTerms((f, b) -> terms.add(new QueryTerm(f, b, 0)));
     assertEquals(expected, terms);
   }
 }

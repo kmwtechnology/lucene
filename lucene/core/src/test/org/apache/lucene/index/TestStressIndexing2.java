@@ -904,7 +904,7 @@ public class TestStressIndexing2 extends LuceneTestCase {
       if (VERBOSE) {
         System.out.println(Thread.currentThread().getName() + ": del query id:" + idString);
       }
-      w.deleteDocuments(new TermQuery(new Term("id", idString)));
+      w.deleteDocuments(new TermQuery(new QueryTerm("id", idString, 0)));
       docs.remove(idString);
     }
 

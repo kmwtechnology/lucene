@@ -19,7 +19,7 @@ package org.apache.lucene.spatial.prefix;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.spatial.prefix.tree.Cell;
@@ -225,7 +225,7 @@ public class RecursivePrefixTreeStrategy extends PrefixTreeStrategy {
         assert prevLevel < cell.getLevel();
       }
       assert cell.isLeaf();
-      return new TermQuery(new Term(getFieldName(), cell.getTokenBytesWithLeaf(null)));
+      return new TermQuery(new QueryTerm(getFieldName(), cell.getTokenBytesWithLeaf(null), 0));
     } else {
       // Well there could be parent cells. But we can reduce the "scan level" which will be slower
       // for a point query.

@@ -25,7 +25,7 @@ import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.expressions.js.JavascriptCompiler;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DoubleValuesSource;
@@ -85,13 +85,13 @@ public class TestExpressionSorts extends LuceneTestCase {
     int n = atLeast(1);
     for (int i = 0; i < n; i++) {
       assertQuery(new MatchAllDocsQuery());
-      assertQuery(new TermQuery(new Term("english", "one")));
+      assertQuery(new TermQuery(new QueryTerm("english", "one", 0)));
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
-      bq.add(new TermQuery(new Term("english", "one")), BooleanClause.Occur.SHOULD);
-      bq.add(new TermQuery(new Term("oddeven", "even")), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("english", "one", 0)), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("oddeven", "even", 0)), BooleanClause.Occur.SHOULD);
       assertQuery(bq.build());
       // force in order
-      bq.add(new TermQuery(new Term("english", "two")), BooleanClause.Occur.SHOULD);
+      bq.add(new TermQuery(new QueryTerm("english", "two", 0)), BooleanClause.Occur.SHOULD);
       bq.setMinimumNumberShouldMatch(2);
       assertQuery(bq.build());
     }

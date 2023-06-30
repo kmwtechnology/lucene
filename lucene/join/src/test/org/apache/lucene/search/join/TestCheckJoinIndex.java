@@ -25,6 +25,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.TermQuery;
@@ -83,7 +84,7 @@ public class TestCheckJoinIndex extends LuceneTestCase {
     final IndexReader reader = w.getReader();
     w.close();
     BitSetProducer parentsFilter =
-        new QueryBitSetProducer(new TermQuery(new Term("parent", "true")));
+        new QueryBitSetProducer(new TermQuery(new QueryTerm("parent", "true", 0)));
     try {
       expectThrows(IllegalStateException.class, () -> CheckJoinIndex.check(reader, parentsFilter));
     } finally {
@@ -121,7 +122,7 @@ public class TestCheckJoinIndex extends LuceneTestCase {
     w.close();
 
     BitSetProducer parentsFilter =
-        new QueryBitSetProducer(new TermQuery(new Term("parent", "true")));
+        new QueryBitSetProducer(new TermQuery(new QueryTerm("parent", "true", 0)));
     try {
       expectThrows(IllegalStateException.class, () -> CheckJoinIndex.check(reader, parentsFilter));
     } finally {

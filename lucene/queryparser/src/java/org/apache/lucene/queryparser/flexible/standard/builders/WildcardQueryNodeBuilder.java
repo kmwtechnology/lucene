@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.queryparser.flexible.standard.builders;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
@@ -43,7 +43,9 @@ public class WildcardQueryNodeBuilder implements StandardQueryBuilder {
     }
 
     return new WildcardQuery(
-        new Term(wildcardNode.getFieldAsString(), wildcardNode.getTextAsString()),
+        // creating a term with a zero offset is reasonable here because this is for the standard
+        // query parser which doesn't (yet) care about query term offsets
+        new QueryTerm(wildcardNode.getFieldAsString(), wildcardNode.getTextAsString(), 0),
         Operations.DEFAULT_DETERMINIZE_WORK_LIMIT,
         method);
   }

@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.search;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.KeepOnlyLastCommitDeletionPolicy;
 import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
@@ -112,7 +115,9 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
       }
       try {
         assertEquals(
-            "generation: " + gen, docs.size(), s.search(new TermQuery(id), 10).totalHits.value);
+            "generation: " + gen,
+            docs.size(),
+            s.search(new TermQuery(asQueryTerm(id)), 10).totalHits.value);
       } finally {
         nrtDeletes.release(s);
       }
@@ -139,7 +144,9 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
       }
       try {
         assertEquals(
-            "generation: " + gen, docs.size(), s.search(new TermQuery(id), 10).totalHits.value);
+            "generation: " + gen,
+            docs.size(),
+            s.search(new TermQuery(asQueryTerm(id)), 10).totalHits.value);
       } finally {
         nrtNoDeletes.release(s);
       }
@@ -164,7 +171,8 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
         System.out.println(Thread.currentThread().getName() + ": nrt: got noDeletes searcher=" + s);
       }
       try {
-        assertEquals("generation: " + gen, 1, s.search(new TermQuery(id), 10).totalHits.value);
+        assertEquals(
+            "generation: " + gen, 1, s.search(new TermQuery(asQueryTerm(id)), 10).totalHits.value);
       } finally {
         nrtNoDeletes.release(s);
       }
@@ -192,7 +200,8 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
         System.out.println(Thread.currentThread().getName() + ": nrt: got deletes searcher=" + s);
       }
       try {
-        assertEquals("generation: " + gen, 1, s.search(new TermQuery(id), 10).totalHits.value);
+        assertEquals(
+            "generation: " + gen, 1, s.search(new TermQuery(asQueryTerm(id)), 10).totalHits.value);
       } finally {
         nrtDeletes.release(s);
       }
@@ -220,7 +229,7 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
         System.out.println(Thread.currentThread().getName() + ": nrt: got deletes searcher=" + s);
       }
       try {
-        assertEquals(0, s.search(new TermQuery(id), 10).totalHits.value);
+        assertEquals(0, s.search(new TermQuery(asQueryTerm(id)), 10).totalHits.value);
       } finally {
         nrtDeletes.release(s);
       }
@@ -249,7 +258,7 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
           public IndexSearcher newSearcher(IndexReader r, IndexReader previous) throws IOException {
             TestControlledRealTimeReopenThread.this.warmCalled = true;
             IndexSearcher s = new IndexSearcher(r, es);
-            s.search(new TermQuery(new Term("body", "united")), 10);
+            s.search(new TermQuery(new QueryTerm("body", "united", 0)), 10);
             return s;
           }
         };
@@ -351,7 +360,7 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
             try {
               signal.await();
               manager.maybeRefresh();
-              writer.deleteDocuments(new TermQuery(new Term("foo", "barista")));
+              writer.deleteDocuments(new TermQuery(new QueryTerm("foo", "barista", 0)));
               manager.maybeRefresh(); // kick off another reopen so we inc. the internal gen
             } catch (Exception e) {
               e.printStackTrace();
@@ -561,7 +570,7 @@ public class TestControlledRealTimeReopenThread extends ThreadedIndexingAndSearc
       long wait = System.nanoTime() - start;
       assertTrue("waited too long for generation " + wait, wait < (maxStaleSecs * 1_000_000_000L));
       IndexSearcher searcher = sm.acquire();
-      TopDocs td = searcher.search(new TermQuery(new Term("count", i + "")), 10);
+      TopDocs td = searcher.search(new TermQuery(new QueryTerm("count", i + "", 0)), 10);
       sm.release(searcher);
       assertEquals(1, td.totalHits.value);
     }

@@ -37,6 +37,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
@@ -154,7 +155,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -163,12 +164,12 @@ public class TestFieldExistsQuery extends LuceneTestCase {
 
       assertSameMatches(
           searcher,
-          new TermQuery(new Term("has_value", "yes")),
+          new TermQuery(new QueryTerm("has_value", "yes", 0)),
           new FieldExistsQuery("dv1"),
           false);
       assertSameMatches(
           searcher,
-          new TermQuery(new Term("has_value", "yes")),
+          new TermQuery(new QueryTerm("has_value", "yes", 0)),
           new FieldExistsQuery("dv2"),
           false);
 
@@ -196,7 +197,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -204,16 +205,16 @@ public class TestFieldExistsQuery extends LuceneTestCase {
       iw.close();
 
       BooleanQuery.Builder ref = new BooleanQuery.Builder();
-      ref.add(new TermQuery(new Term("f", "yes")), Occur.MUST);
-      ref.add(new TermQuery(new Term("has_value", "yes")), Occur.FILTER);
+      ref.add(new TermQuery(new QueryTerm("f", "yes", 0)), Occur.MUST);
+      ref.add(new TermQuery(new QueryTerm("has_value", "yes", 0)), Occur.FILTER);
 
       BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
-      bq1.add(new TermQuery(new Term("f", "yes")), Occur.MUST);
+      bq1.add(new TermQuery(new QueryTerm("f", "yes", 0)), Occur.MUST);
       bq1.add(new FieldExistsQuery("dv1"), Occur.FILTER);
       assertSameMatches(searcher, ref.build(), bq1.build(), true);
 
       BooleanQuery.Builder bq2 = new BooleanQuery.Builder();
-      bq2.add(new TermQuery(new Term("f", "yes")), Occur.MUST);
+      bq2.add(new TermQuery(new QueryTerm("f", "yes", 0)), Occur.MUST);
       bq2.add(new FieldExistsQuery("dv2"), Occur.FILTER);
       assertSameMatches(searcher, ref.build(), bq2.build(), true);
 
@@ -241,7 +242,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -251,7 +252,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
       final float boost = random().nextFloat() * 10;
       final Query ref =
           new BoostQuery(
-              new ConstantScoreQuery(new TermQuery(new Term("has_value", "yes"))), boost);
+              new ConstantScoreQuery(new TermQuery(new QueryTerm("has_value", "yes", 0))), boost);
 
       final Query q1 = new BoostQuery(new FieldExistsQuery("dv1"), boost);
       assertSameMatches(searcher, ref, q1, true);
@@ -369,7 +370,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -378,7 +379,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
 
       assertSameMatches(
           searcher,
-          new TermQuery(new Term("has_value", "yes")),
+          new TermQuery(new QueryTerm("has_value", "yes", 0)),
           new FieldExistsQuery("text1"),
           false);
 
@@ -404,7 +405,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -412,11 +413,11 @@ public class TestFieldExistsQuery extends LuceneTestCase {
       iw.close();
 
       BooleanQuery.Builder ref = new BooleanQuery.Builder();
-      ref.add(new TermQuery(new Term("f", "yes")), Occur.MUST);
-      ref.add(new TermQuery(new Term("has_value", "yes")), Occur.FILTER);
+      ref.add(new TermQuery(new QueryTerm("f", "yes", 0)), Occur.MUST);
+      ref.add(new TermQuery(new QueryTerm("has_value", "yes", 0)), Occur.FILTER);
 
       BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
-      bq1.add(new TermQuery(new Term("f", "yes")), Occur.MUST);
+      bq1.add(new TermQuery(new QueryTerm("f", "yes", 0)), Occur.MUST);
       bq1.add(new FieldExistsQuery("text1"), Occur.FILTER);
       assertSameMatches(searcher, ref.build(), bq1.build(), true);
 
@@ -442,7 +443,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         iw.addDocument(doc);
       }
       if (random().nextBoolean()) {
-        iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+        iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
       }
       iw.commit();
       final IndexReader reader = iw.getReader();
@@ -452,7 +453,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
       final float boost = random().nextFloat() * 10;
       final Query ref =
           new BoostQuery(
-              new ConstantScoreQuery(new TermQuery(new Term("has_value", "yes"))), boost);
+              new ConstantScoreQuery(new TermQuery(new QueryTerm("has_value", "yes", 0))), boost);
 
       final Query q1 = new BoostQuery(new FieldExistsQuery("text1"), boost);
       assertSameMatches(searcher, ref, q1, true);
@@ -589,7 +590,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
           iw.addDocument(doc);
         }
         if (random().nextBoolean()) {
-          iw.deleteDocuments(new TermQuery(new Term("f", "no")));
+          iw.deleteDocuments(new TermQuery(new QueryTerm("f", "no", 0)));
         }
         iw.commit();
 
@@ -598,7 +599,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
 
           assertSameMatches(
               searcher,
-              new TermQuery(new Term("has_value", "yes")),
+              new TermQuery(new QueryTerm("has_value", "yes", 0)),
               new FieldExistsQuery("vector"),
               false);
 
@@ -606,7 +607,8 @@ public class TestFieldExistsQuery extends LuceneTestCase {
           assertSameMatches(
               searcher,
               new BoostQuery(
-                  new ConstantScoreQuery(new TermQuery(new Term("has_value", "yes"))), boost),
+                  new ConstantScoreQuery(new TermQuery(new QueryTerm("has_value", "yes", 0))),
+                  boost),
               new BoostQuery(new FieldExistsQuery("vector"), boost),
               true);
         }
@@ -666,7 +668,7 @@ public class TestFieldExistsQuery extends LuceneTestCase {
         Occur occur = random().nextBoolean() ? Occur.MUST : Occur.FILTER;
         BooleanQuery booleanQuery =
             new BooleanQuery.Builder()
-                .add(new TermQuery(new Term("field", "value1")), occur)
+                .add(new TermQuery(new QueryTerm("field", "value1", 0)), occur)
                 .add(new FieldExistsQuery("vector"), Occur.FILTER)
                 .build();
 

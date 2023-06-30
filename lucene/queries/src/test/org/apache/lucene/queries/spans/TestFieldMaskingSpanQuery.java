@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -148,7 +149,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testRewrite0() throws Exception {
-    SpanQuery q = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
+    SpanQuery q =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("last", "sally", 0)), "first");
     SpanQuery qr = (SpanQuery) searcher.rewrite(q);
 
     QueryUtils.checkEqual(q, qr);
@@ -162,12 +164,12 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
     // mask an anon SpanQuery class that rewrites to something else.
     SpanQuery q =
         new FieldMaskingSpanQuery(
-            new SpanTermQuery(new Term("last", "sally")) {
+            new SpanTermQuery(new QueryTerm("last", "sally", 0)) {
               @Override
               public Query rewrite(IndexReader reader) {
                 return new SpanOrQuery(
-                    new SpanTermQuery(new Term("first", "sally")),
-                    new SpanTermQuery(new Term("first", "james")));
+                    new SpanTermQuery(new QueryTerm("first", "sally", 0)),
+                    new SpanTermQuery(new QueryTerm("first", "james", 0)));
               }
             },
             "first");
@@ -182,8 +184,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testRewrite2() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("last", "smith"));
-    SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("last", "smith", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("last", "jones", 0));
     SpanQuery q =
         new SpanNearQuery(new SpanQuery[] {q1, new FieldMaskingSpanQuery(q2, "last")}, 1, true);
     Query qr = searcher.rewrite(q);
@@ -196,11 +198,16 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testEquality1() {
-    SpanQuery q1 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-    SpanQuery q2 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "first");
-    SpanQuery q3 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "sally")), "XXXXX");
-    SpanQuery q4 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("last", "XXXXX")), "first");
-    SpanQuery q5 = new FieldMaskingSpanQuery(new SpanTermQuery(new Term("xXXX", "sally")), "first");
+    SpanQuery q1 =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("last", "sally", 0)), "first");
+    SpanQuery q2 =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("last", "sally", 0)), "first");
+    SpanQuery q3 =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("last", "sally", 0)), "XXXXX");
+    SpanQuery q4 =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("last", "XXXXX", 0)), "first");
+    SpanQuery q5 =
+        new FieldMaskingSpanQuery(new SpanTermQuery(new QueryTerm("xXXX", "sally", 0)), "first");
     QueryUtils.checkEqual(q1, q2);
     QueryUtils.checkUnequal(q1, q3);
     QueryUtils.checkUnequal(q1, q4);
@@ -208,7 +215,7 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testNoop0() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("last", "sally"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("last", "sally", 0));
     SpanQuery q = new FieldMaskingSpanQuery(q1, "first");
     check(
         q,
@@ -218,8 +225,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testNoop1() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("last", "smith"));
-    SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("last", "smith", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("last", "jones", 0));
     SpanQuery q =
         new SpanNearQuery(new SpanQuery[] {q1, new FieldMaskingSpanQuery(q2, "last")}, 0, true);
     check(q, new int[] {1, 2});
@@ -234,8 +241,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testSimple1() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("first", "james"));
-    SpanQuery q2 = new SpanTermQuery(new Term("last", "jones"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("first", "james", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("last", "jones", 0));
     SpanQuery q =
         new SpanNearQuery(new SpanQuery[] {q1, new FieldMaskingSpanQuery(q2, "first")}, -1, false);
     check(q, new int[] {0, 2});
@@ -249,8 +256,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
 
   public void testSimple2() throws Exception {
     assumeTrue("Broken scoring: LUCENE-3723", searcher.getSimilarity() instanceof TFIDFSimilarity);
-    SpanQuery q1 = new SpanTermQuery(new Term("gender", "female"));
-    SpanQuery q2 = new SpanTermQuery(new Term("last", "smith"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("gender", "female", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("last", "smith", 0));
     SpanQuery q =
         new SpanNearQuery(new SpanQuery[] {q1, new FieldMaskingSpanQuery(q2, "gender")}, -1, false);
     check(q, new int[] {2, 4});
@@ -265,8 +272,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testSpans0() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("gender", "female"));
-    SpanQuery q2 = new SpanTermQuery(new Term("first", "james"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("gender", "female", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("first", "james", 0));
     SpanQuery q = new SpanOrQuery(q1, new FieldMaskingSpanQuery(q2, "gender"));
     check(q, new int[] {0, 1, 2, 3, 4});
 
@@ -286,8 +293,8 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
   }
 
   public void testSpans1() throws Exception {
-    SpanQuery q1 = new SpanTermQuery(new Term("first", "sally"));
-    SpanQuery q2 = new SpanTermQuery(new Term("first", "james"));
+    SpanQuery q1 = new SpanTermQuery(new QueryTerm("first", "sally", 0));
+    SpanQuery q2 = new SpanTermQuery(new QueryTerm("first", "james", 0));
     SpanQuery qA = new SpanOrQuery(q1, q2);
     SpanQuery qB = new FieldMaskingSpanQuery(qA, "id");
 
@@ -314,10 +321,10 @@ public class TestFieldMaskingSpanQuery extends LuceneTestCase {
 
   public void testSpans2() throws Exception {
     assumeTrue("Broken scoring: LUCENE-3723", searcher.getSimilarity() instanceof TFIDFSimilarity);
-    SpanQuery qA1 = new SpanTermQuery(new Term("gender", "female"));
-    SpanQuery qA2 = new SpanTermQuery(new Term("first", "james"));
+    SpanQuery qA1 = new SpanTermQuery(new QueryTerm("gender", "female", 0));
+    SpanQuery qA2 = new SpanTermQuery(new QueryTerm("first", "james", 0));
     SpanQuery qA = new SpanOrQuery(qA1, new FieldMaskingSpanQuery(qA2, "gender"));
-    SpanQuery qB = new SpanTermQuery(new Term("last", "jones"));
+    SpanQuery qB = new SpanTermQuery(new QueryTerm("last", "jones", 0));
     SpanQuery q =
         new SpanNearQuery(
             new SpanQuery[] {

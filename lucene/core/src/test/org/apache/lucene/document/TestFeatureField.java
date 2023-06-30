@@ -20,7 +20,7 @@ import java.io.IOException;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DocIdSetIterator;
@@ -345,8 +345,8 @@ public class TestFeatureField extends LuceneTestCase {
     searcher.setSimilarity(new BM25Similarity());
     Query query =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("body", "apache")), Occur.SHOULD)
-            .add(new TermQuery(new Term("body", "lucene")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("body", "apache", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("body", "lucene", 0)), Occur.SHOULD)
             .build();
     Query boost = FeatureField.newSaturationQuery("features", "pagerank");
     Query boostedQuery =

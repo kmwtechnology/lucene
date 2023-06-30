@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -46,16 +46,16 @@ public class TestPrefixQuery extends LuceneTestCase {
     }
     IndexReader reader = writer.getReader();
 
-    PrefixQuery query = new PrefixQuery(new Term("category", "/Computers"));
+    PrefixQuery query = new PrefixQuery(new QueryTerm("category", "/Computers", 0));
     IndexSearcher searcher = newSearcher(reader);
     ScoreDoc[] hits = searcher.search(query, 1000).scoreDocs;
     assertEquals("All documents in /Computers category and below", 3, hits.length);
 
-    query = new PrefixQuery(new Term("category", "/Computers/Mac"));
+    query = new PrefixQuery(new QueryTerm("category", "/Computers/Mac", 0));
     hits = searcher.search(query, 1000).scoreDocs;
     assertEquals("One in /Computers/Mac", 1, hits.length);
 
-    query = new PrefixQuery(new Term("category", ""));
+    query = new PrefixQuery(new QueryTerm("category", "", 0));
     hits = searcher.search(query, 1000).scoreDocs;
     assertEquals("everything", 3, hits.length);
     writer.close();
@@ -73,7 +73,7 @@ public class TestPrefixQuery extends LuceneTestCase {
 
     IndexReader reader = writer.getReader();
 
-    PrefixQuery query = new PrefixQuery(new Term("field", ""));
+    PrefixQuery query = new PrefixQuery(new QueryTerm("field", "", 0));
     IndexSearcher searcher = newSearcher(reader);
 
     assertEquals(1, searcher.search(query, 1000).totalHits.value);
@@ -110,7 +110,7 @@ public class TestPrefixQuery extends LuceneTestCase {
       byte[] bytes = new byte[random().nextInt(3)];
       random().nextBytes(bytes);
       BytesRef prefix = new BytesRef(bytes);
-      PrefixQuery q = new PrefixQuery(new Term("field", prefix));
+      PrefixQuery q = new PrefixQuery(new QueryTerm("field", prefix, 0));
       int count = 0;
       for (BytesRef term : termsList) {
         if (StringHelper.startsWith(term, prefix)) {

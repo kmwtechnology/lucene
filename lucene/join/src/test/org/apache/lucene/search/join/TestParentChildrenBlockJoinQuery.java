@@ -26,8 +26,8 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -69,14 +69,15 @@ public class TestParentChildrenBlockJoinQuery extends LuceneTestCase {
 
     IndexSearcher searcher = newSearcher(reader);
     BitSetProducer parentFilter =
-        new QueryBitSetProducer(new TermQuery(new Term("type", "parent")));
+        new QueryBitSetProducer(new TermQuery(new QueryTerm("type", "parent", 0)));
     Query childQuery =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("type", "child")), BooleanClause.Occur.FILTER)
+            .add(new TermQuery(new QueryTerm("type", "child", 0)), BooleanClause.Occur.FILTER)
             .add(TestJoinUtil.numericDocValuesScoreQuery("score"), BooleanClause.Occur.SHOULD)
             .build();
 
-    TopDocs parentDocs = searcher.search(new TermQuery(new Term("type", "parent")), numParentDocs);
+    TopDocs parentDocs =
+        searcher.search(new TermQuery(new QueryTerm("type", "parent", 0)), numParentDocs);
     assertEquals(parentDocs.scoreDocs.length, numParentDocs);
     for (ScoreDoc parentScoreDoc : parentDocs.scoreDocs) {
       LeafReaderContext leafReader =

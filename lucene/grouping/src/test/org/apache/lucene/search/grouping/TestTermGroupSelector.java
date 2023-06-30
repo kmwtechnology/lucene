@@ -21,7 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldExistsQuery;
@@ -55,6 +55,6 @@ public class TestTermGroupSelector extends BaseGroupSelectorTestCase<BytesRef> {
           .add(new FieldExistsQuery("groupField"), BooleanClause.Occur.MUST_NOT)
           .build();
     }
-    return new TermQuery(new Term("groupField", groupValue));
+    return new TermQuery(new QueryTerm("groupField", groupValue, 0));
   }
 }

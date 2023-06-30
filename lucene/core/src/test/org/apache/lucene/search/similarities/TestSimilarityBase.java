@@ -26,7 +26,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
@@ -480,7 +480,7 @@ public class TestSimilarityBase extends LuceneTestCase {
 
   /** Tests whether all similarities return three documents for the query word "heart". */
   public void testHeartList() throws IOException {
-    Query q = new TermQuery(new Term(FIELD_BODY, "heart"));
+    Query q = new TermQuery(new QueryTerm(FIELD_BODY, "heart", 0));
 
     for (SimilarityBase sim : sims) {
       searcher.setSimilarity(sim);
@@ -491,7 +491,7 @@ public class TestSimilarityBase extends LuceneTestCase {
 
   /** Test whether all similarities return document 3 before documents 7 and 8. */
   public void testHeartRanking() throws IOException {
-    Query q = new TermQuery(new Term(FIELD_BODY, "heart"));
+    Query q = new TermQuery(new QueryTerm(FIELD_BODY, "heart", 0));
 
     for (SimilarityBase sim : sims) {
       searcher.setSimilarity(sim);

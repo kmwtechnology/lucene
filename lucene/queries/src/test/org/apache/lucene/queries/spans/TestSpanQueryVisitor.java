@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -37,39 +38,39 @@ public class TestSpanQueryVisitor extends LuceneTestCase {
 
   private static final Query query =
       new BooleanQuery.Builder()
-          .add(new TermQuery(new Term("field1", "t1")), BooleanClause.Occur.MUST)
+          .add(new TermQuery(new QueryTerm("field1", "t1", 0)), BooleanClause.Occur.MUST)
           .add(
               new BooleanQuery.Builder()
-                  .add(new TermQuery(new Term("field1", "tm2")), BooleanClause.Occur.SHOULD)
+                  .add(new TermQuery(new QueryTerm("field1", "tm2", 0)), BooleanClause.Occur.SHOULD)
                   .add(
-                      new BoostQuery(new TermQuery(new Term("field1", "tm3")), 2),
+                      new BoostQuery(new TermQuery(new QueryTerm("field1", "tm3", 0)), 2),
                       BooleanClause.Occur.SHOULD)
                   .build(),
               BooleanClause.Occur.MUST)
           .add(
               new BoostQuery(
                   new PhraseQuery.Builder()
-                      .add(new Term("field1", "term4"))
-                      .add(new Term("field1", "term5"))
+                      .add(new QueryTerm("field1", "term4", 0))
+                      .add(new QueryTerm("field1", "term5", 0))
                       .build(),
                   3),
               BooleanClause.Occur.MUST)
           .add(
               new SpanNearQuery(
                   new SpanQuery[] {
-                    new SpanTermQuery(new Term("field1", "term6")),
-                    new SpanTermQuery(new Term("field1", "term7"))
+                    new SpanTermQuery(new QueryTerm("field1", "term6", 0)),
+                    new SpanTermQuery(new QueryTerm("field1", "term7", 0))
                   },
                   2,
                   true),
               BooleanClause.Occur.MUST)
-          .add(new TermQuery(new Term("field1", "term8")), BooleanClause.Occur.MUST_NOT)
-          .add(new PrefixQuery(new Term("field1", "term9")), BooleanClause.Occur.SHOULD)
+          .add(new TermQuery(new QueryTerm("field1", "term8", 0)), BooleanClause.Occur.MUST_NOT)
+          .add(new PrefixQuery(new QueryTerm("field1", "term9", 0)), BooleanClause.Occur.SHOULD)
           .add(
               new BoostQuery(
                   new BooleanQuery.Builder()
                       .add(
-                          new BoostQuery(new TermQuery(new Term("field2", "term10")), 3),
+                          new BoostQuery(new TermQuery(new QueryTerm("field2", "term10", 0)), 3),
                           BooleanClause.Occur.MUST)
                       .build(),
                   2),
@@ -81,10 +82,10 @@ public class TestSpanQueryVisitor extends LuceneTestCase {
     Set<Term> expected =
         new HashSet<>(
             Arrays.asList(
-                new Term("field1", "t1"), new Term("field1", "tm2"),
-                new Term("field1", "tm3"), new Term("field1", "term4"),
-                new Term("field1", "term5"), new Term("field1", "term6"),
-                new Term("field1", "term7"), new Term("field2", "term10")));
+                new QueryTerm("field1", "t1", 0), new QueryTerm("field1", "tm2", 0),
+                new QueryTerm("field1", "tm3", 0), new QueryTerm("field1", "term4", 0),
+                new QueryTerm("field1", "term5", 0), new QueryTerm("field1", "term6", 0),
+                new QueryTerm("field1", "term7", 0), new QueryTerm("field2", "term10", 0)));
     query.visit(QueryVisitor.termCollector(terms));
     assertThat(terms, equalTo(expected));
   }

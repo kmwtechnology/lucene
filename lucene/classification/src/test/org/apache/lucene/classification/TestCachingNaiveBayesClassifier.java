@@ -24,7 +24,7 @@ import org.apache.lucene.analysis.reverse.ReverseStringFilter;
 import org.apache.lucene.classification.utils.ConfusionMatrixGenerator;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.TermQuery;
@@ -64,7 +64,7 @@ public class TestCachingNaiveBayesClassifier extends ClassificationTestBase<Byte
     try {
       MockAnalyzer analyzer = new MockAnalyzer(random());
       leafReader = getSampleIndex(analyzer);
-      TermQuery query = new TermQuery(new Term(textFieldName, "it"));
+      TermQuery query = new TermQuery(new QueryTerm(textFieldName, "it", 0));
       checkCorrectClassification(
           new CachingNaiveBayesClassifier(
               leafReader, analyzer, query, categoryFieldName, textFieldName),

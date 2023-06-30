@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.facet;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -44,8 +44,8 @@ public class FacetQuery extends TermQuery {
     super(toTerm(FacetsConfig.DEFAULT_DIM_CONFIG, dimension, path));
   }
 
-  static Term toTerm(
+  static QueryTerm toTerm(
       final FacetsConfig.DimConfig dimConfig, final String dimension, final String... path) {
-    return new Term(dimConfig.indexFieldName, FacetsConfig.pathToString(dimension, path));
+    return new QueryTerm(dimConfig.indexFieldName, FacetsConfig.pathToString(dimension, path), 0);
   }
 }

@@ -19,7 +19,7 @@ package org.apache.lucene.queries.spans;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.tests.search.QueryUtils;
 
 /** Some utility methods used for testing span queries */
@@ -36,7 +36,7 @@ public class SpanTestUtil {
 
   /** Makes a new SpanTermQuery (with additional asserts). */
   public static SpanQuery spanTermQuery(String field, String term) {
-    return spanQuery(new SpanTermQuery(new Term(field, term)));
+    return spanQuery(new SpanTermQuery(new QueryTerm(field, term, 0)));
   }
 
   /** Makes a new SpanOrQuery (with additional asserts) from the provided {@code terms}. */
@@ -104,7 +104,7 @@ public class SpanTestUtil {
     SpanNearQuery.Builder builder = SpanNearQuery.newUnorderedNearQuery(field);
     builder.setSlop(slop);
     for (String term : terms) {
-      builder.addClause(new SpanTermQuery(new Term(field, term)));
+      builder.addClause(new SpanTermQuery(new QueryTerm(field, term, 0)));
     }
     return spanQuery(builder.build());
   }

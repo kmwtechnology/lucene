@@ -34,7 +34,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -107,7 +107,7 @@ public abstract class AbstractTestCase extends LuceneTestCase {
   }
 
   protected Query tq(float boost, String field, String text) {
-    Query query = new TermQuery(new Term(field, text));
+    Query query = new TermQuery(new QueryTerm(field, text, 0));
     if (boost != 1f) {
       query = new BoostQuery(query, boost);
     }
@@ -135,7 +135,7 @@ public abstract class AbstractTestCase extends LuceneTestCase {
   }
 
   protected Query pq(float boost, int slop, String field, String... texts) {
-    Query query = new PhraseQuery(slop, field, texts);
+    Query query = new PhraseQuery(slop, field, new int[texts.length], texts);
     if (boost != 1f) {
       query = new BoostQuery(query, boost);
     }
@@ -178,7 +178,7 @@ public abstract class AbstractTestCase extends LuceneTestCase {
   }
 
   protected PhraseQuery toPhraseQuery(List<BytesRef> bytesRefs, String field) {
-    return new PhraseQuery(field, bytesRefs.toArray(new BytesRef[0]));
+    return new PhraseQuery(field, new int[bytesRefs.size()], bytesRefs.toArray(new BytesRef[0]));
   }
 
   static final class BigramAnalyzer extends Analyzer {

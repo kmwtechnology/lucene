@@ -32,6 +32,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
@@ -78,8 +79,8 @@ public class TestConjunctions extends LuceneTestCase {
 
   public void testTermConjunctionsWithOmitTF() throws Exception {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new TermQuery(new Term(F1, "nutch")), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term(F2, "is")), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm(F1, "nutch", 0)), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm(F2, "is", 0)), BooleanClause.Occur.MUST);
     TopDocs td = searcher.search(bq.build(), 3);
     assertEquals(1, td.totalHits.value);
     assertEquals(3F, td.scoreDocs[0].score, 0.001F); // f1:nutch + f2:is + f2:is
@@ -120,8 +121,8 @@ public class TestConjunctions extends LuceneTestCase {
     w.addDocument(doc);
     IndexReader r = DirectoryReader.open(w);
     BooleanQuery.Builder b = new BooleanQuery.Builder();
-    b.add(new TermQuery(new Term("field", "a")), BooleanClause.Occur.MUST);
-    b.add(new TermQuery(new Term("field", "b")), BooleanClause.Occur.FILTER);
+    b.add(new TermQuery(new QueryTerm("field", "a", 0)), BooleanClause.Occur.MUST);
+    b.add(new TermQuery(new QueryTerm("field", "b", 0)), BooleanClause.Occur.FILTER);
     Query q = b.build();
     IndexSearcher s = new IndexSearcher(r);
     s.search(

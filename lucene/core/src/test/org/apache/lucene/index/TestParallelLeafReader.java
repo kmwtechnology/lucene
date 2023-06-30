@@ -45,18 +45,18 @@ public class TestParallelLeafReader extends LuceneTestCase {
     single = single(random());
     parallel = parallel(random());
 
-    queryTest(new TermQuery(new Term("f1", "v1")));
-    queryTest(new TermQuery(new Term("f1", "v2")));
-    queryTest(new TermQuery(new Term("f2", "v1")));
-    queryTest(new TermQuery(new Term("f2", "v2")));
-    queryTest(new TermQuery(new Term("f3", "v1")));
-    queryTest(new TermQuery(new Term("f3", "v2")));
-    queryTest(new TermQuery(new Term("f4", "v1")));
-    queryTest(new TermQuery(new Term("f4", "v2")));
+    queryTest(new TermQuery(new QueryTerm("f1", "v1", 0)));
+    queryTest(new TermQuery(new QueryTerm("f1", "v2", 0)));
+    queryTest(new TermQuery(new QueryTerm("f2", "v1", 0)));
+    queryTest(new TermQuery(new QueryTerm("f2", "v2", 0)));
+    queryTest(new TermQuery(new QueryTerm("f3", "v1", 0)));
+    queryTest(new TermQuery(new QueryTerm("f3", "v2", 0)));
+    queryTest(new TermQuery(new QueryTerm("f4", "v1", 0)));
+    queryTest(new TermQuery(new QueryTerm("f4", "v2", 0)));
 
     BooleanQuery.Builder bq1 = new BooleanQuery.Builder();
-    bq1.add(new TermQuery(new Term("f1", "v1")), Occur.MUST);
-    bq1.add(new TermQuery(new Term("f4", "v1")), Occur.MUST);
+    bq1.add(new TermQuery(new QueryTerm("f1", "v1", 0)), Occur.MUST);
+    bq1.add(new TermQuery(new QueryTerm("f4", "v1", 0)), Occur.MUST);
     queryTest(bq1.build());
 
     single.getIndexReader().close();

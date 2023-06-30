@@ -29,7 +29,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -46,8 +46,8 @@ import org.apache.lucene.tests.util.LuceneTestCase;
 public class TestCoveringQuery extends LuceneTestCase {
 
   public void testEquals() {
-    TermQuery tq1 = new TermQuery(new Term("foo", "bar"));
-    TermQuery tq2 = new TermQuery(new Term("foo", "quux"));
+    TermQuery tq1 = new TermQuery(new QueryTerm("foo", "bar", 0));
+    TermQuery tq2 = new TermQuery(new QueryTerm("foo", "quux", 0));
     LongValuesSource vs = LongValuesSource.fromLongField("field");
 
     CoveringQuery q1 = new CoveringQuery(Arrays.asList(tq1, tq2), vs);
@@ -75,8 +75,8 @@ public class TestCoveringQuery extends LuceneTestCase {
   }
 
   public void testRewrite() throws IOException {
-    PhraseQuery pq = new PhraseQuery("foo", "bar");
-    TermQuery tq = new TermQuery(new Term("foo", "bar"));
+    PhraseQuery pq = new PhraseQuery("foo", new int[] {0}, "bar");
+    TermQuery tq = new TermQuery(new QueryTerm("foo", "bar", 0));
     LongValuesSource vs = LongValuesSource.fromIntField("field");
     assertEquals(
         new CoveringQuery(Collections.singleton(tq), vs),
@@ -84,8 +84,8 @@ public class TestCoveringQuery extends LuceneTestCase {
   }
 
   public void testToString() {
-    TermQuery tq1 = new TermQuery(new Term("foo", "bar"));
-    TermQuery tq2 = new TermQuery(new Term("foo", "quux"));
+    TermQuery tq1 = new TermQuery(new QueryTerm("foo", "bar", 0));
+    TermQuery tq2 = new TermQuery(new QueryTerm("foo", "quux", 0));
     LongValuesSource vs = LongValuesSource.fromIntField("field");
     CoveringQuery q = new CoveringQuery(Arrays.asList(tq1, tq2), vs);
     assertEquals(
@@ -124,19 +124,19 @@ public class TestCoveringQuery extends LuceneTestCase {
     for (int iter = 0; iter < iters; ++iter) {
       List<Query> queries = new ArrayList<>();
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "A")));
+        queries.add(new TermQuery(new QueryTerm("field", "A", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "B")));
+        queries.add(new TermQuery(new QueryTerm("field", "B", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "C")));
+        queries.add(new TermQuery(new QueryTerm("field", "C", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "D")));
+        queries.add(new TermQuery(new QueryTerm("field", "D", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "E")));
+        queries.add(new TermQuery(new QueryTerm("field", "E", 0)));
       }
 
       Query q = new CoveringQuery(queries, LongValuesSource.fromLongField("min_match"));
@@ -156,7 +156,7 @@ public class TestCoveringQuery extends LuceneTestCase {
       Query filtered =
           new BooleanQuery.Builder()
               .add(q, Occur.MUST)
-              .add(new TermQuery(new Term("field", "A")), Occur.MUST)
+              .add(new TermQuery(new QueryTerm("field", "A", 0)), Occur.MUST)
               .build();
       QueryUtils.check(random(), filtered, searcher);
     }
@@ -195,19 +195,19 @@ public class TestCoveringQuery extends LuceneTestCase {
     for (int iter = 0; iter < iters; ++iter) {
       List<Query> queries = new ArrayList<>();
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "A")));
+        queries.add(new TermQuery(new QueryTerm("field", "A", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "B")));
+        queries.add(new TermQuery(new QueryTerm("field", "B", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "C")));
+        queries.add(new TermQuery(new QueryTerm("field", "C", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "D")));
+        queries.add(new TermQuery(new QueryTerm("field", "D", 0)));
       }
       if (random().nextBoolean()) {
-        queries.add(new TermQuery(new Term("field", "E")));
+        queries.add(new TermQuery(new QueryTerm("field", "E", 0)));
       }
 
       Query q = new CoveringQuery(queries, LongValuesSource.fromLongField("min_match"));
@@ -227,7 +227,7 @@ public class TestCoveringQuery extends LuceneTestCase {
       Query filtered =
           new BooleanQuery.Builder()
               .add(q, Occur.MUST)
-              .add(new TermQuery(new Term("field", "A")), Occur.MUST)
+              .add(new TermQuery(new QueryTerm("field", "A", 0)), Occur.MUST)
               .build();
       QueryUtils.check(random(), filtered, searcher);
     }

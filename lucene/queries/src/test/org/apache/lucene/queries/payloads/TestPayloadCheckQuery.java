@@ -28,7 +28,7 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.payloads.SpanPayloadCheckQuery.MatchOperation;
 import org.apache.lucene.queries.payloads.SpanPayloadCheckQuery.PayloadType;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
@@ -101,7 +101,7 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
   }
 
   public void testSpanPayloadCheck() throws Exception {
-    SpanQuery term1 = new SpanTermQuery(new Term("field", "five"));
+    SpanQuery term1 = new SpanTermQuery(new QueryTerm("field", "five", 0));
     BytesRef pay = new BytesRef("pos: " + 5);
     SpanQuery query = new SpanPayloadCheckQuery(term1, Collections.singletonList(pay));
     checkHits(
@@ -115,7 +115,7 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
         });
     assertTrue(searcher.explain(query, 1125).getValue().doubleValue() > 0.0f);
 
-    SpanTermQuery term2 = new SpanTermQuery(new Term("field", "hundred"));
+    SpanTermQuery term2 = new SpanTermQuery(new QueryTerm("field", "hundred", 0));
     SpanNearQuery snq;
     SpanQuery[] clauses;
     List<BytesRef> list;
@@ -143,7 +143,7 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
     clauses = new SpanQuery[3];
     clauses[0] = term1;
     clauses[1] = term2;
-    clauses[2] = new SpanTermQuery(new Term("field", "five"));
+    clauses[2] = new SpanTermQuery(new QueryTerm("field", "five", 0));
     snq = new SpanNearQuery(clauses, 0, true);
     pay = new BytesRef("pos: " + 0);
     pay2 = new BytesRef("pos: " + 1);
@@ -158,8 +158,8 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
 
   public void testInequalityPayloadChecks() throws Exception {
     // searching for the term five with a payload of either "pos: 0" or a payload of "pos: 1"
-    SpanQuery termFive = new SpanTermQuery(new Term("field", "five"));
-    SpanQuery termFifty = new SpanTermQuery(new Term("field", "fifty"));
+    SpanQuery termFive = new SpanTermQuery(new QueryTerm("field", "five", 0));
+    SpanQuery termFifty = new SpanTermQuery(new QueryTerm("field", "fifty", 0));
     BytesRef payloadZero = new BytesRef("pos: " + 0);
     BytesRef payloadOne = new BytesRef("pos: " + 1);
     BytesRef payloadTwo = new BytesRef("pos: " + 2);
@@ -308,9 +308,9 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
 
   public void testUnorderedPayloadChecks() throws Exception {
 
-    SpanTermQuery term5 = new SpanTermQuery(new Term("field", "five"));
-    SpanTermQuery term100 = new SpanTermQuery(new Term("field", "hundred"));
-    SpanTermQuery term4 = new SpanTermQuery(new Term("field", "four"));
+    SpanTermQuery term5 = new SpanTermQuery(new QueryTerm("field", "five", 0));
+    SpanTermQuery term100 = new SpanTermQuery(new QueryTerm("field", "hundred", 0));
+    SpanTermQuery term4 = new SpanTermQuery(new QueryTerm("field", "four", 0));
     SpanNearQuery nearQuery = new SpanNearQuery(new SpanQuery[] {term5, term100, term4}, 0, false);
 
     List<BytesRef> payloads = new ArrayList<>();
@@ -331,11 +331,11 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
   }
 
   public void testComplexSpanChecks() throws Exception {
-    SpanTermQuery one = new SpanTermQuery(new Term("field", "one"));
-    SpanTermQuery thous = new SpanTermQuery(new Term("field", "thousand"));
+    SpanTermQuery one = new SpanTermQuery(new QueryTerm("field", "one", 0));
+    SpanTermQuery thous = new SpanTermQuery(new QueryTerm("field", "thousand", 0));
     // should be one position in between
-    SpanTermQuery hundred = new SpanTermQuery(new Term("field", "hundred"));
-    SpanTermQuery three = new SpanTermQuery(new Term("field", "three"));
+    SpanTermQuery hundred = new SpanTermQuery(new QueryTerm("field", "hundred", 0));
+    SpanTermQuery three = new SpanTermQuery(new QueryTerm("field", "three", 0));
 
     SpanNearQuery oneThous = new SpanNearQuery(new SpanQuery[] {one, thous}, 0, true);
     SpanNearQuery hundredThree = new SpanNearQuery(new SpanQuery[] {hundred, three}, 0, true);
@@ -363,8 +363,8 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
   }
 
   public void testEquality() {
-    SpanQuery sq1 = new SpanTermQuery(new Term("field", "one"));
-    SpanQuery sq2 = new SpanTermQuery(new Term("field", "two"));
+    SpanQuery sq1 = new SpanTermQuery(new QueryTerm("field", "one", 0));
+    SpanQuery sq2 = new SpanTermQuery(new QueryTerm("field", "two", 0));
     BytesRef payload1 = new BytesRef("pay1");
     BytesRef payload2 = new BytesRef("pay2");
     SpanQuery query1 = new SpanPayloadCheckQuery(sq1, Collections.singletonList(payload1));
@@ -449,13 +449,13 @@ public class TestPayloadCheckQuery extends LuceneTestCase {
 
   public void testRewrite() throws IOException {
     SpanMultiTermQueryWrapper<WildcardQuery> fiv =
-        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term("field", "fiv*")));
+        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm("field", "fiv*", 0)));
     SpanMultiTermQueryWrapper<WildcardQuery> hund =
-        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term("field", "hund*")));
+        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm("field", "hund*", 0)));
     SpanMultiTermQueryWrapper<WildcardQuery> twent =
-        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term("field", "twent*")));
+        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm("field", "twent*", 0)));
     SpanMultiTermQueryWrapper<WildcardQuery> nin =
-        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term("field", "nin*")));
+        new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm("field", "nin*", 0)));
 
     SpanNearQuery sq = new SpanNearQuery(new SpanQuery[] {fiv, hund, twent, nin}, 0, true);
 

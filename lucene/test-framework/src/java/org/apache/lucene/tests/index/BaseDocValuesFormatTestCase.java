@@ -64,6 +64,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
@@ -141,8 +142,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -178,8 +179,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -217,8 +218,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -258,8 +259,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -317,7 +318,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
 
     for (int i = 0; i < numDocs; i++) {
       String id = Integer.toString(i);
-      Query query = new TermQuery(new Term("id", id));
+      Query query = new TermQuery(new QueryTerm("id", id, 0));
       TopDocs hits = isearcher.search(query, 1);
       assertEquals(1, hits.totalHits.value);
       // Iterate through the results:
@@ -354,8 +355,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -395,8 +396,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
         maybeWrapWithMergingReader(DirectoryReader.open(directory)); // read-only=true
     IndexSearcher isearcher = new IndexSearcher(ireader);
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     StoredFields storedFields = isearcher.storedFields();
     assertEquals(1, hits.totalHits.value);
@@ -443,8 +444,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     BytesRef scratch = newBytesRef();
@@ -623,8 +624,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher isearcher = new IndexSearcher(ireader);
     StoredFields storedFields = isearcher.storedFields();
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     // Iterate through the results:
@@ -698,7 +699,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     doc.add(new BinaryDocValuesField("field", newBytesRef("hi")));
     iwriter.addDocument(doc);
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -731,8 +732,8 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
         maybeWrapWithMergingReader(DirectoryReader.open(directory)); // read-only=true
     IndexSearcher isearcher = new IndexSearcher(ireader);
 
-    assertEquals(1, isearcher.count(new TermQuery(new Term("fieldname", longTerm))));
-    Query query = new TermQuery(new Term("fieldname", "text"));
+    assertEquals(1, isearcher.count(new TermQuery(new QueryTerm("fieldname", longTerm, 0))));
+    Query query = new TermQuery(new QueryTerm("fieldname", "text", 0));
     TopDocs hits = isearcher.search(query, 1);
     assertEquals(1, hits.totalHits.value);
     BytesRef scratch = newBytesRef();
@@ -891,7 +892,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     doc.add(new SortedDocValuesField("field", newBytesRef("hello")));
     iwriter.addDocument(doc);
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -1239,11 +1240,11 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     IndexSearcher searcher = new IndexSearcher(reader);
 
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term("docId", "0")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("docId", "1")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("docId", "2")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("docId", "3")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term("docId", "4")), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("docId", "0", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("docId", "1", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("docId", "2", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("docId", "3", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm("docId", "4", 0)), BooleanClause.Occur.SHOULD);
 
     TopDocs search = searcher.search(query.build(), 10);
     assertEquals(5, search.totalHits.value);
@@ -2173,7 +2174,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     doc.add(new SortedSetDocValuesField("field", newBytesRef("hello")));
     iwriter.addDocument(doc);
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3128,7 +3129,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     doc.add(new NumericDocValuesField("field", 5));
     iwriter.addDocument(doc);
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3254,7 +3255,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
     doc.add(new SortedNumericDocValuesField("field", 5));
     iwriter.addDocument(doc);
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3420,7 +3421,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
       iwriter.addDocument(new Document());
     }
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3455,7 +3456,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
       iwriter.addDocument(new Document());
     }
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3490,7 +3491,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
       iwriter.addDocument(new Document());
     }
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3521,7 +3522,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
       iwriter.addDocument(new Document());
     }
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();
@@ -3551,7 +3552,7 @@ public abstract class BaseDocValuesFormatTestCase extends BaseIndexFileFormatTes
       iwriter.addDocument(new Document());
     }
     iwriter.commit();
-    iwriter.deleteDocuments(new Term("id", "1"));
+    iwriter.deleteDocuments(new QueryTerm("id", "1", 0));
     iwriter.forceMerge(1);
 
     DirectoryReader ireader = iwriter.getReader();

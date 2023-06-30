@@ -32,6 +32,7 @@ import org.apache.lucene.index.ImpactsSource;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SlowImpactsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -69,7 +70,7 @@ public final class SynonymQuery extends Query {
     }
 
     /** Adds the provided {@code term} as a synonym. */
-    public Builder addTerm(Term term) {
+    public Builder addTerm(QueryTerm term) {
       return addTerm(term, 1f);
     }
 
@@ -77,7 +78,7 @@ public final class SynonymQuery extends Query {
      * Adds the provided {@code term} as a synonym, document frequencies of this term will be
      * boosted by {@code boost}.
      */
-    public Builder addTerm(Term term, float boost) {
+    public Builder addTerm(QueryTerm term, float boost) {
       if (field.equals(term.field()) == false) {
         throw new IllegalArgumentException("Synonyms must be across the same field");
       }
@@ -117,9 +118,11 @@ public final class SynonymQuery extends Query {
     this.field = field;
   }
 
-  public List<Term> getTerms() {
+  public List<QueryTerm> getTerms() {
     return Collections.unmodifiableList(
-        Arrays.stream(terms).map(t -> new Term(field, t.term)).collect(Collectors.toList()));
+        Arrays.stream(terms)
+            .map(t -> new QueryTerm(field, t.term, 0))
+            .collect(Collectors.toList()));
   }
 
   @Override
@@ -129,7 +132,7 @@ public final class SynonymQuery extends Query {
       if (i != 0) {
         builder.append(" ");
       }
-      Query termQuery = new TermQuery(new Term(this.field, terms[i].term));
+      Query termQuery = new TermQuery(new QueryTerm(this.field, terms[i].term, 0));
       builder.append(termQuery.toString(field));
       if (terms[i].boost != 1f) {
         builder.append("^");
@@ -157,7 +160,7 @@ public final class SynonymQuery extends Query {
       return new BooleanQuery.Builder().build();
     }
     if (terms.length == 1 && terms[0].boost == 1f) {
-      return new TermQuery(new Term(field, terms[0].term));
+      return new TermQuery(new QueryTerm(field, terms[0].term, 0));
     }
     return this;
   }
@@ -168,7 +171,7 @@ public final class SynonymQuery extends Query {
       return;
     }
     QueryVisitor v = visitor.getSubVisitor(BooleanClause.Occur.SHOULD, this);
-    Term[] ts = Arrays.stream(terms).map(t -> new Term(field, t.term)).toArray(Term[]::new);
+    Term[] ts = Arrays.stream(terms).map(t -> new QueryTerm(field, t.term, 0)).toArray(Term[]::new);
     v.consumeTerms(this, ts);
   }
 
@@ -181,7 +184,7 @@ public final class SynonymQuery extends Query {
       // if scores are not needed, let BooleanWeight deal with optimizing that case.
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       for (TermAndBoost term : terms) {
-        bq.add(new TermQuery(new Term(field, term.term)), BooleanClause.Occur.SHOULD);
+        bq.add(new TermQuery(new QueryTerm(field, term.term, 0)), BooleanClause.Occur.SHOULD);
       }
       return searcher
           .rewrite(bq.build())
@@ -205,7 +208,7 @@ public final class SynonymQuery extends Query {
       long totalTermFreq = 0;
       termStates = new TermStates[terms.length];
       for (int i = 0; i < termStates.length; i++) {
-        Term term = new Term(field, terms[i].term);
+        Term term = new QueryTerm(field, terms[i].term, 0);
         TermStates ts = TermStates.build(searcher.getTopReaderContext(), term, true);
         termStates[i] = ts;
         if (ts.docFreq() > 0) {
@@ -232,7 +235,9 @@ public final class SynonymQuery extends Query {
         return super.matches(context, doc);
       }
       List<Term> termList =
-          Arrays.stream(terms).map(t -> new Term(field, t.term)).collect(Collectors.toList());
+          Arrays.stream(terms)
+              .map(t -> new QueryTerm(field, t.term, 0))
+              .collect(Collectors.toList());
       return MatchesUtils.forField(
           field,
           () -> DisjunctionMatchesIterator.fromTerms(context, doc, getQuery(), field, termList));

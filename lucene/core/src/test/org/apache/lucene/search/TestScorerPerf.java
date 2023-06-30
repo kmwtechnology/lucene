@@ -25,6 +25,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -281,7 +282,9 @@ public class TestScorerPerf extends LuceneTestCase {
         if (termflag.get(tnum)) tnum = termflag.nextClearBit(tnum);
         if (tnum < 0 || tnum >= termsInIndex) tnum = termflag.nextClearBit(0);
         termflag.set(tnum);
-        Query tq = new TermQuery(terms[tnum]);
+        QueryTerm term =
+            terms[tnum] instanceof QueryTerm ? (QueryTerm) terms[tnum] : new QueryTerm(terms[tnum]);
+        Query tq = new TermQuery(term);
         bq.add(tq, BooleanClause.Occur.MUST);
       }
 
@@ -319,7 +322,11 @@ public class TestScorerPerf extends LuceneTestCase {
           if (termflag.get(tnum)) tnum = termflag.nextClearBit(tnum);
           if (tnum < 0 || tnum >= 25) tnum = termflag.nextClearBit(0);
           termflag.set(tnum);
-          Query tq = new TermQuery(terms[tnum]);
+          QueryTerm term =
+              terms[tnum] instanceof QueryTerm
+                  ? (QueryTerm) terms[tnum]
+                  : new QueryTerm(terms[tnum]);
+          Query tq = new TermQuery(term);
           bq.add(tq, BooleanClause.Occur.MUST);
         } // inner
 
@@ -341,9 +348,12 @@ public class TestScorerPerf extends LuceneTestCase {
     for (int i = 0; i < iter; i++) {
       int nClauses = random().nextInt(maxClauses - 1) + 2; // min 2 clauses
       PhraseQuery.Builder builder = new PhraseQuery.Builder();
+      int termInc = 0;
       for (int j = 0; j < nClauses; j++) {
         int tnum = random().nextInt(termsInIndex);
-        builder.add(new Term("f", Character.toString((char) (tnum + 'A'))));
+        String qtrm = Character.toString((char) (tnum + 'A'));
+        builder.add(new QueryTerm("f", qtrm, termInc));
+        termInc += (qtrm.length() + 1); // + 1 emulating single space
       }
       // slop could be random too
       builder.setSlop(termsInIndex);

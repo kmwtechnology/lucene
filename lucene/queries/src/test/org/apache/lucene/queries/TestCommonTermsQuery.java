@@ -29,6 +29,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -80,12 +81,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 3);
       assertEquals("0", r.storedFields().document(search.scoreDocs[0].doc).get("id"));
@@ -96,9 +97,9 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     { // only high freq
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 2);
       assertEquals("0", r.storedFields().document(search.scoreDocs[0].doc).get("id"));
@@ -108,10 +109,10 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     { // low freq is mandatory
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.MUST, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
 
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 1);
@@ -121,8 +122,8 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     { // low freq is mandatory
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.MUST, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "restaurant"));
-      query.add(new Term("field", "universe"));
+      query.add(new QueryTerm("field", "restaurant", 0));
+      query.add(new QueryTerm("field", "universe", 0));
 
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 1);
@@ -214,12 +215,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       query.setLowFreqMinimumNumberShouldMatch(0.5f);
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 1);
@@ -228,12 +229,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       query.setLowFreqMinimumNumberShouldMatch(2.0f);
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 1);
@@ -243,12 +244,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       query.setLowFreqMinimumNumberShouldMatch(0.49f);
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 3);
@@ -260,12 +261,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       query.setLowFreqMinimumNumberShouldMatch(1.0f);
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 3);
@@ -278,12 +279,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       query.setLowFreqMinimumNumberShouldMatch(1.0f);
       query.setHighFreqMinimumNumberShouldMatch(4.0f);
       TopDocs search = s.search(query, 10);
@@ -303,9 +304,9 @@ public class TestCommonTermsQuery extends LuceneTestCase {
       // only high freq terms around - check that min should match is applied
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "the"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "the", 0));
       query.setLowFreqMinimumNumberShouldMatch(1.0f);
       query.setHighFreqMinimumNumberShouldMatch(2.0f);
       TopDocs search = s.search(query, 10);
@@ -316,9 +317,9 @@ public class TestCommonTermsQuery extends LuceneTestCase {
       // only high freq terms around - check that min should match is applied
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.MUST, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "the"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "the", 0));
       query.setLowFreqMinimumNumberShouldMatch(1.0f);
       query.setHighFreqMinimumNumberShouldMatch(2.0f);
       TopDocs search = s.search(query, 10);
@@ -377,12 +378,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
     {
       CommonTermsQuery query =
           new CommonTermsQuery(Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 3);
       assertEquals("0", r.storedFields().document(search.scoreDocs[0].doc).get("id"));
@@ -395,12 +396,12 @@ public class TestCommonTermsQuery extends LuceneTestCase {
       CommonTermsQuery query =
           new ExtendedCommonTermsQuery(
               Occur.SHOULD, Occur.SHOULD, random().nextBoolean() ? 2.0f : 0.5f);
-      query.add(new Term("field", "is"));
-      query.add(new Term("field", "this"));
-      query.add(new Term("field", "end"));
-      query.add(new Term("field", "world"));
-      query.add(new Term("field", "universe"));
-      query.add(new Term("field", "right"));
+      query.add(new QueryTerm("field", "is", 0));
+      query.add(new QueryTerm("field", "this", 0));
+      query.add(new QueryTerm("field", "end", 0));
+      query.add(new QueryTerm("field", "world", 0));
+      query.add(new QueryTerm("field", "universe", 0));
+      query.add(new QueryTerm("field", "right", 0));
       TopDocs search = s.search(query, 10);
       assertEquals(search.totalHits.value, 3);
       assertEquals("2", r.storedFields().document(search.scoreDocs[0].doc).get("id"));
@@ -470,12 +471,13 @@ public class TestCommonTermsQuery extends LuceneTestCase {
       BooleanQuery.Builder verifyQuery = new BooleanQuery.Builder();
       CommonTermsQuery cq = new CommonTermsQuery(randomOccur(random()), lowFreqOccur, highFreq - 1);
       for (TermAndFreq termAndFreq : lowTerms) {
-        cq.add(new Term(field, termAndFreq.term));
+        cq.add(new QueryTerm(field, termAndFreq.term, 0));
         verifyQuery.add(
-            new BooleanClause(new TermQuery(new Term(field, termAndFreq.term)), lowFreqOccur));
+            new BooleanClause(
+                new TermQuery(new QueryTerm(field, termAndFreq.term, 0)), lowFreqOccur));
       }
       for (TermAndFreq termAndFreq : highTerms) {
-        cq.add(new Term(field, termAndFreq.term));
+        cq.add(new QueryTerm(field, termAndFreq.term, 0));
       }
 
       TopDocs cqSearch = searcher.search(cq, reader.maxDoc());

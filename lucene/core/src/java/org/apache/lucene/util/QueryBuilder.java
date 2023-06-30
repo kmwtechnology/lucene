@@ -25,10 +25,11 @@ import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CachingTokenFilter;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostAttribute;
@@ -62,6 +63,13 @@ public class QueryBuilder {
   protected boolean enableGraphQueries = true;
   protected boolean autoGenerateMultiTermSynonymsPhraseQuery = false;
 
+  // subclasses that call createFieldQuery on __subsections__ of a query should update this to
+  // ensure
+  // query terms get the correct offsets
+  protected int queryTermOffsetAdjust = 0;
+
+  protected int topLevelQueryOffset = 0;
+
   /** Wraps a term and boost */
   public static class TermAndBoost {
     /** the term */
@@ -69,10 +77,13 @@ public class QueryBuilder {
     /** the boost */
     public final float boost;
 
+    public final int startOffset;
+
     /** Creates a new TermAndBoost */
-    public TermAndBoost(BytesRef term, float boost) {
+    public TermAndBoost(BytesRef term, float boost, int startOffset) {
       this.term = BytesRef.deepCopyOf(term);
       this.boost = boost;
+      this.startOffset = startOffset;
     }
   }
 
@@ -106,7 +117,8 @@ public class QueryBuilder {
     if (operator != BooleanClause.Occur.SHOULD && operator != BooleanClause.Occur.MUST) {
       throw new IllegalArgumentException("invalid operator: only SHOULD or MUST are allowed");
     }
-    return createFieldQuery(analyzer, operator, field, queryText, false, 0);
+    return createFieldQuery(
+        analyzer, operator, field, queryText, false, 0, 0); // todo: not zero begincol
   }
 
   /**
@@ -133,7 +145,14 @@ public class QueryBuilder {
    *     MultiPhraseQuery}, based on the analysis of {@code queryText}
    */
   public Query createPhraseQuery(String field, String queryText, int phraseSlop) {
-    return createFieldQuery(analyzer, BooleanClause.Occur.MUST, field, queryText, true, phraseSlop);
+    return createFieldQuery(
+        analyzer,
+        BooleanClause.Occur.MUST,
+        field,
+        queryText,
+        true,
+        phraseSlop,
+        0); // todo: not zero begin col
   }
 
   /**
@@ -155,7 +174,14 @@ public class QueryBuilder {
     }
 
     Query query =
-        createFieldQuery(analyzer, BooleanClause.Occur.SHOULD, field, queryText, false, 0);
+        createFieldQuery(
+            analyzer,
+            BooleanClause.Occur.SHOULD,
+            field,
+            queryText,
+            false,
+            0,
+            0); // todo: not zero begin col
     if (query instanceof BooleanQuery) {
       query = addMinShouldMatchToBoolean((BooleanQuery) query, fraction);
     }
@@ -241,6 +267,8 @@ public class QueryBuilder {
    * @param queryText text to be passed to the analysis chain
    * @param quoted true if phrases should be generated when terms occur at more than one position
    * @param phraseSlop slop factor for phrase/multiphrase queries
+   * @param beginColumn The offset of the first character of the term (excluding field specifier) in
+   *     the query
    */
   protected Query createFieldQuery(
       Analyzer analyzer,
@@ -248,13 +276,14 @@ public class QueryBuilder {
       String field,
       String queryText,
       boolean quoted,
-      int phraseSlop) {
+      int phraseSlop,
+      int beginColumn) {
     assert operator == BooleanClause.Occur.SHOULD || operator == BooleanClause.Occur.MUST;
 
     // Use the analyzer to get all the tokens, and then build an appropriate
     // query based on the analysis chain.
     try (TokenStream source = analyzer.tokenStream(field, queryText)) {
-      return createFieldQuery(source, operator, field, quoted, phraseSlop);
+      return createFieldQuery(source, operator, field, quoted, phraseSlop, beginColumn);
     } catch (IOException e) {
       throw new RuntimeException("Error analyzing query text", e);
     }
@@ -286,18 +315,21 @@ public class QueryBuilder {
    * @param field field to create queries against
    * @param quoted true if phrases should be generated when terms occur at more than one position
    * @param phraseSlop slop factor for phrase/multiphrase queries
+   * @param beginColumn The offset of the first character of the term (excluding field specifier) in
+   *     the query
    */
   protected Query createFieldQuery(
       TokenStream source,
       BooleanClause.Occur operator,
       String field,
       boolean quoted,
-      int phraseSlop) {
+      int phraseSlop,
+      int beginColumn) {
     assert operator == BooleanClause.Occur.SHOULD || operator == BooleanClause.Occur.MUST;
 
     // Build an appropriate query based on the analysis chain.
     try (CachingTokenFilter stream = new CachingTokenFilter(source)) {
-
+      this.topLevelQueryOffset = beginColumn;
       TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
       PositionIncrementAttribute posIncAtt = stream.addAttribute(PositionIncrementAttribute.class);
       PositionLengthAttribute posLenAtt = stream.addAttribute(PositionLengthAttribute.class);
@@ -343,7 +375,7 @@ public class QueryBuilder {
         if (quoted) {
           return analyzeGraphPhrase(stream, field, phraseSlop);
         } else {
-          return analyzeGraphBoolean(field, stream, operator);
+          return analyzeGraphBoolean(field, stream, operator, beginColumn);
         }
       } else if (quoted && positionCount > 1) {
         // phrase
@@ -373,24 +405,35 @@ public class QueryBuilder {
   protected Query analyzeTerm(String field, TokenStream stream) throws IOException {
     TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
     BoostAttribute boostAtt = stream.addAttribute(BoostAttribute.class);
+    OffsetAttribute offsetAttribute = stream.addAttribute(OffsetAttribute.class);
 
     stream.reset();
     if (!stream.incrementToken()) {
       throw new AssertionError();
     }
 
-    return newTermQuery(new Term(field, termAtt.getBytesRef()), boostAtt.getBoost());
+    return newTermQuery(
+        new QueryTerm(
+            field, termAtt.getBytesRef(), offsetAttribute.startOffset() + currentOffset()),
+        boostAtt.getBoost());
+  }
+
+  private int currentOffset() {
+    return queryTermOffsetAdjust + topLevelQueryOffset;
   }
 
   /** Creates simple boolean query from the cached tokenstream contents */
   protected Query analyzeBoolean(String field, TokenStream stream) throws IOException {
     TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
     BoostAttribute boostAtt = stream.addAttribute(BoostAttribute.class);
+    OffsetAttribute offsetAttribute = stream.addAttribute(OffsetAttribute.class);
 
     stream.reset();
     List<TermAndBoost> terms = new ArrayList<>();
     while (stream.incrementToken()) {
-      terms.add(new TermAndBoost(termAtt.getBytesRef(), boostAtt.getBoost()));
+      terms.add(
+          new TermAndBoost(
+              termAtt.getBytesRef(), boostAtt.getBoost(), offsetAttribute.startOffset()));
     }
 
     return newSynonymQuery(field, terms.toArray(TermAndBoost[]::new));
@@ -405,7 +448,12 @@ public class QueryBuilder {
       return;
     }
     if (current.size() == 1) {
-      q.add(newTermQuery(new Term(field, current.get(0).term), current.get(0).boost), operator);
+      q.add(
+          newTermQuery(
+              new QueryTerm(
+                  field, current.get(0).term, current.get(0).startOffset + currentOffset()),
+              current.get(0).boost),
+          operator);
     } else {
       q.add(newSynonymQuery(field, current.toArray(TermAndBoost[]::new)), operator);
     }
@@ -420,6 +468,7 @@ public class QueryBuilder {
     TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
     PositionIncrementAttribute posIncrAtt = stream.getAttribute(PositionIncrementAttribute.class);
     BoostAttribute boostAtt = stream.addAttribute(BoostAttribute.class);
+    OffsetAttribute offsetAttribute = stream.addAttribute(OffsetAttribute.class);
 
     stream.reset();
     while (stream.incrementToken()) {
@@ -427,7 +476,9 @@ public class QueryBuilder {
         add(field, q, currentQuery, operator);
         currentQuery.clear();
       }
-      currentQuery.add(new TermAndBoost(termAtt.getBytesRef(), boostAtt.getBoost()));
+      currentQuery.add(
+          new TermAndBoost(
+              termAtt.getBytesRef(), boostAtt.getBoost(), offsetAttribute.startOffset()));
     }
     add(field, q, currentQuery, operator);
 
@@ -442,6 +493,8 @@ public class QueryBuilder {
     TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
     BoostAttribute boostAtt = stream.addAttribute(BoostAttribute.class);
     PositionIncrementAttribute posIncrAtt = stream.getAttribute(PositionIncrementAttribute.class);
+    OffsetAttribute offsetAttribute = stream.addAttribute(OffsetAttribute.class);
+
     int position = -1;
     float phraseBoost = DEFAULT_BOOST;
     stream.reset();
@@ -451,7 +504,12 @@ public class QueryBuilder {
       } else {
         position += 1;
       }
-      builder.add(new Term(field, termAtt.getBytesRef()), position);
+      builder.add(
+          new QueryTerm(
+              field,
+              termAtt.getBytesRef(),
+              offsetAttribute.startOffset() + this.queryTermOffsetAdjust),
+          position);
       phraseBoost *= boostAtt.getBoost();
     }
     PhraseQuery query = builder.build();
@@ -470,29 +528,35 @@ public class QueryBuilder {
     TermToBytesRefAttribute termAtt = stream.getAttribute(TermToBytesRefAttribute.class);
 
     PositionIncrementAttribute posIncrAtt = stream.getAttribute(PositionIncrementAttribute.class);
+    OffsetAttribute offsetAttribute = stream.addAttribute(OffsetAttribute.class);
+
     int position = -1;
 
-    List<Term> multiTerms = new ArrayList<>();
+    List<QueryTerm> multiTerms = new ArrayList<>();
     stream.reset();
     while (stream.incrementToken()) {
       int positionIncrement = posIncrAtt.getPositionIncrement();
 
       if (positionIncrement > 0 && multiTerms.size() > 0) {
         if (enablePositionIncrements) {
-          mpqb.add(multiTerms.toArray(new Term[0]), position);
+          mpqb.add(multiTerms.toArray(new QueryTerm[0]), position);
         } else {
-          mpqb.add(multiTerms.toArray(new Term[0]));
+          mpqb.add(multiTerms.toArray(new QueryTerm[0]));
         }
         multiTerms.clear();
       }
       position += positionIncrement;
-      multiTerms.add(new Term(field, termAtt.getBytesRef()));
+      multiTerms.add(
+          new QueryTerm(
+              field,
+              termAtt.getBytesRef(),
+              offsetAttribute.startOffset() + this.queryTermOffsetAdjust));
     }
 
     if (enablePositionIncrements) {
-      mpqb.add(multiTerms.toArray(new Term[0]), position);
+      mpqb.add(multiTerms.toArray(new QueryTerm[0]), position);
     } else {
-      mpqb.add(multiTerms.toArray(new Term[0]));
+      mpqb.add(multiTerms.toArray(new QueryTerm[0]));
     }
     return mpqb.build();
   }
@@ -503,7 +567,8 @@ public class QueryBuilder {
    * query.
    */
   protected Query analyzeGraphBoolean(
-      String field, TokenStream source, BooleanClause.Occur operator) throws IOException {
+      String field, TokenStream source, BooleanClause.Occur operator, int beginColumn)
+      throws IOException {
     source.reset();
     GraphTokenStreamFiniteStrings graph = new GraphTokenStreamFiniteStrings(source);
     BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -534,7 +599,8 @@ public class QueryBuilder {
                     BooleanClause.Occur.MUST,
                     field,
                     getAutoGenerateMultiTermSynonymsPhraseQuery(),
-                    0);
+                    0,
+                    beginColumn);
               }
             };
         positionalQuery = newGraphSynonymQuery(queries);
@@ -546,12 +612,17 @@ public class QueryBuilder {
                     s -> {
                       TermToBytesRefAttribute t = s.addAttribute(TermToBytesRefAttribute.class);
                       BoostAttribute b = s.addAttribute(BoostAttribute.class);
-                      return new TermAndBoost(t.getBytesRef(), b.getBoost());
+                      OffsetAttribute offsetAttribute = s.addAttribute(OffsetAttribute.class);
+                      return new TermAndBoost(
+                          t.getBytesRef(), b.getBoost(), offsetAttribute.startOffset());
                     })
                 .toArray(TermAndBoost[]::new);
         assert terms.length > 0;
         if (terms.length == 1) {
-          positionalQuery = newTermQuery(new Term(field, terms[0].term), terms[0].boost);
+          positionalQuery =
+              newTermQuery(
+                  new QueryTerm(field, terms[0].term, terms[0].startOffset + currentOffset()),
+                  terms[0].boost);
         } else {
           positionalQuery = newSynonymQuery(field, terms);
         }
@@ -575,7 +646,14 @@ public class QueryBuilder {
     BooleanQuery.Builder builder = new BooleanQuery.Builder();
     Iterator<TokenStream> it = graph.getFiniteStrings();
     while (it.hasNext()) {
-      Query query = createFieldQuery(it.next(), BooleanClause.Occur.MUST, field, true, phraseSlop);
+      Query query =
+          createFieldQuery(
+              it.next(),
+              BooleanClause.Occur.MUST,
+              field,
+              true,
+              phraseSlop,
+              0); // todo: not zero begin col
       if (query != null) {
         builder.add(query, BooleanClause.Occur.SHOULD);
       }
@@ -636,7 +714,7 @@ public class QueryBuilder {
    * @param term term
    * @return new TermQuery instance
    */
-  protected Query newTermQuery(Term term, float boost) {
+  protected Query newTermQuery(QueryTerm term, float boost) {
     Query q = new TermQuery(term);
     if (boost == DEFAULT_BOOST) {
       return q;

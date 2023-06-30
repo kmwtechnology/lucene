@@ -26,7 +26,7 @@ import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
@@ -78,7 +78,7 @@ public class TestRandomSamplingFacetsCollector extends FacetTestCase {
         RandomSamplingFacetsCollector.createManager(numDocs / 10, random.nextLong());
     // There should be no divisions by zero
     RandomSamplingFacetsCollector collectRandomZeroResults =
-        searcher.search(new TermQuery(new Term("EvenOdd", "NeverMatches")), fcm);
+        searcher.search(new TermQuery(new QueryTerm("EvenOdd", "NeverMatches", 0)), fcm);
 
     // There should be no divisions by zero and no null result
     assertNotNull(collectRandomZeroResults.getMatchingDocs());
@@ -91,7 +91,7 @@ public class TestRandomSamplingFacetsCollector extends FacetTestCase {
     // Now start searching and retrieve results.
 
     // Use a query to select half of the documents.
-    TermQuery query = new TermQuery(new Term("EvenOdd", "even"));
+    TermQuery query = new TermQuery(new QueryTerm("EvenOdd", "even", 0));
 
     // 10% of total docs, 20% of the hits
     fcm = RandomSamplingFacetsCollector.createManager(numDocs / 10, random.nextLong());

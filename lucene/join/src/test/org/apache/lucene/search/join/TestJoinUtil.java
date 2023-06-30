@@ -58,9 +58,9 @@ import org.apache.lucene.index.NoMergePolicy;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.OrdinalMap;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.*;
@@ -152,7 +152,7 @@ public class TestJoinUtil extends LuceneTestCase {
             idField,
             false,
             toField,
-            new TermQuery(new Term("name", "name2")),
+            new TermQuery(new QueryTerm("name", "name2", 0)),
             indexSearcher,
             ScoreMode.None);
 
@@ -166,7 +166,7 @@ public class TestJoinUtil extends LuceneTestCase {
             idField,
             false,
             toField,
-            new TermQuery(new Term("name", "name1")),
+            new TermQuery(new QueryTerm("name", "name1", 0)),
             indexSearcher,
             ScoreMode.None);
     result = indexSearcher.search(joinQuery, 10);
@@ -180,7 +180,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             false,
             idField,
-            new TermQuery(new Term("id", "5")),
+            new TermQuery(new QueryTerm("id", "5", 0)),
             indexSearcher,
             ScoreMode.None);
     result = indexSearcher.search(joinQuery, 10);
@@ -271,8 +271,8 @@ public class TestJoinUtil extends LuceneTestCase {
     }
     OrdinalMap ordinalMap = OrdinalMap.build(null, values, PackedInts.DEFAULT);
 
-    Query toQuery = new TermQuery(new Term(typeField, "price"));
-    Query fromQuery = new TermQuery(new Term("name", "name2"));
+    Query toQuery = new TermQuery(new QueryTerm(typeField, "price", 0));
+    Query fromQuery = new TermQuery(new QueryTerm("name", "name2", 0));
     // Search for product and return prices
     Query joinQuery =
         JoinUtil.createJoinQuery(
@@ -282,7 +282,7 @@ public class TestJoinUtil extends LuceneTestCase {
     assertEquals(4, result.scoreDocs[0].doc);
     assertEquals(5, result.scoreDocs[1].doc);
 
-    fromQuery = new TermQuery(new Term("name", "name1"));
+    fromQuery = new TermQuery(new QueryTerm("name", "name1", 0));
     joinQuery =
         JoinUtil.createJoinQuery(
             joinField, fromQuery, toQuery, indexSearcher, ScoreMode.None, ordinalMap);
@@ -292,8 +292,8 @@ public class TestJoinUtil extends LuceneTestCase {
     assertEquals(2, result.scoreDocs[1].doc);
 
     // Search for prices and return products
-    fromQuery = new TermQuery(new Term("price", "20.0"));
-    toQuery = new TermQuery(new Term(typeField, "product"));
+    fromQuery = new TermQuery(new QueryTerm("price", "20.0", 0));
+    toQuery = new TermQuery(new QueryTerm(typeField, "product", 0));
     joinQuery =
         JoinUtil.createJoinQuery(
             joinField, fromQuery, toQuery, indexSearcher, ScoreMode.None, ordinalMap);
@@ -383,8 +383,8 @@ public class TestJoinUtil extends LuceneTestCase {
     }
     OrdinalMap ordinalMap = OrdinalMap.build(null, values, PackedInts.DEFAULT);
 
-    Query toQuery = new TermQuery(new Term("price", "5.0"));
-    Query fromQuery = new TermQuery(new Term("name", "name2"));
+    Query toQuery = new TermQuery(new QueryTerm("price", "5.0", 0));
+    Query fromQuery = new TermQuery(new QueryTerm("name", "name2", 0));
 
     for (ScoreMode scoreMode : ScoreMode.values()) {
       Query joinQuery =
@@ -425,7 +425,7 @@ public class TestJoinUtil extends LuceneTestCase {
       BitSet expectedResult =
           createExpectedResult(randomValue, from, indexSearcher.getIndexReader(), context);
 
-      final Query actualQuery = new TermQuery(new Term("value", randomValue));
+      final Query actualQuery = new TermQuery(new QueryTerm("value", randomValue, 0));
       if (VERBOSE) {
         System.out.println("actualQuery=" + actualQuery);
       }
@@ -437,9 +437,9 @@ public class TestJoinUtil extends LuceneTestCase {
       final Query joinQuery;
       if (from) {
         BooleanQuery.Builder fromQuery = new BooleanQuery.Builder();
-        fromQuery.add(new TermQuery(new Term("type", "from")), BooleanClause.Occur.FILTER);
+        fromQuery.add(new TermQuery(new QueryTerm("type", "from", 0)), BooleanClause.Occur.FILTER);
         fromQuery.add(actualQuery, BooleanClause.Occur.MUST);
-        Query toQuery = new TermQuery(new Term("type", "to"));
+        Query toQuery = new TermQuery(new QueryTerm("type", "to", 0));
         joinQuery =
             JoinUtil.createJoinQuery(
                 "join_field",
@@ -450,9 +450,9 @@ public class TestJoinUtil extends LuceneTestCase {
                 context.ordinalMap);
       } else {
         BooleanQuery.Builder fromQuery = new BooleanQuery.Builder();
-        fromQuery.add(new TermQuery(new Term("type", "to")), BooleanClause.Occur.FILTER);
+        fromQuery.add(new TermQuery(new QueryTerm("type", "to", 0)), BooleanClause.Occur.FILTER);
         fromQuery.add(actualQuery, BooleanClause.Occur.MUST);
-        Query toQuery = new TermQuery(new Term("type", "from"));
+        Query toQuery = new TermQuery(new QueryTerm("type", "from", 0));
         joinQuery =
             JoinUtil.createJoinQuery(
                 "join_field",
@@ -528,7 +528,7 @@ public class TestJoinUtil extends LuceneTestCase {
     OrdinalMap ordinalMap = OrdinalMap.build(null, values, PackedInts.DEFAULT);
     BooleanQuery.Builder fromQuery = new BooleanQuery.Builder();
     fromQuery.add(priceQuery, BooleanClause.Occur.MUST);
-    Query toQuery = new TermQuery(new Term("type", "to"));
+    Query toQuery = new TermQuery(new QueryTerm("type", "to", 0));
     Query joinQuery =
         JoinUtil.createJoinQuery(
             "join_field", fromQuery.build(), toQuery, searcher, ScoreMode.Min, ordinalMap);
@@ -662,8 +662,8 @@ public class TestJoinUtil extends LuceneTestCase {
       values[leadContext.ord] = DocValues.getSorted(leadContext.reader(), "join_field");
     }
     OrdinalMap ordinalMap = OrdinalMap.build(null, values, PackedInts.DEFAULT);
-    Query fromQuery = new TermQuery(new Term("type", "from"));
-    Query toQuery = new TermQuery(new Term("type", "to"));
+    Query fromQuery = new TermQuery(new QueryTerm("type", "from", 0));
+    Query toQuery = new TermQuery(new QueryTerm("type", "to", 0));
 
     int iters = RandomNumbers.randomIntBetween(random(), 3, 9);
     for (int i = 1; i <= iters; i++) {
@@ -791,7 +791,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             multipleValues,
             idField,
-            new TermQuery(new Term("price", "10.0")),
+            new TermQuery(new QueryTerm("price", "10.0", 0)),
             indexSearcher,
             scoreMode);
 
@@ -878,13 +878,13 @@ public class TestJoinUtil extends LuceneTestCase {
             idField,
             false,
             toField,
-            new TermQuery(new Term("description", "random")),
+            new TermQuery(new QueryTerm("description", "random", 0)),
             indexSearcher,
             ScoreMode.Avg);
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.add(joinQuery, BooleanClause.Occur.SHOULD);
-    bq.add(new TermQuery(new Term("id", "3")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new QueryTerm("id", "3", 0)), BooleanClause.Occur.SHOULD);
 
     indexSearcher.search(
         bq.build(),
@@ -990,7 +990,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             false,
             idField,
-            new TermQuery(new Term("subtitle", "random")),
+            new TermQuery(new QueryTerm("subtitle", "random", 0)),
             indexSearcher,
             ScoreMode.Max);
     TopDocs result = indexSearcher.search(joinQuery, 10);
@@ -1004,7 +1004,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             false,
             idField,
-            new TermQuery(new Term("subtitle", "movie")),
+            new TermQuery(new QueryTerm("subtitle", "movie", 0)),
             indexSearcher,
             ScoreMode.Max);
     result = indexSearcher.search(joinQuery, 10);
@@ -1018,7 +1018,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             false,
             idField,
-            new TermQuery(new Term("subtitle", "movie")),
+            new TermQuery(new QueryTerm("subtitle", "movie", 0)),
             indexSearcher,
             ScoreMode.Total);
     result = indexSearcher.search(joinQuery, 10);
@@ -1032,7 +1032,7 @@ public class TestJoinUtil extends LuceneTestCase {
             toField,
             false,
             idField,
-            new TermQuery(new Term("subtitle", "movie")),
+            new TermQuery(new QueryTerm("subtitle", "movie", 0)),
             indexSearcher,
             ScoreMode.Avg);
     result = indexSearcher.search(joinQuery, 10);
@@ -1084,7 +1084,7 @@ public class TestJoinUtil extends LuceneTestCase {
                   joinField,
                   multiValued,
                   joinField,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   indexSearcher,
                   scoreMode1);
           assertEquals(
@@ -1094,7 +1094,7 @@ public class TestJoinUtil extends LuceneTestCase {
                   joinField,
                   multiValued,
                   joinField,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   indexSearcher,
                   scoreMode1));
 
@@ -1105,7 +1105,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       joinField,
                       multiValued,
                       joinField,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode2)));
 
@@ -1116,7 +1116,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       joinField,
                       multiValued,
                       "other_field",
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
 
@@ -1127,7 +1127,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       "other_field",
                       multiValued,
                       joinField,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
 
@@ -1138,7 +1138,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       "other_field",
                       multiValued,
                       joinField,
-                      new TermQuery(new Term("name", "name6")),
+                      new TermQuery(new QueryTerm("name", "name6", 0)),
                       indexSearcher,
                       scoreMode1)));
         }
@@ -1166,7 +1166,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       joinField,
                       multiValued,
                       joinField,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
         }
@@ -1209,7 +1209,7 @@ public class TestJoinUtil extends LuceneTestCase {
           x =
               JoinUtil.createJoinQuery(
                   joinField,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   new MatchAllDocsQuery(),
                   indexSearcher,
                   scoreMode1,
@@ -1219,7 +1219,7 @@ public class TestJoinUtil extends LuceneTestCase {
               x,
               JoinUtil.createJoinQuery(
                   joinField,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   new MatchAllDocsQuery(),
                   indexSearcher,
                   scoreMode1,
@@ -1230,7 +1230,7 @@ public class TestJoinUtil extends LuceneTestCase {
               x.equals(
                   JoinUtil.createJoinQuery(
                       joinField,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       new MatchAllDocsQuery(),
                       indexSearcher,
                       scoreMode2,
@@ -1240,7 +1240,7 @@ public class TestJoinUtil extends LuceneTestCase {
               x.equals(
                   JoinUtil.createJoinQuery(
                       joinField,
-                      new TermQuery(new Term("name", "name6")),
+                      new TermQuery(new QueryTerm("name", "name6", 0)),
                       new MatchAllDocsQuery(),
                       indexSearcher,
                       scoreMode1,
@@ -1267,7 +1267,7 @@ public class TestJoinUtil extends LuceneTestCase {
               x.equals(
                   JoinUtil.createJoinQuery(
                       joinField,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       new MatchAllDocsQuery(),
                       indexSearcher,
                       scoreMode1,
@@ -1321,7 +1321,7 @@ public class TestJoinUtil extends LuceneTestCase {
                   multiValued,
                   joinField,
                   Integer.class,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   indexSearcher,
                   scoreMode1);
           assertEquals(
@@ -1332,7 +1332,7 @@ public class TestJoinUtil extends LuceneTestCase {
                   multiValued,
                   joinField,
                   Integer.class,
-                  new TermQuery(new Term("name", "name5")),
+                  new TermQuery(new QueryTerm("name", "name5", 0)),
                   indexSearcher,
                   scoreMode1));
 
@@ -1344,7 +1344,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       multiValued,
                       joinField,
                       Integer.class,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode2)));
 
@@ -1356,7 +1356,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       multiValued,
                       "other_field",
                       Integer.class,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
 
@@ -1368,7 +1368,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       multiValued,
                       joinField,
                       Integer.class,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
 
@@ -1380,7 +1380,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       multiValued,
                       joinField,
                       Integer.class,
-                      new TermQuery(new Term("name", "name6")),
+                      new TermQuery(new QueryTerm("name", "name6", 0)),
                       indexSearcher,
                       scoreMode1)));
         }
@@ -1411,7 +1411,7 @@ public class TestJoinUtil extends LuceneTestCase {
                       multiValued,
                       joinField,
                       Integer.class,
-                      new TermQuery(new Term("name", "name5")),
+                      new TermQuery(new QueryTerm("name", "name5", 0)),
                       indexSearcher,
                       scoreMode1)));
         }
@@ -1461,7 +1461,7 @@ public class TestJoinUtil extends LuceneTestCase {
         BitSet expectedResult =
             createExpectedResult(randomValue, from, indexSearcher.getIndexReader(), context);
 
-        final Query actualQuery = new TermQuery(new Term("value", randomValue));
+        final Query actualQuery = new TermQuery(new QueryTerm("value", randomValue, 0));
         if (VERBOSE) {
           System.out.println("actualQuery=" + actualQuery);
         }
@@ -1747,7 +1747,7 @@ public class TestJoinUtil extends LuceneTestCase {
       final Map<BytesRef, JoinScore> joinValueToJoinScores = new HashMap<>();
       if (multipleValuesPerDocument) {
         searcher.search(
-            new TermQuery(new Term("value", uniqueRandomValue)),
+            new TermQuery(new QueryTerm("value", uniqueRandomValue, 0)),
             new SimpleCollector() {
 
               private Scorable scorer;
@@ -1790,7 +1790,7 @@ public class TestJoinUtil extends LuceneTestCase {
             });
       } else {
         searcher.search(
-            new TermQuery(new Term("value", uniqueRandomValue)),
+            new TermQuery(new QueryTerm("value", uniqueRandomValue, 0)),
             new SimpleCollector() {
 
               private Scorable scorer;

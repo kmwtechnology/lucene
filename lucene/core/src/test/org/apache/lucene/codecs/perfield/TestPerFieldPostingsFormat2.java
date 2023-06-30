@@ -43,9 +43,9 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.MergeState;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
@@ -146,7 +146,7 @@ public class TestPerFieldPostingsFormat2 extends LuceneTestCase {
 
     addDocs(writer, 10);
     writer.commit();
-    assertQuery(new Term("content", "aaa"), dir, 10);
+    assertQuery(new QueryTerm("content", "aaa", 0), dir, 10);
     if (VERBOSE) {
       System.out.println("TEST: addDocs3");
     }
@@ -154,8 +154,8 @@ public class TestPerFieldPostingsFormat2 extends LuceneTestCase {
     writer.commit();
     writer.close();
 
-    assertQuery(new Term("content", "ccc"), dir, 10);
-    assertQuery(new Term("content", "aaa"), dir, 10);
+    assertQuery(new QueryTerm("content", "ccc", 0), dir, 10);
+    assertQuery(new QueryTerm("content", "aaa", 0), dir, 10);
     Codec codec = iwconf.getCodec();
 
     iwconf =
@@ -176,18 +176,18 @@ public class TestPerFieldPostingsFormat2 extends LuceneTestCase {
     writer.commit();
     codec = iwconf.getCodec();
     assertEquals(30, writer.getDocStats().maxDoc);
-    assertQuery(new Term("content", "bbb"), dir, 10);
-    assertQuery(new Term("content", "ccc"), dir, 10); // //
-    assertQuery(new Term("content", "aaa"), dir, 10);
+    assertQuery(new QueryTerm("content", "bbb", 0), dir, 10);
+    assertQuery(new QueryTerm("content", "ccc", 0), dir, 10); // //
+    assertQuery(new QueryTerm("content", "aaa", 0), dir, 10);
 
     if (VERBOSE) {
       System.out.println("TEST: add more docs w/ new codec");
     }
     addDocs2(writer, 10);
     writer.commit();
-    assertQuery(new Term("content", "ccc"), dir, 10);
-    assertQuery(new Term("content", "bbb"), dir, 20);
-    assertQuery(new Term("content", "aaa"), dir, 10);
+    assertQuery(new QueryTerm("content", "ccc", 0), dir, 10);
+    assertQuery(new QueryTerm("content", "bbb", 0), dir, 20);
+    assertQuery(new QueryTerm("content", "aaa", 0), dir, 10);
     assertEquals(40, writer.getDocStats().maxDoc);
 
     if (VERBOSE) {
@@ -196,14 +196,14 @@ public class TestPerFieldPostingsFormat2 extends LuceneTestCase {
     writer.forceMerge(1);
     assertEquals(40, writer.getDocStats().maxDoc);
     writer.close();
-    assertQuery(new Term("content", "ccc"), dir, 10);
-    assertQuery(new Term("content", "bbb"), dir, 20);
-    assertQuery(new Term("content", "aaa"), dir, 10);
+    assertQuery(new QueryTerm("content", "ccc", 0), dir, 10);
+    assertQuery(new QueryTerm("content", "bbb", 0), dir, 20);
+    assertQuery(new QueryTerm("content", "aaa", 0), dir, 10);
 
     dir.close();
   }
 
-  public void assertQuery(Term t, Directory dir, int num) throws IOException {
+  public void assertQuery(QueryTerm t, Directory dir, int num) throws IOException {
     if (VERBOSE) {
       System.out.println("\nTEST: assertQuery " + t);
     }

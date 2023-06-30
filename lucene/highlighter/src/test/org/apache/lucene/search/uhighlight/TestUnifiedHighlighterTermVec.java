@@ -36,7 +36,7 @@ import org.apache.lucene.index.FilterLeafReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.ParallelLeafReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.TermVectors;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -111,7 +111,7 @@ public class TestUnifiedHighlighterTermVec extends LuceneTestCase {
     UnifiedHighlighter highlighter = UnifiedHighlighter.builder(searcher, indexAnalyzer).build();
     BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
     for (String field : fields) {
-      queryBuilder.add(new TermQuery(new Term(field, "test")), BooleanClause.Occur.MUST);
+      queryBuilder.add(new TermQuery(new QueryTerm(field, "test", 0)), BooleanClause.Occur.MUST);
     }
     BooleanQuery query = queryBuilder.build();
     TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
@@ -208,7 +208,7 @@ public class TestUnifiedHighlighterTermVec extends LuceneTestCase {
             return Collections.emptySet(); // no WEIGHT_MATCHES
           }
         };
-    TermQuery query = new TermQuery(new Term("body", "vectors"));
+    TermQuery query = new TermQuery(new QueryTerm("body", "vectors", 0));
     TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
     try {
       highlighter.highlight("body", query, topDocs, 1); // should throw

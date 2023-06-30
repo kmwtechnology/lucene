@@ -29,8 +29,8 @@ import org.apache.lucene.classification.utils.NearestFuzzyQuery;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -139,7 +139,7 @@ public class KNearestFuzzyClassifier implements Classifier<BytesRef> {
       nearestFuzzyQuery.addTerms(text, fieldName);
     }
     bq.add(nearestFuzzyQuery, BooleanClause.Occur.MUST);
-    Query classFieldQuery = new WildcardQuery(new Term(classFieldName, "*"));
+    Query classFieldQuery = new WildcardQuery(new QueryTerm(classFieldName, "*", 0));
     bq.add(new BooleanClause(classFieldQuery, BooleanClause.Occur.MUST));
     if (query != null) {
       bq.add(query, BooleanClause.Occur.MUST);

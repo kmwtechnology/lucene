@@ -52,7 +52,7 @@ public class TestIndexWriterCommit extends LuceneTestCase {
     }
     writer.close();
 
-    Term searchTerm = new Term("content", "aaa");
+    QueryTerm searchTerm = new QueryTerm("content", "aaa", 0);
     DirectoryReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = newSearcher(reader);
     ScoreDoc[] hits = searcher.search(new TermQuery(searchTerm), 1000).scoreDocs;
@@ -105,7 +105,7 @@ public class TestIndexWriterCommit extends LuceneTestCase {
     }
     writer.close();
 
-    Term searchTerm = new Term("content", "aaa");
+    QueryTerm searchTerm = new QueryTerm("content", "aaa", 0);
     IndexReader reader = DirectoryReader.open(dir);
     IndexSearcher searcher = newSearcher(reader);
     ScoreDoc[] hits = searcher.search(new TermQuery(searchTerm), 1000).scoreDocs;

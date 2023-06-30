@@ -29,6 +29,7 @@ import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.SlowImpactsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -44,17 +45,17 @@ import org.apache.lucene.util.PriorityQueue;
 /**
  * A generalized version of {@link PhraseQuery}, with the possibility of adding more than one term
  * at the same position that are treated as a disjunction (OR). To use this class to search for the
- * phrase "Microsoft app*" first create a Builder and use {@link Builder#add(Term)} on the term
+ * phrase "Microsoft app*" first create a Builder and use {@link Builder#add(QueryTerm)} on the term
  * "microsoft" (assuming lowercase analysis), then find all terms that have "app" as prefix using
  * {@link LeafReader#terms(String)}, seeking to "app" then iterating and collecting terms until
- * there is no longer that prefix, and finally use {@link Builder#add(Term[])} to add them. {@link
- * Builder#build()} returns the fully constructed (and immutable) MultiPhraseQuery.
+ * there is no longer that prefix, and finally use {@link Builder#add(QueryTerm[])} to add them.
+ * {@link Builder#build()} returns the fully constructed (and immutable) MultiPhraseQuery.
  */
 public class MultiPhraseQuery extends Query {
   /** A builder for multi-phrase queries */
   public static class Builder {
     private String field; // becomes non-null on first add() then is unmodified
-    private final ArrayList<Term[]> termArrays;
+    private final ArrayList<QueryTerm[]> termArrays;
     private final ArrayList<Integer> positions;
     private int slop;
 
@@ -101,8 +102,8 @@ public class MultiPhraseQuery extends Query {
     }
 
     /** Add a single term at the next position in the phrase. */
-    public Builder add(Term term) {
-      return add(new Term[] {term});
+    public Builder add(QueryTerm term) {
+      return add(new QueryTerm[] {term});
     }
 
     /**
@@ -110,7 +111,7 @@ public class MultiPhraseQuery extends Query {
      * disjunction). The array is not copied or mutated, the caller should consider it immutable
      * subsequent to calling this method.
      */
-    public Builder add(Term[] terms) {
+    public Builder add(QueryTerm[] terms) {
       int position = 0;
       if (positions.size() > 0) position = positions.get(positions.size() - 1) + 1;
 
@@ -121,7 +122,7 @@ public class MultiPhraseQuery extends Query {
      * Allows to specify the relative position of terms within the phrase. The array is not copied
      * or mutated, the caller should consider it immutable subsequent to calling this method.
      */
-    public Builder add(Term[] terms, int position) {
+    public Builder add(QueryTerm[] terms, int position) {
       Objects.requireNonNull(terms, "Term array must not be null");
       if (termArrays.size() == 0) field = terms[0].field();
 
@@ -146,18 +147,18 @@ public class MultiPhraseQuery extends Query {
         positionsArray[i] = this.positions.get(i);
       }
 
-      Term[][] termArraysArray = termArrays.toArray(new Term[termArrays.size()][]);
+      QueryTerm[][] termArraysArray = termArrays.toArray(new QueryTerm[termArrays.size()][]);
 
       return new MultiPhraseQuery(field, termArraysArray, positionsArray, slop);
     }
   }
 
   private final String field;
-  private final Term[][] termArrays;
+  private final QueryTerm[][] termArrays;
   private final int[] positions;
   private final int slop;
 
-  private MultiPhraseQuery(String field, Term[][] termArrays, int[] positions, int slop) {
+  private MultiPhraseQuery(String field, QueryTerm[][] termArrays, int[] positions, int slop) {
     // No argument checks here since they are provided by the MultiPhraseQuery.Builder
     this.field = field;
     this.termArrays = termArrays;
@@ -175,7 +176,7 @@ public class MultiPhraseQuery extends Query {
   }
 
   /** Returns the arrays of arrays of terms in the multi-phrase. Do not modify! */
-  public Term[][] getTermArrays() {
+  public QueryTerm[][] getTermArrays() {
     return termArrays;
   }
 
@@ -192,7 +193,8 @@ public class MultiPhraseQuery extends Query {
       Term[] terms = termArrays[0];
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       for (Term term : terms) {
-        builder.add(new TermQuery(term), BooleanClause.Occur.SHOULD);
+        QueryTerm t = term instanceof QueryTerm ? (QueryTerm) term : new QueryTerm(term);
+        builder.add(new TermQuery(t), BooleanClause.Occur.SHOULD);
       }
       return builder.build();
     } else {

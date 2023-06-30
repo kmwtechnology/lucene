@@ -16,6 +16,8 @@
  */
 package org.apache.lucene.queries.spans;
 
+import static org.apache.lucene.index.QueryTerm.asQueryTerm;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,7 +178,7 @@ public class SpanMultiTermQueryWrapper<Q extends MultiTermQuery> extends SpanQue
                   int docCount,
                   float boost,
                   TermStates states) {
-                final SpanTermQuery q = new SpanTermQuery(term, states);
+                final SpanTermQuery q = new SpanTermQuery(asQueryTerm(term), states);
                 topLevel.add(q);
               }
             };
@@ -221,7 +223,7 @@ public class SpanMultiTermQueryWrapper<Q extends MultiTermQuery> extends SpanQue
             @Override
             protected void addClause(
                 List<SpanQuery> topLevel, Term term, int docFreq, float boost, TermStates states) {
-              final SpanTermQuery q = new SpanTermQuery(term, states);
+              final SpanTermQuery q = new SpanTermQuery(asQueryTerm(term), states);
               topLevel.add(q);
             }
           };

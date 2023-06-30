@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
@@ -383,6 +384,8 @@ public class CommonTermsQuery extends Query {
    * @return new TermQuery instance
    */
   protected Query newTermQuery(Term term, TermStates termStates) {
-    return termStates == null ? new TermQuery(term) : new TermQuery(term, termStates);
+    return termStates == null
+        ? new TermQuery(QueryTerm.asQueryTerm(term))
+        : new TermQuery(QueryTerm.asQueryTerm(term), termStates);
   }
 }

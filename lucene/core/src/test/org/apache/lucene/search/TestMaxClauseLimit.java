@@ -20,7 +20,7 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.util.Arrays;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.tests.util.LuceneTestCase;
 
 public class TestMaxClauseLimit extends LuceneTestCase {
@@ -42,13 +42,14 @@ public class TestMaxClauseLimit extends LuceneTestCase {
 
     BooleanQuery.Builder builder1024 = new BooleanQuery.Builder();
     for (int i = 0; i < 1024; i++) {
-      builder1024.add(new TermQuery(new Term("foo", "bar-" + i)), BooleanClause.Occur.SHOULD);
+      builder1024.add(
+          new TermQuery(new QueryTerm("foo", "bar-" + i, 0)), BooleanClause.Occur.SHOULD);
     }
     Query inner = builder1024.build();
     Query query =
         new BooleanQuery.Builder()
             .add(inner, BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term("foo", "baz")), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "baz", 0)), BooleanClause.Occur.SHOULD)
             .build();
 
     Exception e =
@@ -69,7 +70,8 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     nestedBuilder.setMinimumNumberShouldMatch(5);
 
     for (int i = 0; i < 600; i++) {
-      nestedBuilder.add(new TermQuery(new Term("foo", "bar-" + i)), BooleanClause.Occur.SHOULD);
+      nestedBuilder.add(
+          new TermQuery(new QueryTerm("foo", "bar-" + i, 0)), BooleanClause.Occur.SHOULD);
     }
     Query inner = nestedBuilder.build();
     BooleanQuery.Builder builderMixed =
@@ -78,7 +80,7 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     builderMixed.setMinimumNumberShouldMatch(5);
 
     for (int i = 0; i < 600; i++) {
-      builderMixed.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
+      builderMixed.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
     }
 
     Query query = builderMixed.build();
@@ -98,7 +100,8 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     nestedBuilder.setMinimumNumberShouldMatch(5);
 
     for (int i = 0; i < 600; i++) {
-      nestedBuilder.add(new TermQuery(new Term("foo", "bar-" + i)), BooleanClause.Occur.SHOULD);
+      nestedBuilder.add(
+          new TermQuery(new QueryTerm("foo", "bar-" + i, 0)), BooleanClause.Occur.SHOULD);
     }
     Query inner = nestedBuilder.build();
     BooleanQuery.Builder builderMixed = new BooleanQuery.Builder();
@@ -106,7 +109,7 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     builderMixed.setMinimumNumberShouldMatch(5);
 
     for (int i = 0; i < 600; i++) {
-      builderMixed.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
+      builderMixed.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
     }
 
     builderMixed.add(inner, BooleanClause.Occur.SHOULD);
@@ -126,10 +129,10 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     Query[] clausesQueryArray = new Query[1050];
 
     for (int i = 0; i < 1049; i++) {
-      clausesQueryArray[i] = new TermQuery(new Term("field", "a"));
+      clausesQueryArray[i] = new TermQuery(new QueryTerm("field", "a", 0));
     }
 
-    PhraseQuery pq = new PhraseQuery("field", new String[0]);
+    PhraseQuery pq = new PhraseQuery("field", new int[] {}, new String[0]);
 
     clausesQueryArray[1049] = pq;
 
@@ -148,7 +151,11 @@ public class TestMaxClauseLimit extends LuceneTestCase {
     MultiPhraseQuery.Builder qb = new MultiPhraseQuery.Builder();
 
     for (int i = 0; i < 1050; i++) {
-      qb.add(new Term[] {new Term("foo", "bar-" + i), new Term("foo", "bar+" + i)}, 0);
+      qb.add(
+          new QueryTerm[] {
+            new QueryTerm("foo", "bar-" + i, 0), new QueryTerm("foo", "bar+" + i, 0)
+          },
+          0);
     }
 
     // Can't be flattened, but high clause count should still be cause during nested walk...

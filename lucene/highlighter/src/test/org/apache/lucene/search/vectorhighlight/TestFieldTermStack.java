@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.search.vectorhighlight;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.WildcardQuery;
@@ -167,7 +167,8 @@ public class TestFieldTermStack extends AbstractTestCase {
 
   public void testWildcard() throws Exception {
     makeIndexLongMV();
-    FieldQuery fq = new FieldQuery(new WildcardQuery(new Term(F, "th*e")), reader, true, true);
+    FieldQuery fq =
+        new FieldQuery(new WildcardQuery(new QueryTerm(F, "th*e", 0)), reader, true, true);
     FieldTermStack stack = new FieldTermStack(reader, 0, F, fq);
     assertEquals(4, stack.termList.size());
     assertEquals("the(15,18,2)", stack.pop().toString());

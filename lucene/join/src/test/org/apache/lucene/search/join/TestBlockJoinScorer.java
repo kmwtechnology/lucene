@@ -23,7 +23,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -70,7 +70,7 @@ public class TestBlockJoinScorer extends LuceneTestCase {
 
     // Create a filter that defines "parent" documents in the index - in this case resumes
     BitSetProducer parentsFilter =
-        new QueryBitSetProducer(new TermQuery(new Term("docType", "parent")));
+        new QueryBitSetProducer(new TermQuery(new QueryTerm("docType", "parent", 0)));
     CheckJoinIndex.check(reader, parentsFilter);
 
     Query childQuery = new MatchAllDocsQuery();

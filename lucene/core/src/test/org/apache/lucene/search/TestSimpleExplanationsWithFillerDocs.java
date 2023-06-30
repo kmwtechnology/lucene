@@ -18,7 +18,7 @@ package org.apache.lucene.search;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.TestUtil;
 import org.apache.lucene.util.ArrayUtil;
@@ -110,7 +110,8 @@ public class TestSimpleExplanationsWithFillerDocs extends TestSimpleExplanations
       BooleanQuery.Builder builder = new BooleanQuery.Builder();
       builder.add(new BooleanClause(q, BooleanClause.Occur.MUST));
       builder.add(
-          new BooleanClause(new TermQuery(new Term(EXTRA, EXTRA)), BooleanClause.Occur.MUST_NOT));
+          new BooleanClause(
+              new TermQuery(new QueryTerm(EXTRA, EXTRA, 0)), BooleanClause.Occur.MUST_NOT));
       q = builder.build();
     }
     super.qtest(q, expDocNrs);

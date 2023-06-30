@@ -27,7 +27,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IOContext;
@@ -268,8 +268,8 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries01() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST);
     int[] expDocNrs = {2, 3};
     queriesTest(query.build(), expDocNrs);
   }
@@ -277,8 +277,8 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries02() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.SHOULD);
     int[] expDocNrs = {2, 3, 1, 0};
     queriesTest(query.build(), expDocNrs);
   }
@@ -286,8 +286,8 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries03() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.SHOULD);
     int[] expDocNrs = {2, 3, 1, 0};
     queriesTest(query.build(), expDocNrs);
   }
@@ -295,8 +295,8 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries04() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST_NOT);
     int[] expDocNrs = {1, 0};
     queriesTest(query.build(), expDocNrs);
   }
@@ -304,8 +304,8 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries05() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST_NOT);
     int[] expDocNrs = {1, 0};
     queriesTest(query.build(), expDocNrs);
   }
@@ -313,9 +313,9 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries06() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST_NOT);
-    query.add(new TermQuery(new Term(field, "w5")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w5", 0)), BooleanClause.Occur.MUST_NOT);
     int[] expDocNrs = {1};
     queriesTest(query.build(), expDocNrs);
   }
@@ -323,9 +323,9 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries07() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST_NOT);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST_NOT);
-    query.add(new TermQuery(new Term(field, "w5")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w5", 0)), BooleanClause.Occur.MUST_NOT);
     int[] expDocNrs = {};
     queriesTest(query.build(), expDocNrs);
   }
@@ -333,9 +333,9 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries08() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term(field, "w5")), BooleanClause.Occur.MUST_NOT);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "w5", 0)), BooleanClause.Occur.MUST_NOT);
     int[] expDocNrs = {2, 3, 1};
     queriesTest(query.build(), expDocNrs);
   }
@@ -343,10 +343,10 @@ public class TestBoolean2 extends LuceneTestCase {
   @Test
   public void testQueries09() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(field, "w3")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "xx")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "w2")), BooleanClause.Occur.MUST);
-    query.add(new TermQuery(new Term(field, "zz")), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(field, "w3", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "xx", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "w2", 0)), BooleanClause.Occur.MUST);
+    query.add(new TermQuery(new QueryTerm(field, "zz", 0)), BooleanClause.Occur.SHOULD);
     int[] expDocNrs = {2, 3};
     queriesTest(query.build(), expDocNrs);
   }
@@ -396,7 +396,7 @@ public class TestBoolean2 extends LuceneTestCase {
 
         BooleanQuery.Builder q3 = new BooleanQuery.Builder();
         q3.add(q1, BooleanClause.Occur.SHOULD);
-        q3.add(new PrefixQuery(new Term("field2", "b")), BooleanClause.Occur.SHOULD);
+        q3.add(new PrefixQuery(new QueryTerm("field2", "b", 0)), BooleanClause.Occur.SHOULD);
         assertEquals(
             mulFactor * topDocs.totalHits.value + NUM_EXTRA_DOCS / 2,
             bigSearcher.count(q3.build()));
@@ -440,13 +440,15 @@ public class TestBoolean2 extends LuceneTestCase {
       }
       Query q;
       if (qType < 3) {
-        q = new TermQuery(new Term(field, vals[rnd.nextInt(vals.length)]));
+        q = new TermQuery(new QueryTerm(field, vals[rnd.nextInt(vals.length)], 0));
       } else if (qType < 4) {
         String t1 = vals[rnd.nextInt(vals.length)];
         String t2 = vals[rnd.nextInt(vals.length)];
-        q = new PhraseQuery(10, field, t1, t2); // slop increases possibility of matching
+        q =
+            new PhraseQuery(
+                10, field, new int[] {0, 0}, t1, t2); // slop increases possibility of matching
       } else if (qType < 7) {
-        q = new WildcardQuery(new Term(field, "w*"));
+        q = new WildcardQuery(new QueryTerm(field, "w*", 0));
       } else {
         q = randBoolQuery(rnd, allowMust, level - 1, field, vals, cb).build();
       }

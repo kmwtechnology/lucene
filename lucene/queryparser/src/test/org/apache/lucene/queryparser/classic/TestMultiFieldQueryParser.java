@@ -27,7 +27,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -340,8 +340,8 @@ public class TestMultiFieldQueryParser extends LuceneTestCase {
     MultiFieldQueryParser mfqp = new MultiFieldQueryParser(fields, new MockAnalyzer(random()));
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new RegexpQuery(new Term("a", "[a-z][123]")), Occur.SHOULD);
-    bq.add(new RegexpQuery(new Term("b", "[a-z][123]")), Occur.SHOULD);
+    bq.add(new RegexpQuery(new QueryTerm("a", "[a-z][123]", 0)), Occur.SHOULD);
+    bq.add(new RegexpQuery(new QueryTerm("b", "[a-z][123]", 0)), Occur.SHOULD);
     assertEquals(bq.build(), mfqp.parse("/[a-z][123]/"));
   }
 

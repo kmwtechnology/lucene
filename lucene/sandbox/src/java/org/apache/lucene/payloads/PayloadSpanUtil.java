@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanOrQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
@@ -80,7 +80,7 @@ public class PayloadSpanUtil {
       }
 
     } else if (query instanceof PhraseQuery) {
-      Term[] phraseQueryTerms = ((PhraseQuery) query).getTerms();
+      QueryTerm[] phraseQueryTerms = ((PhraseQuery) query).getTerms();
       SpanQuery[] clauses = new SpanQuery[phraseQueryTerms.length];
       for (int i = 0; i < phraseQueryTerms.length; i++) {
         clauses[i] = new SpanTermQuery(phraseQueryTerms[i]);
@@ -109,7 +109,7 @@ public class PayloadSpanUtil {
 
     } else if (query instanceof MultiPhraseQuery) {
       final MultiPhraseQuery mpq = (MultiPhraseQuery) query;
-      final Term[][] termArrays = mpq.getTermArrays();
+      final QueryTerm[][] termArrays = mpq.getTermArrays();
       final int[] positions = mpq.getPositions();
       if (positions.length > 0) {
 
@@ -125,13 +125,13 @@ public class PayloadSpanUtil {
         int distinctPositions = 0;
 
         for (int i = 0; i < termArrays.length; ++i) {
-          final Term[] termArray = termArrays[i];
+          final QueryTerm[] termArray = termArrays[i];
           List<Query> disjuncts = disjunctLists[positions[i]];
           if (disjuncts == null) {
             disjuncts = (disjunctLists[positions[i]] = new ArrayList<>(termArray.length));
             ++distinctPositions;
           }
-          for (final Term term : termArray) {
+          for (final QueryTerm term : termArray) {
             disjuncts.add(new SpanTermQuery(term));
           }
         }

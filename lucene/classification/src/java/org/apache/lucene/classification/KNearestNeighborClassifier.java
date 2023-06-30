@@ -29,8 +29,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -171,7 +171,7 @@ public class KNearestNeighborClassifier implements Classifier<BytesRef> {
               mlt.like(fieldName, new StringReader(text)), BooleanClause.Occur.SHOULD));
       mlt.setBoostFactor(1); // restore neutral boost for next field
     }
-    Query classFieldQuery = new WildcardQuery(new Term(classFieldName, "*"));
+    Query classFieldQuery = new WildcardQuery(new QueryTerm(classFieldName, "*", 0));
     mltQuery.add(new BooleanClause(classFieldQuery, BooleanClause.Occur.MUST));
     if (query != null) {
       mltQuery.add(query, BooleanClause.Occur.MUST);

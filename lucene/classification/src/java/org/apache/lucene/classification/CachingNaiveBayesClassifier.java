@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -169,12 +170,13 @@ public class CachingNaiveBayesClassifier extends SimpleNaiveBayesClassifier {
         for (String textFieldName : textFieldNames) {
           subQuery.add(
               new BooleanClause(
-                  new TermQuery(new Term(textFieldName, word)), BooleanClause.Occur.SHOULD));
+                  new TermQuery(new QueryTerm(textFieldName, word, 0)),
+                  BooleanClause.Occur.SHOULD));
         }
         booleanQuery.add(new BooleanClause(subQuery.build(), BooleanClause.Occur.MUST));
         booleanQuery.add(
             new BooleanClause(
-                new TermQuery(new Term(classFieldName, cclass)), BooleanClause.Occur.MUST));
+                new TermQuery(new QueryTerm(classFieldName, cclass, 0)), BooleanClause.Occur.MUST));
         if (query != null) {
           booleanQuery.add(query, BooleanClause.Occur.MUST);
         }

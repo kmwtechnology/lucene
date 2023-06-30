@@ -24,7 +24,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -39,8 +39,8 @@ import org.apache.lucene.util.IOUtils;
 public class TestConstantScoreQuery extends LuceneTestCase {
 
   public void testCSQ() throws Exception {
-    final Query q1 = new ConstantScoreQuery(new TermQuery(new Term("a", "b")));
-    final Query q2 = new ConstantScoreQuery(new TermQuery(new Term("a", "c")));
+    final Query q1 = new ConstantScoreQuery(new TermQuery(new QueryTerm("a", "b", 0)));
+    final Query q2 = new ConstantScoreQuery(new TermQuery(new QueryTerm("a", "c", 0)));
     final Query q3 =
         new ConstantScoreQuery(TermRangeQuery.newStringRange("a", "b", "c", true, true));
     QueryUtils.check(q1);
@@ -51,7 +51,7 @@ public class TestConstantScoreQuery extends LuceneTestCase {
     QueryUtils.checkUnequal(q1, q2);
     QueryUtils.checkUnequal(q2, q3);
     QueryUtils.checkUnequal(q1, q3);
-    QueryUtils.checkUnequal(q1, new TermQuery(new Term("a", "b")));
+    QueryUtils.checkUnequal(q1, new TermQuery(new QueryTerm("a", "b", 0)));
   }
 
   private void checkHits(
@@ -139,11 +139,12 @@ public class TestConstantScoreQuery extends LuceneTestCase {
       searcher.setQueryCache(null); // to assert on scorer impl
 
       final BoostQuery csq1 =
-          new BoostQuery(new ConstantScoreQuery(new TermQuery(new Term("field", "term1"))), 2f);
+          new BoostQuery(
+              new ConstantScoreQuery(new TermQuery(new QueryTerm("field", "term1", 0))), 2f);
       final BoostQuery csq2 =
           new BoostQuery(
               new ConstantScoreQuery(
-                  new ConstantScoreQuery(new TermQuery(new Term("field", "term2")))),
+                  new ConstantScoreQuery(new TermQuery(new QueryTerm("field", "term2", 0)))),
               5f);
 
       final BooleanQuery.Builder bq = new BooleanQuery.Builder();
@@ -212,7 +213,7 @@ public class TestConstantScoreQuery extends LuceneTestCase {
     IndexReader r = w.getReader();
     w.close();
 
-    Query filterB = new QueryWrapper(new TermQuery(new Term("field", "b")));
+    Query filterB = new QueryWrapper(new TermQuery(new QueryTerm("field", "b", 0)));
     Query query = new ConstantScoreQuery(filterB);
 
     IndexSearcher s = newSearcher(r);
@@ -220,7 +221,7 @@ public class TestConstantScoreQuery extends LuceneTestCase {
         new BooleanQuery.Builder().add(query, Occur.MUST).add(filterB, Occur.FILTER).build();
     assertEquals(1, s.count(filtered)); // Query for field:b, Filter field:b
 
-    Query filterA = new QueryWrapper(new TermQuery(new Term("field", "a")));
+    Query filterA = new QueryWrapper(new TermQuery(new QueryTerm("field", "a", 0)));
     query = new ConstantScoreQuery(filterA);
 
     filtered = new BooleanQuery.Builder().add(query, Occur.MUST).add(filterB, Occur.FILTER).build();
@@ -243,7 +244,7 @@ public class TestConstantScoreQuery extends LuceneTestCase {
     final IndexSearcher searcher = newSearcher(reader);
     searcher.setQueryCache(null); // to still have approximations
 
-    PhraseQuery pq = new PhraseQuery("field", "a", "b");
+    PhraseQuery pq = new PhraseQuery("field", new int[] {0, 0}, "a", "b");
 
     Query q = searcher.rewrite(new ConstantScoreQuery(pq));
 

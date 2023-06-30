@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.DateTools;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.charstream.CharStream;
 import org.apache.lucene.queryparser.charstream.FastCharStream;
@@ -100,6 +101,8 @@ public abstract class QueryParserBase extends QueryBuilder
   boolean autoGeneratePhraseQueries;
   int determinizeWorkLimit = DEFAULT_DETERMINIZE_WORK_LIMIT;
 
+  int queryPos;
+
   // So the generated QueryParser(CharStream) won't error out
   protected QueryParserBase() {
     super(null);
@@ -144,6 +147,17 @@ public abstract class QueryParserBase extends QueryBuilder
           new ParseException("Cannot parse '" + query + "': too many boolean clauses");
       e.initCause(tmc);
       throw e;
+    }
+  }
+
+  // Note: this method really only exists to support QueryDecomposerTest
+  public Query parse(String query, int termOffset) throws ParseException {
+    int origOffset = this.queryTermOffsetAdjust;
+    try {
+      this.queryTermOffsetAdjust = termOffset;
+      return parse(query);
+    } finally {
+      this.queryTermOffsetAdjust = origOffset;
     }
   }
 
@@ -460,32 +474,40 @@ public abstract class QueryParserBase extends QueryBuilder
    * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getFieldQuery(String field, String queryText, boolean quoted)
+  protected Query getFieldQuery(String field, String queryText, boolean quoted, int beginColumn)
       throws ParseException {
-    return newFieldQuery(getAnalyzer(), field, queryText, quoted);
+    return newFieldQuery(getAnalyzer(), field, queryText, quoted, beginColumn);
   }
 
   /**
    * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query newFieldQuery(Analyzer analyzer, String field, String queryText, boolean quoted)
+  protected Query newFieldQuery(
+      Analyzer analyzer, String field, String queryText, boolean quoted, int beginColumn)
       throws ParseException {
     BooleanClause.Occur occur =
         operator == Operator.AND ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
     return createFieldQuery(
-        analyzer, occur, field, queryText, quoted || autoGeneratePhraseQueries, phraseSlop);
+        analyzer,
+        occur,
+        field,
+        queryText,
+        quoted || autoGeneratePhraseQueries,
+        phraseSlop,
+        beginColumn);
   }
 
   /**
-   * Base implementation delegates to {@link #getFieldQuery(String,String,boolean)}. This method may
-   * be overridden, for example, to return a SpanNearQuery instead of a PhraseQuery.
+   * Base implementation delegates to {@link #getFieldQuery(String, String, boolean, int)}. This
+   * method may be overridden, for example, to return a SpanNearQuery instead of a PhraseQuery.
    *
    * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getFieldQuery(String field, String queryText, int slop) throws ParseException {
-    Query query = getFieldQuery(field, queryText, true);
+  protected Query getFieldQuery(String field, String queryText, int slop, int beginColumn)
+      throws ParseException {
+    Query query = getFieldQuery(field, queryText, true, beginColumn);
 
     if (query instanceof PhraseQuery) {
       query = addSlopToPhrase((PhraseQuery) query, slop);
@@ -504,7 +526,7 @@ public abstract class QueryParserBase extends QueryBuilder
   private PhraseQuery addSlopToPhrase(PhraseQuery query, int slop) {
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.setSlop(slop);
-    org.apache.lucene.index.Term[] terms = query.getTerms();
+    QueryTerm[] terms = query.getTerms();
     int[] positions = query.getPositions();
     for (int i = 0; i < terms.length; ++i) {
       builder.add(terms[i], positions[i]);
@@ -567,7 +589,7 @@ public abstract class QueryParserBase extends QueryBuilder
    * @param prefix Prefix term
    * @return new PrefixQuery instance
    */
-  protected Query newPrefixQuery(Term prefix) {
+  protected Query newPrefixQuery(QueryTerm prefix) {
     return new PrefixQuery(prefix, multiTermRewriteMethod);
   }
 
@@ -577,7 +599,7 @@ public abstract class QueryParserBase extends QueryBuilder
    * @param regexp Regexp term
    * @return new RegexpQuery instance
    */
-  protected Query newRegexpQuery(Term regexp) {
+  protected Query newRegexpQuery(QueryTerm regexp) {
     return new RegexpQuery(
         regexp,
         RegExp.ALL,
@@ -649,7 +671,7 @@ public abstract class QueryParserBase extends QueryBuilder
    * @param t wildcard term
    * @return new WildcardQuery instance
    */
-  protected Query newWildcardQuery(Term t) {
+  protected Query newWildcardQuery(QueryTerm t) {
     return new WildcardQuery(t, determinizeWorkLimit, multiTermRewriteMethod);
   }
 
@@ -691,18 +713,21 @@ public abstract class QueryParserBase extends QueryBuilder
    * @param field Name of the field query will use.
    * @param termStr Term token that contains one or more wild card characters (? or *), but is not
    *     simple prefix term
+   * @param beginColumn the offset of the first character of the term in the parsed query when
+   *     applicable. It is safe to pass zero if the source is not a parsed string.
    * @return Resulting {@link org.apache.lucene.search.Query} built for the term
-   * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
+   * @throws org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getWildcardQuery(String field, String termStr) throws ParseException {
+  protected Query getWildcardQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if ("*".equals(field)) {
       if ("*".equals(termStr)) return newMatchAllDocsQuery();
     }
     if (!allowLeadingWildcard && (termStr.startsWith("*") || termStr.startsWith("?")))
       throw new ParseException("'*' or '?' not allowed as first character in WildcardQuery");
 
-    Term t = new Term(field, analyzeWildcard(field, termStr));
+    QueryTerm t = new QueryTerm(field, analyzeWildcard(field, termStr), beginColumn);
     return newWildcardQuery(t);
   }
 
@@ -746,16 +771,18 @@ public abstract class QueryParserBase extends QueryBuilder
    *
    * @param field Name of the field query will use.
    * @param termStr Term token that contains a regular expression
+   * @param beginColumn the offset of the term within the query string if available.
    * @return Resulting {@link org.apache.lucene.search.Query} built for the term
-   * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
+   * @throws org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getRegexpQuery(String field, String termStr) throws ParseException {
+  protected Query getRegexpQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     // We need to pass the whole string to #normalize, which will not work with
     // custom attribute factories for the binary term impl, and may not work
     // with some analyzers
     BytesRef term = getAnalyzer().normalize(field, termStr);
-    Term t = new Term(field, term);
+    QueryTerm t = new QueryTerm(field, term, beginColumn);
     return newRegexpQuery(t);
   }
 
@@ -776,15 +803,17 @@ public abstract class QueryParserBase extends QueryBuilder
    * @param field Name of the field query will use.
    * @param termStr Term token to use for building term for the query (<b>without</b> trailing '*'
    *     character!)
+   * @param beginColumn the offset of the term within the query string if available.
    * @return Resulting {@link org.apache.lucene.search.Query} built for the term
-   * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
+   * @throws org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getPrefixQuery(String field, String termStr) throws ParseException {
+  protected Query getPrefixQuery(String field, String termStr, int beginColumn)
+      throws ParseException {
     if (!allowLeadingWildcard && termStr.startsWith("*"))
       throw new ParseException("'*' not allowed as first character in PrefixQuery");
     BytesRef term = getAnalyzer().normalize(field, termStr);
-    Term t = new Term(field, term);
+    QueryTerm t = new QueryTerm(field, term, beginColumn);
     return newPrefixQuery(t);
   }
 
@@ -794,14 +823,16 @@ public abstract class QueryParserBase extends QueryBuilder
    *
    * @param field Name of the field query will use.
    * @param termStr Term token to use for building term for the query
+   * @param beginColumn The offset of the first character of the term (excluding field specifier) in
+   *     the query
    * @return Resulting {@link org.apache.lucene.search.Query} built for the term
-   * @exception org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
+   * @throws org.apache.lucene.queryparser.classic.ParseException throw in overridden method to
    *     disallow
    */
-  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity)
+  protected Query getFuzzyQuery(String field, String termStr, float minSimilarity, int beginColumn)
       throws ParseException {
     BytesRef term = getAnalyzer().normalize(field, termStr);
-    Term t = new Term(field, term);
+    Term t = new QueryTerm(field, term, beginColumn);
     return newFuzzyQuery(t, minSimilarity, fuzzyPrefixLength);
   }
 
@@ -819,17 +850,21 @@ public abstract class QueryParserBase extends QueryBuilder
 
     String termImage = discardEscapeChar(term.image);
     if (wildcard) {
-      q = getWildcardQuery(qfield, term.image);
+      q = getWildcardQuery(qfield, term.image, term.beginColumn);
     } else if (prefix) {
       q =
           getPrefixQuery(
-              qfield, discardEscapeChar(term.image.substring(0, term.image.length() - 1)));
+              qfield,
+              discardEscapeChar(term.image.substring(0, term.image.length() - 1)),
+              term.beginColumn);
     } else if (regexp) {
-      q = getRegexpQuery(qfield, term.image.substring(1, term.image.length() - 1));
+      q =
+          getRegexpQuery(
+              qfield, term.image.substring(1, term.image.length() - 1), term.beginColumn);
     } else if (fuzzy) {
-      q = handleBareFuzzy(qfield, fuzzySlop, termImage);
+      q = handleBareFuzzy(qfield, fuzzySlop, termImage, term.beginColumn);
     } else {
-      q = getFieldQuery(qfield, termImage, false);
+      q = getFieldQuery(qfield, termImage, false, term.beginColumn);
     }
     return q;
   }
@@ -857,7 +892,8 @@ public abstract class QueryParserBase extends QueryBuilder
     return fuzzyMinSim;
   }
 
-  Query handleBareFuzzy(String qfield, Token fuzzySlop, String termImage) throws ParseException {
+  Query handleBareFuzzy(String qfield, Token fuzzySlop, String termImage, int beginColumn)
+      throws ParseException {
     float fms = getFuzzyDistance(fuzzySlop, termImage);
     if (fms < 0.0f) {
       throw new ParseException(
@@ -865,7 +901,7 @@ public abstract class QueryParserBase extends QueryBuilder
     } else if (fms >= 1.0f && fms != (int) fms) {
       throw new ParseException("Fractional edit distances are not allowed!");
     }
-    return getFuzzyQuery(qfield, termImage, fms);
+    return getFuzzyQuery(qfield, termImage, fms, beginColumn);
   }
 
   // extracted from the .jj grammar
@@ -880,7 +916,10 @@ public abstract class QueryParserBase extends QueryBuilder
       }
     }
     return getFieldQuery(
-        qfield, discardEscapeChar(term.image.substring(1, term.image.length() - 1)), s);
+        qfield,
+        discardEscapeChar(term.image.substring(1, term.image.length() - 1)),
+        s,
+        term.beginColumn);
   }
 
   // extracted from the .jj grammar

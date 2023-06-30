@@ -32,7 +32,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.DoubleValues;
 import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.search.Query;
@@ -211,7 +211,7 @@ public abstract class StrategyTestCase extends SpatialTestCase {
   }
 
   protected void deleteDoc(String id) throws IOException {
-    indexWriter.deleteDocuments(new TermQuery(new Term("id", id)));
+    indexWriter.deleteDocuments(new TermQuery(new QueryTerm("id", id, 0)));
   }
 
   /** scores[] are in docId order */

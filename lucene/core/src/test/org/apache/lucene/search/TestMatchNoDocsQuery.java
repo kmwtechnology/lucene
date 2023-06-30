@@ -23,7 +23,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.search.QueryUtils;
@@ -72,7 +72,9 @@ public class TestMatchNoDocsQuery extends LuceneTestCase {
     assertEquals(query.toString(), "MatchNoDocsQuery(\"field not found\")");
 
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
-    bq.add(new BooleanClause(new TermQuery(new Term("key", "five")), BooleanClause.Occur.SHOULD));
+    bq.add(
+        new BooleanClause(
+            new TermQuery(new QueryTerm("key", "five", 0)), BooleanClause.Occur.SHOULD));
     bq.add(new BooleanClause(new MatchNoDocsQuery("field not found"), BooleanClause.Occur.MUST));
     query = bq.build();
     assertEquals(searcher.count(query), 0);
@@ -81,7 +83,9 @@ public class TestMatchNoDocsQuery extends LuceneTestCase {
     assertEquals(query.toString(), "key:five +MatchNoDocsQuery(\"field not found\")");
 
     bq = new BooleanQuery.Builder();
-    bq.add(new BooleanClause(new TermQuery(new Term("key", "one")), BooleanClause.Occur.SHOULD));
+    bq.add(
+        new BooleanClause(
+            new TermQuery(new QueryTerm("key", "one", 0)), BooleanClause.Occur.SHOULD));
     bq.add(new BooleanClause(new MatchNoDocsQuery("field not found"), BooleanClause.Occur.SHOULD));
     query = bq.build();
     assertEquals(query.toString(), "key:one MatchNoDocsQuery(\"field not found\")");

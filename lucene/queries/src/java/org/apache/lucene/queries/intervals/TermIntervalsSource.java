@@ -26,6 +26,7 @@ import org.apache.lucene.codecs.lucene90.Lucene90PostingsReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -162,7 +163,7 @@ class TermIntervalsSource extends IntervalsSource {
   }
 
   static IntervalMatchesIterator matches(TermsEnum te, int doc, String field) throws IOException {
-    TermQuery query = new TermQuery(new Term(field, te.term()));
+    TermQuery query = new TermQuery(new QueryTerm(field, te.term(), 0));
     PostingsEnum pe = te.postings(null, PostingsEnum.OFFSETS);
     if (pe.advance(doc) != doc) {
       return null;

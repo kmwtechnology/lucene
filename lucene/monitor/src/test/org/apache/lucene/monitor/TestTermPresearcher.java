@@ -26,7 +26,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.memory.MemoryIndex;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -146,7 +146,7 @@ public class TestTermPresearcher extends PresearcherTestBase {
                         new BooleanQuery.Builder()
                             .add(should(new TermInSetQuery("f", new BytesRef("test"))))
                             .build()))
-                .add(should(new TermQuery(new Term("__anytokenfield", "__ANYTOKEN__"))))
+                .add(should(new TermQuery(new QueryTerm("__anytokenfield", "__ANYTOKEN__", 0))))
                 .build();
 
         assertEquals(expected, q);

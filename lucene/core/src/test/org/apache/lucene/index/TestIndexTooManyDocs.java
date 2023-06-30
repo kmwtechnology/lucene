@@ -67,7 +67,7 @@ public class TestIndexTooManyDocs extends LuceneTestCase {
                         try {
                           Term t = new Term("id", id);
                           if (random().nextInt(5) == 0) {
-                            writer.deleteDocuments(new TermQuery(t));
+                            writer.deleteDocuments(new TermQuery(QueryTerm.asQueryTerm(t)));
                           }
                           writer.updateDocument(t, doc);
                         } catch (IOException e) {

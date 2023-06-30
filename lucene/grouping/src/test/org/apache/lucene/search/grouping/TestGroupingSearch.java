@@ -25,7 +25,7 @@ import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.queries.function.valuesource.BytesRefFieldSource;
 import org.apache.lucene.search.IndexSearcher;
@@ -123,7 +123,8 @@ public class TestGroupingSearch extends LuceneTestCase {
     GroupingSearch groupingSearch = createRandomGroupingSearch(groupField, groupSort, 5, canUseIDV);
 
     TopGroups<?> groups =
-        groupingSearch.search(indexSearcher, new TermQuery(new Term("content", "random")), 0, 10);
+        groupingSearch.search(
+            indexSearcher, new TermQuery(new QueryTerm("content", "random", 0)), 0, 10);
 
     assertEquals(7, groups.totalHitCount);
     assertEquals(7, groups.totalGroupedHitCount);
@@ -159,10 +160,11 @@ public class TestGroupingSearch extends LuceneTestCase {
     assertEquals(1, group.scoreDocs.length);
     assertEquals(6, group.scoreDocs[0].doc);
 
-    Query lastDocInBlock = new TermQuery(new Term("groupend", "x"));
+    Query lastDocInBlock = new TermQuery(new QueryTerm("groupend", "x", 0));
     groupingSearch = new GroupingSearch(lastDocInBlock);
     groups =
-        groupingSearch.search(indexSearcher, new TermQuery(new Term("content", "random")), 0, 10);
+        groupingSearch.search(
+            indexSearcher, new TermQuery(new QueryTerm("content", "random", 0)), 0, 10);
 
     assertEquals(7, groups.totalHitCount);
     assertEquals(7, groups.totalGroupedHitCount);
@@ -240,7 +242,8 @@ public class TestGroupingSearch extends LuceneTestCase {
 
     GroupingSearch gs = new GroupingSearch("group");
     gs.setAllGroups(true);
-    TopGroups<?> groups = gs.search(indexSearcher, new TermQuery(new Term("group", "foo")), 0, 10);
+    TopGroups<?> groups =
+        gs.search(indexSearcher, new TermQuery(new QueryTerm("group", "foo", 0)), 0, 10);
     assertEquals(1, groups.totalHitCount);
     // assertEquals(1, groups.totalGroupCount.intValue());
     assertEquals(1, groups.totalGroupedHitCount);

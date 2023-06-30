@@ -27,7 +27,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.Query;
@@ -75,7 +75,7 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testBasic() throws IOException {
     QueryProfilerIndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query query = new TermQuery(new Term("foo", "bar"));
+    Query query = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.search(query, 1);
 
     List<QueryProfilerResult> results = searcher.getProfileResult();
@@ -116,10 +116,10 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testTwoQueries() throws IOException {
     QueryProfilerIndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query firstQuery = new TermQuery(new Term("foo", "bar"));
+    Query firstQuery = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.search(firstQuery, 1);
 
-    Query secondQuery = new TermQuery(new Term("foo", "baz"));
+    Query secondQuery = new TermQuery(new QueryTerm("foo", "baz", 0));
     searcher.search(secondQuery, 1);
 
     List<QueryProfilerResult> results = searcher.getProfileResult();
@@ -139,7 +139,7 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testNoCaching() throws IOException {
     IndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query query = new TermQuery(new Term("foo", "bar"));
+    Query query = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.search(query, 1);
 
     LRUQueryCache cache = (LRUQueryCache) searcher.getQueryCache();
@@ -151,7 +151,7 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testNoScoring() throws IOException {
     QueryProfilerIndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query query = new TermQuery(new Term("foo", "bar"));
+    Query query = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.search(query, 1, Sort.INDEXORDER); // scores are not needed
 
     List<QueryProfilerResult> results = searcher.getProfileResult();
@@ -191,7 +191,7 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testUseIndexStats() throws IOException {
     QueryProfilerIndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query query = new TermQuery(new Term("foo", "bar"));
+    Query query = new TermQuery(new QueryTerm("foo", "bar", 0));
     searcher.count(query); // will use index stats
 
     List<QueryProfilerResult> results = searcher.getProfileResult();
@@ -232,7 +232,8 @@ public class TestQueryProfilerIndexSearcher extends LuceneTestCase {
 
   public void testApproximations() throws IOException {
     QueryProfilerIndexSearcher searcher = new QueryProfilerIndexSearcher(reader);
-    Query query = new RandomApproximationQuery(new TermQuery(new Term("foo", "bar")), random());
+    Query query =
+        new RandomApproximationQuery(new TermQuery(new QueryTerm("foo", "bar", 0)), random());
     searcher.count(query);
     List<QueryProfilerResult> results = searcher.getProfileResult();
     assertEquals(1, results.size());

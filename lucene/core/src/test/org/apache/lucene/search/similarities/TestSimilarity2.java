@@ -25,7 +25,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Explanation;
@@ -90,7 +90,7 @@ public class TestSimilarity2 extends LuceneTestCase {
 
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
-      assertEquals(0, is.search(new TermQuery(new Term("foo", "bar")), 10).totalHits.value);
+      assertEquals(0, is.search(new TermQuery(new QueryTerm("foo", "bar", 0)), 10).totalHits.value);
     }
     ir.close();
     dir.close();
@@ -110,8 +110,8 @@ public class TestSimilarity2 extends LuceneTestCase {
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
       BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-      query.add(new TermQuery(new Term("bar", "baz")), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("bar", "baz", 0)), BooleanClause.Occur.SHOULD);
       assertEquals(1, is.search(query.build(), 10).totalHits.value);
     }
     ir.close();
@@ -134,8 +134,8 @@ public class TestSimilarity2 extends LuceneTestCase {
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
       BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-      query.add(new TermQuery(new Term("foo", "baz")), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "baz", 0)), BooleanClause.Occur.SHOULD);
       assertEquals(1, is.search(query.build(), 10).totalHits.value);
     }
     ir.close();
@@ -159,7 +159,7 @@ public class TestSimilarity2 extends LuceneTestCase {
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
       BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
       assertEquals(1, is.search(query.build(), 10).totalHits.value);
     }
     ir.close();
@@ -179,8 +179,8 @@ public class TestSimilarity2 extends LuceneTestCase {
     IndexSearcher is = newSearcher(ir);
 
     BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-    queryBuilder.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
-    queryBuilder.add(new TermQuery(new Term("foo", "baz")), BooleanClause.Occur.SHOULD);
+    queryBuilder.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
+    queryBuilder.add(new TermQuery(new QueryTerm("foo", "baz", 0)), BooleanClause.Occur.SHOULD);
     Query query = queryBuilder.build();
 
     // collect scores
@@ -233,7 +233,7 @@ public class TestSimilarity2 extends LuceneTestCase {
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
       BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
       assertEquals(1, is.search(query.build(), 10).totalHits.value);
     }
     ir.close();
@@ -259,7 +259,7 @@ public class TestSimilarity2 extends LuceneTestCase {
     for (Similarity sim : sims) {
       is.setSimilarity(sim);
       BooleanQuery.Builder query = new BooleanQuery.Builder();
-      query.add(new TermQuery(new Term("foo", "bar")), BooleanClause.Occur.SHOULD);
+      query.add(new TermQuery(new QueryTerm("foo", "bar", 0)), BooleanClause.Occur.SHOULD);
       assertEquals(1, is.search(query.build(), 10).totalHits.value);
     }
     ir.close();

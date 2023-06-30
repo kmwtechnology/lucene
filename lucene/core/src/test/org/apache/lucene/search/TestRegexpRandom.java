@@ -25,7 +25,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -88,7 +88,7 @@ public class TestRegexpRandom extends LuceneTestCase {
   }
 
   private void assertPatternHits(String pattern, int numHits) throws Exception {
-    Query wq = new RegexpQuery(new Term("field", fillPattern(pattern)));
+    Query wq = new RegexpQuery(new QueryTerm("field", fillPattern(pattern), 0));
     TopDocs docs = searcher.search(wq, 25);
     assertEquals("Incorrect hits for pattern: " + pattern, numHits, docs.totalHits.value);
   }

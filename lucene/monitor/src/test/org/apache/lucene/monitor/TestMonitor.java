@@ -28,7 +28,7 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -43,7 +43,7 @@ public class TestMonitor extends MonitorTestBase {
     doc.add(newTextField(FIELD, "This is a test document", Field.Store.NO));
 
     try (Monitor monitor = newMonitor()) {
-      monitor.register(new MonitorQuery("query1", new TermQuery(new Term(FIELD, "test"))));
+      monitor.register(new MonitorQuery("query1", new TermQuery(new QueryTerm(FIELD, "test", 0))));
 
       MatchingQueries<QueryMatch> matches = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
       assertNotNull(matches.getMatches());
@@ -59,7 +59,8 @@ public class TestMonitor extends MonitorTestBase {
 
     try (Monitor monitor = newMonitor()) {
       monitor.register(
-          new MonitorQuery("query1", new TermQuery(new Term(MonitorTestBase.FIELD, "test"))));
+          new MonitorQuery(
+              "query1", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "test", 0))));
 
       MatchingQueries<QueryMatch> matches = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
       assertEquals(1, matches.getQueriesRun());
@@ -75,9 +76,11 @@ public class TestMonitor extends MonitorTestBase {
 
     try (Monitor monitor = newMonitor()) {
       monitor.register(
-          new MonitorQuery("query1", new TermQuery(new Term(MonitorTestBase.FIELD, "this"))));
+          new MonitorQuery(
+              "query1", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "this", 0))));
       monitor.register(
-          new MonitorQuery("query1", new TermQuery(new Term(MonitorTestBase.FIELD, "that"))));
+          new MonitorQuery(
+              "query1", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "that", 0))));
 
       MatchingQueries<QueryMatch> matches = monitor.match(doc, QueryMatch.SIMPLE_MATCHER);
       assertNotNull(matches.matches("query1"));
@@ -92,10 +95,13 @@ public class TestMonitor extends MonitorTestBase {
 
     try (Monitor monitor = newMonitor()) {
       monitor.register(
-          new MonitorQuery("query1", new TermQuery(new Term(MonitorTestBase.FIELD, "this"))));
+          new MonitorQuery(
+              "query1", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "this", 0))));
       monitor.register(
-          new MonitorQuery("query2", new TermQuery(new Term(MonitorTestBase.FIELD, "that"))),
-          new MonitorQuery("query3", new TermQuery(new Term(MonitorTestBase.FIELD, "other"))));
+          new MonitorQuery(
+              "query2", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "that", 0))),
+          new MonitorQuery(
+              "query3", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "other", 0))));
       assertEquals(3, monitor.getQueryCount());
 
       monitor.deleteById("query2", "query1");
@@ -202,7 +208,8 @@ public class TestMonitor extends MonitorTestBase {
 
     try (Monitor monitor = new Monitor(ANALYZER)) {
       monitor.register(
-          new MonitorQuery("1", new TermQuery(new Term(MonitorTestBase.FIELD, "kangaroo"))));
+          new MonitorQuery(
+              "1", new TermQuery(new QueryTerm(MonitorTestBase.FIELD, "kangaroo", 0))));
 
       MultiMatchingQueries<QueryMatch> response =
           monitor.match(new Document[] {doc1, doc2}, QueryMatch.SIMPLE_MATCHER);

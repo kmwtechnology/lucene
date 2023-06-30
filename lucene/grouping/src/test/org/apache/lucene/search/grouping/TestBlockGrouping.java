@@ -25,7 +25,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldDoc;
@@ -47,11 +47,11 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
     indexRandomDocs(shard.writer);
     IndexSearcher searcher = shard.getIndexSearcher();
 
-    Query blockEndQuery = new TermQuery(new Term("blockEnd", "true"));
+    Query blockEndQuery = new TermQuery(new QueryTerm("blockEnd", "true", 0));
     GroupingSearch grouper = new GroupingSearch(blockEndQuery);
     grouper.setGroupDocsLimit(10);
 
-    Query topLevel = new TermQuery(new Term("text", "grandmother"));
+    Query topLevel = new TermQuery(new QueryTerm("text", "grandmother", 0));
     TopGroups<?> tg = grouper.search(searcher, topLevel, 0, 5);
 
     // We're sorting by score, so the score of the top group should be the same as the
@@ -67,7 +67,7 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
       Query filtered =
           new BooleanQuery.Builder()
               .add(topLevel, BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term("book", bookName)), BooleanClause.Occur.FILTER)
+              .add(new TermQuery(new QueryTerm("book", bookName, 0)), BooleanClause.Occur.FILTER)
               .build();
       TopDocs td = searcher.search(filtered, 10);
       assertScoreDocsEquals(td.scoreDocs, tg.groups[i].scoreDocs);
@@ -84,13 +84,13 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
 
     Sort sort = new Sort(new SortField("length", SortField.Type.LONG));
 
-    Query blockEndQuery = new TermQuery(new Term("blockEnd", "true"));
+    Query blockEndQuery = new TermQuery(new QueryTerm("blockEnd", "true", 0));
     GroupingSearch grouper = new GroupingSearch(blockEndQuery);
     grouper.setGroupDocsLimit(10);
     // groups returned sorted by length, chapters within group sorted by relevancy
     grouper.setGroupSort(sort);
 
-    Query topLevel = new TermQuery(new Term("text", "grandmother"));
+    Query topLevel = new TermQuery(new QueryTerm("text", "grandmother", 0));
     TopGroups<?> tg = grouper.search(searcher, topLevel, 0, 5);
 
     // The sort value of the top doc in the top group should be the same as the sort value
@@ -105,7 +105,7 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
       Query filtered =
           new BooleanQuery.Builder()
               .add(topLevel, BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term("book", bookName)), BooleanClause.Occur.FILTER)
+              .add(new TermQuery(new QueryTerm("book", bookName, 0)), BooleanClause.Occur.FILTER)
               .build();
       TopDocs td = searcher.search(filtered, 10);
       assertScoreDocsEquals(td.scoreDocs, tg.groups[i].scoreDocs);
@@ -125,13 +125,13 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
 
     Sort sort = new Sort(new SortField("length", SortField.Type.LONG));
 
-    Query blockEndQuery = new TermQuery(new Term("blockEnd", "true"));
+    Query blockEndQuery = new TermQuery(new QueryTerm("blockEnd", "true", 0));
     GroupingSearch grouper = new GroupingSearch(blockEndQuery);
     grouper.setGroupDocsLimit(10);
     // groups returned sorted by relevancy, chapters within group sorted by length
     grouper.setSortWithinGroup(sort);
 
-    Query topLevel = new TermQuery(new Term("text", "grandmother"));
+    Query topLevel = new TermQuery(new QueryTerm("text", "grandmother", 0));
     TopGroups<?> tg = grouper.search(searcher, topLevel, 0, 5);
 
     // We're sorting by score, so the score of the top group should be the same as the
@@ -146,7 +146,7 @@ public class TestBlockGrouping extends AbstractGroupingTestCase {
       Query filtered =
           new BooleanQuery.Builder()
               .add(topLevel, BooleanClause.Occur.MUST)
-              .add(new TermQuery(new Term("book", bookName)), BooleanClause.Occur.FILTER)
+              .add(new TermQuery(new QueryTerm("book", bookName, 0)), BooleanClause.Occur.FILTER)
               .build();
       TopDocs td = searcher.search(filtered, 10, sort);
       assertFieldDocsEquals(td.scoreDocs, tg.groups[i].scoreDocs);

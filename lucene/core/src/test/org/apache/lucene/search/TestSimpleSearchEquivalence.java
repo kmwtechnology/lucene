@@ -17,7 +17,7 @@
 package org.apache.lucene.search;
 
 import java.util.Arrays;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.tests.search.AssertingQuery;
 import org.apache.lucene.tests.search.SearchEquivalenceTestBase;
@@ -31,8 +31,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** A ⊆ (A B) */
   public void testTermVersusBooleanOr() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     BooleanQuery.Builder q2 = new BooleanQuery.Builder();
     q2.add(new TermQuery(t1), Occur.SHOULD);
@@ -42,8 +42,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** A ⊆ (+A B) */
   public void testTermVersusBooleanReqOpt() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     TermQuery q1 = new TermQuery(t1);
     BooleanQuery.Builder q2 = new BooleanQuery.Builder();
     q2.add(new TermQuery(t1), Occur.MUST);
@@ -53,8 +53,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** (A -B) ⊆ A */
   public void testBooleanReqExclVersusTerm() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     BooleanQuery.Builder q1 = new BooleanQuery.Builder();
     q1.add(new TermQuery(t1), Occur.MUST);
     q1.add(new TermQuery(t2), Occur.MUST_NOT);
@@ -64,8 +64,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** (+A +B) ⊆ (A B) */
   public void testBooleanAndVersusBooleanOr() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     BooleanQuery.Builder q1 = new BooleanQuery.Builder();
     q1.add(new TermQuery(t1), Occur.SHOULD);
     q1.add(new TermQuery(t2), Occur.SHOULD);
@@ -77,8 +77,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** (A B) = (A | B) */
   public void testDisjunctionSumVersusDisjunctionMax() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     BooleanQuery.Builder q1 = new BooleanQuery.Builder();
     q1.add(new TermQuery(t1), Occur.SHOULD);
     q1.add(new TermQuery(t2), Occur.SHOULD);
@@ -89,9 +89,9 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** "A B" ⊆ (+A +B) */
   public void testExactPhraseVersusBooleanAnd() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
-    PhraseQuery q1 = new PhraseQuery(t1.field(), t1.bytes(), t2.bytes());
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
+    PhraseQuery q1 = new PhraseQuery(t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
     BooleanQuery.Builder q2 = new BooleanQuery.Builder();
     q2.add(new TermQuery(t1), Occur.MUST);
     q2.add(new TermQuery(t2), Occur.MUST);
@@ -100,8 +100,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** same as above, with posincs */
   public void testExactPhraseVersusBooleanAndWithHoles() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.add(t1, 0);
     builder.add(t2, 2);
@@ -114,17 +114,17 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** "A B" ⊆ "A B"~1 */
   public void testPhraseVersusSloppyPhrase() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
-    PhraseQuery q1 = new PhraseQuery(t1.field(), t1.bytes(), t2.bytes());
-    PhraseQuery q2 = new PhraseQuery(1, t1.field(), t1.bytes(), t2.bytes());
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
+    PhraseQuery q1 = new PhraseQuery(t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
+    PhraseQuery q2 = new PhraseQuery(1, t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
     assertSubsetOf(q1, q2);
   }
 
   /** same as above, with posincs */
   public void testPhraseVersusSloppyPhraseWithHoles() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.add(t1, 0);
     builder.add(t2, 2);
@@ -136,41 +136,42 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** "A B" ⊆ "A (B C)" */
   public void testExactPhraseVersusMultiPhrase() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
-    PhraseQuery q1 = new PhraseQuery(t1.field(), t1.bytes(), t2.bytes());
-    Term t3 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
+    PhraseQuery q1 = new PhraseQuery(t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
+    QueryTerm t3 = randomTerm();
     MultiPhraseQuery.Builder q2b = new MultiPhraseQuery.Builder();
     q2b.add(t1);
-    q2b.add(new Term[] {t2, t3});
+    q2b.add(new QueryTerm[] {t2, t3});
     assertSubsetOf(q1, q2b.build());
   }
 
   /** same as above, with posincs */
   public void testExactPhraseVersusMultiPhraseWithHoles() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.add(t1, 0);
     builder.add(t2, 2);
     PhraseQuery q1 = builder.build();
-    Term t3 = randomTerm();
+    QueryTerm t3 = randomTerm();
     MultiPhraseQuery.Builder q2b = new MultiPhraseQuery.Builder();
     q2b.add(t1);
-    q2b.add(new Term[] {t2, t3}, 2);
+    q2b.add(new QueryTerm[] {t2, t3}, 2);
     assertSubsetOf(q1, q2b.build());
   }
 
   /** "A B"~∞ = +A +B if A != B */
   public void testSloppyPhraseVersusBooleanAnd() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = null;
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = null;
     // semantics differ from SpanNear: SloppyPhrase handles repeats,
     // so we must ensure t1 != t2
     do {
       t2 = randomTerm();
     } while (t1.equals(t2));
-    PhraseQuery q1 = new PhraseQuery(Integer.MAX_VALUE, t1.field(), t1.bytes(), t2.bytes());
+    PhraseQuery q1 =
+        new PhraseQuery(Integer.MAX_VALUE, t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
     BooleanQuery.Builder q2 = new BooleanQuery.Builder();
     q2.add(new TermQuery(t1), Occur.MUST);
     q2.add(new TermQuery(t2), Occur.MUST);
@@ -179,9 +180,9 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** Phrase positions are relative. */
   public void testPhraseRelativePositions() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
-    PhraseQuery q1 = new PhraseQuery(t1.field(), t1.bytes(), t2.bytes());
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
+    PhraseQuery q1 = new PhraseQuery(t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.add(t1, 10000);
     builder.add(t2, 10001);
@@ -191,9 +192,9 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
 
   /** Sloppy-phrase positions are relative. */
   public void testSloppyPhraseRelativePositions() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
-    PhraseQuery q1 = new PhraseQuery(2, t1.field(), t1.bytes(), t2.bytes());
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
+    PhraseQuery q1 = new PhraseQuery(2, t1.field(), new int[] {0, 0}, t1.bytes(), t2.bytes());
     PhraseQuery.Builder builder = new PhraseQuery.Builder();
     builder.add(t1, 10000);
     builder.add(t2, 10001);
@@ -205,7 +206,7 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
   public void testBoostQuerySimplification() throws Exception {
     float b1 = random().nextFloat() * 10;
     float b2 = random().nextFloat() * 10;
-    Term term = randomTerm();
+    QueryTerm term = randomTerm();
 
     Query q1 = new BoostQuery(new BoostQuery(new TermQuery(term), b2), b1);
     // Use AssertingQuery to prevent BoostQuery from merging inner and outer boosts
@@ -229,8 +230,8 @@ public class TestSimpleSearchEquivalence extends SearchEquivalenceTestBase {
   }
 
   public void testBooleanOrVsSynonym() throws Exception {
-    Term t1 = randomTerm();
-    Term t2 = randomTerm();
+    QueryTerm t1 = randomTerm();
+    QueryTerm t2 = randomTerm();
     assertEquals(t1.field(), t2.field());
     SynonymQuery q1 = new SynonymQuery.Builder(t1.field()).addTerm(t1).addTerm(t2).build();
     BooleanQuery.Builder q2 = new BooleanQuery.Builder();

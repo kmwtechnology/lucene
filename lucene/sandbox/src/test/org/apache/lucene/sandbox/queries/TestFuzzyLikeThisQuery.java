@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -84,9 +85,10 @@ public class TestFuzzyLikeThisQuery extends LuceneTestCase {
     Query q = flt.rewrite(searcher.getIndexReader());
     HashSet<Term> queryTerms = new HashSet<>();
     q.visit(QueryVisitor.termCollector(queryTerms));
-    assertTrue("Should have variant smythe", queryTerms.contains(new Term("name", "smythe")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
-    assertTrue("Should have variant smyth", queryTerms.contains(new Term("name", "smyth")));
+    assertTrue(
+        "Should have variant smythe", queryTerms.contains(new QueryTerm("name", "smythe", 0)));
+    assertTrue("Should have variant smith", queryTerms.contains(new QueryTerm("name", "smith", 0)));
+    assertTrue("Should have variant smyth", queryTerms.contains(new QueryTerm("name", "smyth", 0)));
     TopDocs topDocs = searcher.search(flt, 1);
     ScoreDoc[] sd = topDocs.scoreDocs;
     assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
@@ -101,8 +103,9 @@ public class TestFuzzyLikeThisQuery extends LuceneTestCase {
     Query q = flt.rewrite(searcher.getIndexReader());
     HashSet<Term> queryTerms = new HashSet<>();
     q.visit(QueryVisitor.termCollector(queryTerms));
-    assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+    assertTrue(
+        "Should have variant jonathan", queryTerms.contains(new QueryTerm("name", "jonathan", 0)));
+    assertTrue("Should have variant smith", queryTerms.contains(new QueryTerm("name", "smith", 0)));
     TopDocs topDocs = searcher.search(flt, 1);
     ScoreDoc[] sd = topDocs.scoreDocs;
     assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
@@ -119,8 +122,9 @@ public class TestFuzzyLikeThisQuery extends LuceneTestCase {
     Query q = flt.rewrite(searcher.getIndexReader());
     HashSet<Term> queryTerms = new HashSet<>();
     q.visit(QueryVisitor.termCollector(queryTerms));
-    assertTrue("Should have variant jonathan", queryTerms.contains(new Term("name", "jonathan")));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+    assertTrue(
+        "Should have variant jonathan", queryTerms.contains(new QueryTerm("name", "jonathan", 0)));
+    assertTrue("Should have variant smith", queryTerms.contains(new QueryTerm("name", "smith", 0)));
     TopDocs topDocs = searcher.search(flt, 1);
     ScoreDoc[] sd = topDocs.scoreDocs;
     assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));
@@ -135,7 +139,7 @@ public class TestFuzzyLikeThisQuery extends LuceneTestCase {
     Query q = flt.rewrite(searcher.getIndexReader());
     HashSet<Term> queryTerms = new HashSet<>();
     q.visit(QueryVisitor.termCollector(queryTerms));
-    assertTrue("Should have variant smith", queryTerms.contains(new Term("name", "smith")));
+    assertTrue("Should have variant smith", queryTerms.contains(new QueryTerm("name", "smith", 0)));
     TopDocs topDocs = searcher.search(flt, 1);
     ScoreDoc[] sd = topDocs.scoreDocs;
     assertTrue("score docs must match 1 doc", (sd != null) && (sd.length > 0));

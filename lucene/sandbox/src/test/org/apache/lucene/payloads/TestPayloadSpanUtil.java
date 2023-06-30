@@ -31,7 +31,7 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
@@ -63,7 +63,8 @@ public class TestPayloadSpanUtil extends LuceneTestCase {
 
     PayloadSpanUtil psu = new PayloadSpanUtil(searcher.getTopReaderContext());
 
-    Collection<byte[]> payloads = psu.getPayloadsForQuery(new TermQuery(new Term(FIELD, "rr")));
+    Collection<byte[]> payloads =
+        psu.getPayloadsForQuery(new TermQuery(new QueryTerm(FIELD, "rr", 0)));
     if (VERBOSE) {
       System.out.println("Num payloads:" + payloads.size());
       for (final byte[] bytes : payloads) {

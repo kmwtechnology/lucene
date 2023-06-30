@@ -24,7 +24,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.search.CheckHits;
@@ -129,7 +129,7 @@ public class TestLongValuesSource extends LuceneTestCase {
     for (int i = 0; i < n; i++) {
       Sort sort = randomSort();
       checkSorts(new MatchAllDocsQuery(), sort);
-      checkSorts(new TermQuery(new Term("english", "one")), sort);
+      checkSorts(new TermQuery(new QueryTerm("english", "one", 0)), sort);
     }
   }
 

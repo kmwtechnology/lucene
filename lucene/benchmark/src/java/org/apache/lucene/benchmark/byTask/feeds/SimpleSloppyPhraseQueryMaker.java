@@ -18,7 +18,7 @@ package org.apache.lucene.benchmark.byTask.feeds;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 
@@ -51,7 +51,7 @@ public class SimpleSloppyPhraseQueryMaker extends SimpleQueryMaker {
           int wind = wd;
           PhraseQuery.Builder builder = new PhraseQuery.Builder();
           for (int i = 0; i < qlen; i++) {
-            builder.add(new Term(DocMaker.BODY_FIELD, words[wind++]), i);
+            builder.add(new QueryTerm(DocMaker.BODY_FIELD, words[wind++], 0), i);
             if (remainedSlop > 0) {
               remainedSlop--;
               wind++;
@@ -65,7 +65,7 @@ public class SimpleSloppyPhraseQueryMaker extends SimpleQueryMaker {
           wind = wd + qlen + remainedSlop - 1;
           builder = new PhraseQuery.Builder();
           for (int i = 0; i < qlen; i++) {
-            builder.add(new Term(DocMaker.BODY_FIELD, words[wind--]), i);
+            builder.add(new QueryTerm(DocMaker.BODY_FIELD, words[wind--], 0), i);
             if (remainedSlop > 0) {
               remainedSlop--;
               wind--;

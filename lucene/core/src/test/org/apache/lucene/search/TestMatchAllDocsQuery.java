@@ -23,6 +23,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -70,7 +71,7 @@ public class TestMatchAllDocsQuery extends LuceneTestCase {
 
     bq = new BooleanQuery.Builder();
     bq.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-    bq.add(new TermQuery(new Term("key", "three")), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new QueryTerm("key", "three", 0)), BooleanClause.Occur.MUST);
     hits = is.search(bq.build(), 1000).scoreDocs;
     assertEquals(1, hits.length);
 

@@ -30,6 +30,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.PrefixCodedTerms;
 import org.apache.lucene.index.PrefixCodedTerms.TermIterator;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
@@ -120,7 +121,9 @@ public class TermInSetQuery extends Query implements Accountable {
       BooleanQuery.Builder bq = new BooleanQuery.Builder();
       TermIterator iterator = termData.iterator();
       for (BytesRef term = iterator.next(); term != null; term = iterator.next()) {
-        bq.add(new TermQuery(new Term(iterator.field(), BytesRef.deepCopyOf(term))), Occur.SHOULD);
+        bq.add(
+            new TermQuery(new QueryTerm(iterator.field(), BytesRef.deepCopyOf(term), 0)),
+            Occur.SHOULD);
       }
       return new ConstantScoreQuery(bq.build());
     }
@@ -287,7 +290,7 @@ public class TermInSetQuery extends Query implements Accountable {
                   termsEnum.termState(), context.ord, docFreq, termsEnum.totalTermFreq());
               Query q =
                   new ConstantScoreQuery(
-                      new TermQuery(new Term(field, termsEnum.term()), termStates));
+                      new TermQuery(new QueryTerm(field, termsEnum.term(), 0), termStates));
               Weight weight = searcher.rewrite(q).createWeight(searcher, scoreMode, score());
               return new WeightOrDocIdSet(weight);
             }
@@ -318,7 +321,7 @@ public class TermInSetQuery extends Query implements Accountable {
           for (TermAndState t : matchingTerms) {
             final TermStates termStates = new TermStates(searcher.getTopReaderContext());
             termStates.register(t.state, context.ord, t.docFreq, t.totalTermFreq);
-            bq.add(new TermQuery(new Term(t.field, t.term), termStates), Occur.SHOULD);
+            bq.add(new TermQuery(new QueryTerm(t.field, t.term, 0), termStates), Occur.SHOULD);
           }
           Query q = new ConstantScoreQuery(bq.build());
           final Weight weight = searcher.rewrite(q).createWeight(searcher, scoreMode, score());

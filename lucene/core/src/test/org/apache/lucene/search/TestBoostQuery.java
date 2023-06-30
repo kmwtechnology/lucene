@@ -18,7 +18,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.tests.util.LuceneTestCase;
 
@@ -60,11 +60,12 @@ public class TestBoostQuery extends LuceneTestCase {
 
   public void testToString() {
     assertEquals(
-        "(foo:bar)^2.0", new BoostQuery(new TermQuery(new Term("foo", "bar")), 2).toString());
+        "(foo:bar)^2.0",
+        new BoostQuery(new TermQuery(new QueryTerm("foo", "bar", 0)), 2).toString());
     BooleanQuery bq =
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("foo", "bar")), Occur.SHOULD)
-            .add(new TermQuery(new Term("foo", "baz")), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "bar", 0)), Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm("foo", "baz", 0)), Occur.SHOULD)
             .build();
     assertEquals("(foo:bar foo:baz)^2.0", new BoostQuery(bq, 2).toString());
   }
@@ -73,8 +74,9 @@ public class TestBoostQuery extends LuceneTestCase {
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
 
     // inner queries are rewritten
-    Query q = new BoostQuery(new PhraseQuery("foo", "bar"), 2);
-    assertEquals(new BoostQuery(new TermQuery(new Term("foo", "bar")), 2), searcher.rewrite(q));
+    Query q = new BoostQuery(new PhraseQuery("foo", new int[] {0}, "bar"), 2);
+    assertEquals(
+        new BoostQuery(new TermQuery(new QueryTerm("foo", "bar", 0)), 2), searcher.rewrite(q));
 
     // boosts are merged
     q = new BoostQuery(new BoostQuery(new MatchAllDocsQuery(), 3), 2);

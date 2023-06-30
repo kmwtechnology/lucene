@@ -16,7 +16,7 @@
  */
 package org.apache.lucene.search.vectorhighlight;
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -26,8 +26,8 @@ public class TestScoreOrderFragmentsBuilder extends AbstractTestCase {
 
   public void test3Frags() throws Exception {
     BooleanQuery.Builder query = new BooleanQuery.Builder();
-    query.add(new TermQuery(new Term(F, "a")), BooleanClause.Occur.SHOULD);
-    query.add(new TermQuery(new Term(F, "c")), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F, "a", 0)), BooleanClause.Occur.SHOULD);
+    query.add(new TermQuery(new QueryTerm(F, "c", 0)), BooleanClause.Occur.SHOULD);
 
     FieldFragList ffl = ffl(query.build(), "a b b b b b b b b b b b a b a b b b b b c a a b b");
     ScoreOrderFragmentsBuilder sofb = new ScoreOrderFragmentsBuilder();

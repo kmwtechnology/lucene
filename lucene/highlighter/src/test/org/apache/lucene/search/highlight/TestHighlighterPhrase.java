@@ -29,7 +29,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanNearQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanTermQuery;
@@ -71,7 +71,7 @@ public class TestHighlighterPhrase extends LuceneTestCase {
     try {
       assertEquals(1, indexReader.numDocs());
       final IndexSearcher indexSearcher = newSearcher(indexReader);
-      final PhraseQuery phraseQuery = new PhraseQuery(FIELD, "fox", "jumped");
+      final PhraseQuery phraseQuery = new PhraseQuery(FIELD, new int[] {0, 0}, "fox", "jumped");
       TopDocs hits = indexSearcher.search(phraseQuery, 1);
       assertEquals(1, hits.totalHits.value);
       final Highlighter highlighter =
@@ -115,8 +115,8 @@ public class TestHighlighterPhrase extends LuceneTestCase {
       final Query phraseQuery =
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term(FIELD, "fox")),
-                new SpanTermQuery(new Term(FIELD, "jumped"))
+                new SpanTermQuery(new QueryTerm(FIELD, "fox", 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, "jumped", 0))
               },
               0,
               true);
@@ -168,7 +168,7 @@ public class TestHighlighterPhrase extends LuceneTestCase {
     try {
       assertEquals(1, indexReader.numDocs());
       final IndexSearcher indexSearcher = newSearcher(indexReader);
-      final PhraseQuery phraseQuery = new PhraseQuery(FIELD, "did", "jump");
+      final PhraseQuery phraseQuery = new PhraseQuery(FIELD, new int[] {0, 0}, "did", "jump");
       TopDocs hits = indexSearcher.search(phraseQuery, 1);
       assertEquals(0, hits.totalHits.value);
       final Highlighter highlighter =
@@ -207,7 +207,7 @@ public class TestHighlighterPhrase extends LuceneTestCase {
     try {
       assertEquals(1, indexReader.numDocs());
       final IndexSearcher indexSearcher = newSearcher(indexReader);
-      final PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, "did", "jump");
+      final PhraseQuery phraseQuery = new PhraseQuery(1, FIELD, new int[] {0, 0}, "did", "jump");
       TopDocs hits = indexSearcher.search(phraseQuery, 1);
       assertEquals(1, hits.totalHits.value);
       final Highlighter highlighter =
@@ -248,8 +248,8 @@ public class TestHighlighterPhrase extends LuceneTestCase {
       final Query phraseQuery =
           new SpanNearQuery(
               new SpanQuery[] {
-                new SpanTermQuery(new Term(FIELD, "did")),
-                new SpanTermQuery(new Term(FIELD, "jump"))
+                new SpanTermQuery(new QueryTerm(FIELD, "did", 0)),
+                new SpanTermQuery(new QueryTerm(FIELD, "jump", 0))
               },
               0,
               true);
@@ -287,9 +287,9 @@ public class TestHighlighterPhrase extends LuceneTestCase {
       // equivalent of "ab the the cd the the the ef"
       final PhraseQuery phraseQuery =
           new PhraseQuery.Builder()
-              .add(new Term(FIELD, "ab"), 0)
-              .add(new Term(FIELD, "cd"), 3)
-              .add(new Term(FIELD, "ef"), 7)
+              .add(new QueryTerm(FIELD, "ab", 0), 0)
+              .add(new QueryTerm(FIELD, "cd", 0), 3)
+              .add(new QueryTerm(FIELD, "ef", 0), 7)
               .build();
 
       TopDocs hits = indexSearcher.search(phraseQuery, 100);
@@ -321,8 +321,8 @@ public class TestHighlighterPhrase extends LuceneTestCase {
       // equivalent of "ab the cd"
       final PhraseQuery phraseQuery =
           new PhraseQuery.Builder()
-              .add(new Term(FIELD, "ab"), 0)
-              .add(new Term(FIELD, "cd"), 2)
+              .add(new QueryTerm(FIELD, "ab", 0), 0)
+              .add(new QueryTerm(FIELD, "cd", 0), 2)
               .build();
 
       TopDocs hits = indexSearcher.search(phraseQuery, 100);

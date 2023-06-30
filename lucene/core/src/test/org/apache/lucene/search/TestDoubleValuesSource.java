@@ -28,7 +28,7 @@ import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.search.CheckHits;
@@ -158,7 +158,7 @@ public class TestDoubleValuesSource extends LuceneTestCase {
     for (int i = 0; i < n; i++) {
       Sort sort = randomSort();
       checkSorts(new MatchAllDocsQuery(), sort);
-      checkSorts(new TermQuery(new Term("english", "one")), sort);
+      checkSorts(new TermQuery(new QueryTerm("english", "one", 0)), sort);
     }
   }
 
@@ -235,16 +235,17 @@ public class TestDoubleValuesSource extends LuceneTestCase {
   static final Query[] testQueries =
       new Query[] {
         new MatchAllDocsQuery(),
-        new TermQuery(new Term("oddeven", "odd")),
+        new TermQuery(new QueryTerm("oddeven", "odd", 0)),
         new BooleanQuery.Builder()
-            .add(new TermQuery(new Term("english", "one")), BooleanClause.Occur.MUST)
-            .add(new TermQuery(new Term("english", "two")), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("english", "one", 0)), BooleanClause.Occur.MUST)
+            .add(new TermQuery(new QueryTerm("english", "two", 0)), BooleanClause.Occur.MUST)
             .build()
       };
 
   public void testExplanations() throws Exception {
     for (Query q : testQueries) {
-      testExplanations(q, DoubleValuesSource.fromQuery(new TermQuery(new Term("english", "one"))));
+      testExplanations(
+          q, DoubleValuesSource.fromQuery(new TermQuery(new QueryTerm("english", "one", 0))));
       testExplanations(q, DoubleValuesSource.fromIntField("int"));
       testExplanations(q, DoubleValuesSource.fromLongField("long"));
       testExplanations(q, DoubleValuesSource.fromFloatField("float"));
@@ -306,11 +307,11 @@ public class TestDoubleValuesSource extends LuceneTestCase {
   }
 
   public void testQueryDoubleValuesSource() throws Exception {
-    Query iteratingQuery = new TermQuery(new Term("english", "two"));
+    Query iteratingQuery = new TermQuery(new QueryTerm("english", "two", 0));
     Query approximatingQuery =
         new PhraseQuery.Builder()
-            .add(new Term("english", "hundred"), 0)
-            .add(new Term("english", "one"), 1)
+            .add(new QueryTerm("english", "hundred", 0), 0)
+            .add(new QueryTerm("english", "one", 0), 1)
             .build();
 
     doTestQueryDoubleValuesSources(iteratingQuery);

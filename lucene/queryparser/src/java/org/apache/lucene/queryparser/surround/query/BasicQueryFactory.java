@@ -24,7 +24,7 @@ package org.apache.lucene.queryparser.surround.query;
  * Default is 1024, the same as the max. number of subqueries for a BooleanQuery.
  */
 
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.spans.SpanTermQuery;
 import org.apache.lucene.search.TermQuery;
 
@@ -69,12 +69,12 @@ public class BasicQueryFactory {
     queriesMade++;
   }
 
-  public TermQuery newTermQuery(Term term) throws TooManyBasicQueries {
+  public TermQuery newTermQuery(QueryTerm term) throws TooManyBasicQueries {
     checkMax();
     return new TermQuery(term);
   }
 
-  public SpanTermQuery newSpanTermQuery(Term term) throws TooManyBasicQueries {
+  public SpanTermQuery newSpanTermQuery(QueryTerm term) throws TooManyBasicQueries {
     checkMax();
     return new SpanTermQuery(term);
   }

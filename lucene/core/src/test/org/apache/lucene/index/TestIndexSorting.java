@@ -1772,7 +1772,7 @@ public class TestIndexSorting extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     StoredFields storedFields = reader.storedFields();
     for (int i = 0; i < numDocs; ++i) {
-      TermQuery termQuery = new TermQuery(new Term("id", Integer.toString(i)));
+      TermQuery termQuery = new TermQuery(new QueryTerm("id", Integer.toString(i), 0));
       final TopDocs topDocs = searcher.search(termQuery, 1);
       if (deleted.get(i)) {
         assertEquals(0, topDocs.totalHits.value);
@@ -1824,7 +1824,7 @@ public class TestIndexSorting extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     StoredFields storedFields = reader.storedFields();
     for (int i = 0; i < numDocs; ++i) {
-      TermQuery termQuery = new TermQuery(new Term("id", Integer.toString(i)));
+      TermQuery termQuery = new TermQuery(new QueryTerm("id", Integer.toString(i), 0));
       final TopDocs topDocs = searcher.search(termQuery, 1);
       if (deleted.get(i)) {
         assertEquals(0, topDocs.totalHits.value);
@@ -1930,7 +1930,7 @@ public class TestIndexSorting extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     for (int i = 0; i < numDocs; ++i) {
       final TopDocs topDocs =
-          searcher.search(new TermQuery(new Term("id", Integer.toString(i))), 1);
+          searcher.search(new TermQuery(new QueryTerm("id", Integer.toString(i), 0)), 1);
       if (values.containsKey(i) == false) {
         assertEquals(0, topDocs.totalHits.value);
       } else {
@@ -2068,7 +2068,7 @@ public class TestIndexSorting extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     for (int i = 0; i < numDocs; ++i) {
       final TopDocs topDocs =
-          searcher.search(new TermQuery(new Term("id", Integer.toString(i))), 1);
+          searcher.search(new TermQuery(new QueryTerm("id", Integer.toString(i), 0)), 1);
       assertEquals(1, topDocs.totalHits.value);
       NumericDocValues dvs = MultiDocValues.getNumericValues(reader, "bar");
       int hitDoc = topDocs.scoreDocs[0].doc;
@@ -2166,7 +2166,7 @@ public class TestIndexSorting extends LuceneTestCase {
     final IndexSearcher searcher = newSearcher(reader);
     final IndexSearcher searcher2 = newSearcher(reader2);
     for (int i = 0; i < numDocs; ++i) {
-      Query query = new TermQuery(new Term("id", Integer.toString(i)));
+      Query query = new TermQuery(new QueryTerm("id", Integer.toString(i), 0));
       final TopDocs topDocs = searcher.search(query, 1);
       final TopDocs topDocs2 = searcher2.search(query, 1);
       assertEquals(topDocs.totalHits.value, topDocs2.totalHits.value);
@@ -2866,7 +2866,7 @@ public class TestIndexSorting extends LuceneTestCase {
     for (int i = 0; i < numDeleted; i++) {
       int idToDelete = random().nextInt(numDocs);
       if (random().nextBoolean()) {
-        w.deleteDocuments(new TermQuery(new Term("id", Integer.toString(idToDelete))));
+        w.deleteDocuments(new TermQuery(new QueryTerm("id", Integer.toString(idToDelete), 0)));
       } else {
         w.deleteDocuments(new Term("id", Integer.toString(idToDelete)));
       }

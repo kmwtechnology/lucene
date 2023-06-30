@@ -99,7 +99,7 @@ public class TestNumericDocValuesUpdates extends LuceneTestCase {
 
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc-1")),
+            new TermQuery(new QueryTerm("id", "doc-1", 0)),
             1,
             new Sort(new SortField("val", SortField.Type.LONG)));
     assertEquals("doc-1 missing?", 1, td.scoreDocs.length);
@@ -107,7 +107,7 @@ public class TestNumericDocValuesUpdates extends LuceneTestCase {
 
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc-2")),
+            new TermQuery(new QueryTerm("id", "doc-2", 0)),
             1,
             new Sort(new SortField("val", SortField.Type.LONG)));
     assertEquals("doc-2 missing?", 1, td.scoreDocs.length);
@@ -167,7 +167,7 @@ public class TestNumericDocValuesUpdates extends LuceneTestCase {
       String id = "doc-" + expect.getKey();
       TopFieldDocs td =
           searcher.search(
-              new TermQuery(new Term("id", id)),
+              new TermQuery(new QueryTerm("id", id, 0)),
               1,
               new Sort(new SortField("val", SortField.Type.LONG)));
       assertEquals(id + " missing?", 1, td.totalHits.value);
@@ -1175,14 +1175,14 @@ public class TestNumericDocValuesUpdates extends LuceneTestCase {
     // doc0
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc0")),
+            new TermQuery(new QueryTerm("id", "doc0", 0)),
             1,
             new Sort(new SortField("ndv", SortField.Type.LONG)));
     assertEquals(5L, ((FieldDoc) td.scoreDocs[0]).fields[0]);
     // doc1
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc1")),
+            new TermQuery(new QueryTerm("id", "doc1", 0)),
             1,
             new Sort(
                 new SortField("ndv", SortField.Type.LONG),
@@ -1192,14 +1192,14 @@ public class TestNumericDocValuesUpdates extends LuceneTestCase {
     // doc2
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc2")),
+            new TermQuery(new QueryTerm("id", "doc2", 0)),
             1,
             new Sort(new SortField("ndv", SortField.Type.LONG)));
     assertEquals(0L, ((FieldDoc) td.scoreDocs[0]).fields[0]);
     // doc4
     td =
         searcher.search(
-            new TermQuery(new Term("id", "doc4")),
+            new TermQuery(new QueryTerm("id", "doc4", 0)),
             1,
             new Sort(new SortField("ndv", SortField.Type.LONG)));
     assertEquals(0L, ((FieldDoc) td.scoreDocs[0]).fields[0]);

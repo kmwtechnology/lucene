@@ -18,6 +18,7 @@ package org.apache.lucene.search;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -48,34 +49,45 @@ public class TestNGramPhraseQuery extends LuceneTestCase {
 
   public void testRewrite() throws Exception {
     // bi-gram test ABC => AB/BC => AB/BC
-    NGramPhraseQuery pq1 = new NGramPhraseQuery(2, new PhraseQuery("f", "AB", "BC"));
+    NGramPhraseQuery pq1 =
+        new NGramPhraseQuery(2, new PhraseQuery("f", new int[] {0, 0}, "AB", "BC"));
 
     Query q = pq1.rewrite(reader);
     assertSame(q.rewrite(reader), q);
     PhraseQuery rewritten1 = (PhraseQuery) q;
-    assertArrayEquals(new Term[] {new Term("f", "AB"), new Term("f", "BC")}, rewritten1.getTerms());
+    assertArrayEquals(
+        new QueryTerm[] {new QueryTerm("f", "AB", 0), new QueryTerm("f", "BC", 0)},
+        rewritten1.getTerms());
     assertArrayEquals(new int[] {0, 1}, rewritten1.getPositions());
 
     // bi-gram test ABCD => AB/BC/CD => AB//CD
-    NGramPhraseQuery pq2 = new NGramPhraseQuery(2, new PhraseQuery("f", "AB", "BC", "CD"));
+    NGramPhraseQuery pq2 =
+        new NGramPhraseQuery(2, new PhraseQuery("f", new int[] {0, 0, 0}, "AB", "BC", "CD"));
 
     q = pq2.rewrite(reader);
     assertTrue(q instanceof PhraseQuery);
     assertNotSame(pq2, q);
     PhraseQuery rewritten2 = (PhraseQuery) q;
-    assertArrayEquals(new Term[] {new Term("f", "AB"), new Term("f", "CD")}, rewritten2.getTerms());
+    assertArrayEquals(
+        new Term[] {new QueryTerm("f", "AB", 0), new QueryTerm("f", "CD", 0)},
+        rewritten2.getTerms());
     assertArrayEquals(new int[] {0, 2}, rewritten2.getPositions());
 
     // tri-gram test ABCDEFGH => ABC/BCD/CDE/DEF/EFG/FGH => ABC///DEF//FGH
     NGramPhraseQuery pq3 =
-        new NGramPhraseQuery(3, new PhraseQuery("f", "ABC", "BCD", "CDE", "DEF", "EFG", "FGH"));
+        new NGramPhraseQuery(
+            3,
+            new PhraseQuery(
+                "f", new int[] {0, 0, 0, 0, 0, 0}, "ABC", "BCD", "CDE", "DEF", "EFG", "FGH"));
 
     q = pq3.rewrite(reader);
     assertTrue(q instanceof PhraseQuery);
     assertNotSame(pq3, q);
     PhraseQuery rewritten3 = (PhraseQuery) q;
     assertArrayEquals(
-        new Term[] {new Term("f", "ABC"), new Term("f", "DEF"), new Term("f", "FGH")},
+        new Term[] {
+          new QueryTerm("f", "ABC", 0), new QueryTerm("f", "DEF", 0), new QueryTerm("f", "FGH", 0)
+        },
         rewritten3.getTerms());
     assertArrayEquals(new int[] {0, 3, 5}, rewritten3.getPositions());
   }

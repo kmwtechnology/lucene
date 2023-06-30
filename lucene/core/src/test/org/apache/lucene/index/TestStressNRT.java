@@ -323,7 +323,8 @@ public class TestStressNRT extends LuceneTestCase {
                                   + " nextVal="
                                   + nextVal);
                         }
-                        writer.deleteDocuments(new TermQuery(new Term("id", Integer.toString(id))));
+                        writer.deleteDocuments(
+                            new TermQuery(new QueryTerm("id", Integer.toString(id), 0)));
                         model.put(id, -nextVal);
                       } else {
                         // assertU(adoc("id",Integer.toString(id), field, Long.toString(nextVal)));
@@ -415,12 +416,12 @@ public class TestStressNRT extends LuceneTestCase {
                     lastReader = r;
                     lastSearcher = searcher;
                   }
-                  Query q = new TermQuery(new Term("id", Integer.toString(id)));
+                  Query q = new TermQuery(new QueryTerm("id", Integer.toString(id), 0));
                   TopDocs results = searcher.search(q, 10);
 
                   if (results.totalHits.value == 0 && tombstones) {
                     // if we couldn't find the doc, look for its tombstone
-                    q = new TermQuery(new Term("id", "-" + Integer.toString(id)));
+                    q = new TermQuery(new QueryTerm("id", "-" + Integer.toString(id), 0));
                     results = searcher.search(q, 1);
                     if (results.totalHits.value == 0) {
                       if (val == -1L) {

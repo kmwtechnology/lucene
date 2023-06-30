@@ -25,7 +25,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -68,7 +68,7 @@ public class TestBlockJoinValidation extends LuceneTestCase {
     indexReader = DirectoryReader.open(indexWriter);
     indexWriter.close();
     indexSearcher = new IndexSearcher(indexReader);
-    parentsFilter = new QueryBitSetProducer(new WildcardQuery(new Term("parent", "*")));
+    parentsFilter = new QueryBitSetProducer(new WildcardQuery(new QueryTerm("parent", "*", 0)));
   }
 
   @Override
@@ -198,8 +198,9 @@ public class TestBlockJoinValidation extends LuceneTestCase {
   }
 
   private static Query createChildrenQueryWithOneParent(int childNumber) {
-    TermQuery childQuery = new TermQuery(new Term("child", createFieldValue(childNumber)));
-    Query randomParentQuery = new TermQuery(new Term("id", createFieldValue(getRandomParentId())));
+    TermQuery childQuery = new TermQuery(new QueryTerm("child", createFieldValue(childNumber), 0));
+    Query randomParentQuery =
+        new TermQuery(new QueryTerm("id", createFieldValue(getRandomParentId()), 0));
     BooleanQuery.Builder childrenQueryWithRandomParent = new BooleanQuery.Builder();
     childrenQueryWithRandomParent.add(new BooleanClause(childQuery, BooleanClause.Occur.SHOULD));
     childrenQueryWithRandomParent.add(
@@ -210,7 +211,7 @@ public class TestBlockJoinValidation extends LuceneTestCase {
   private static Query createParentsQueryWithOneChild(int randomChildNumber) {
     BooleanQuery.Builder childQueryWithRandomParent = new BooleanQuery.Builder();
     Query parentsQuery =
-        new TermQuery(new Term("parent", createFieldValue(getRandomParentNumber())));
+        new TermQuery(new QueryTerm("parent", createFieldValue(getRandomParentNumber()), 0));
     childQueryWithRandomParent.add(new BooleanClause(parentsQuery, BooleanClause.Occur.SHOULD));
     childQueryWithRandomParent.add(
         new BooleanClause(randomChildQuery(randomChildNumber), BooleanClause.Occur.SHOULD));
@@ -226,7 +227,8 @@ public class TestBlockJoinValidation extends LuceneTestCase {
   }
 
   private static Query randomChildQuery(int randomChildNumber) {
-    return new TermQuery(new Term("id", createFieldValue(getRandomParentId(), randomChildNumber)));
+    return new TermQuery(
+        new QueryTerm("id", createFieldValue(getRandomParentId(), randomChildNumber), 0));
   }
 
   private static int getRandomChildNumber(int notLessThan) {

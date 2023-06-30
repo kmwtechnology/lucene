@@ -58,6 +58,7 @@ import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NoMergePolicy;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
@@ -179,7 +180,7 @@ public abstract class BaseStoredFieldsFormatTestCase extends BaseIndexFileFormat
           if (VERBOSE) {
             System.out.println("TEST: test id=" + testID);
           }
-          TopDocs hits = s.search(new TermQuery(new Term("id", testID)), 1);
+          TopDocs hits = s.search(new TermQuery(new QueryTerm("id", testID, 0)), 1);
           assertEquals(1, hits.totalHits.value);
           Document doc = storedFields.document(hits.scoreDocs[0].doc);
           Document docExp = docs.get(testID);
@@ -469,7 +470,7 @@ public abstract class BaseStoredFieldsFormatTestCase extends BaseIndexFileFormat
             @Override
             public void run() {
               for (int q : queries) {
-                final Query query = new TermQuery(new Term("fld", "" + q));
+                final Query query = new TermQuery(new QueryTerm("fld", "" + q, 0));
                 try {
                   StoredFields storedFields = rd.storedFields();
                   final TopDocs topDocs = searcher.search(query, 1);
@@ -790,7 +791,7 @@ public abstract class BaseStoredFieldsFormatTestCase extends BaseIndexFileFormat
     final IndexSearcher searcher = new IndexSearcher(rd);
     StoredFields storedFields = rd.storedFields();
     for (int i = 0; i < numDocs; ++i) {
-      final Query query = new TermQuery(new Term("id", "" + i));
+      final Query query = new TermQuery(new QueryTerm("id", "" + i, 0));
       final TopDocs topDocs = searcher.search(query, 1);
       assertEquals("" + i, 1, topDocs.totalHits.value);
       final Document doc = storedFields.document(topDocs.scoreDocs[0].doc);
@@ -951,7 +952,7 @@ public abstract class BaseStoredFieldsFormatTestCase extends BaseIndexFileFormat
               if (VERBOSE) {
                 System.out.println("TEST: test id=" + testID);
               }
-              TopDocs hits = searcher.search(new TermQuery(new Term("id", testID)), 1);
+              TopDocs hits = searcher.search(new TermQuery(new QueryTerm("id", testID, 0)), 1);
               assertEquals(1, hits.totalHits.value);
               List<IndexableField> expectedFields =
                   docs.get(testID).getFields().stream()
@@ -991,7 +992,7 @@ public abstract class BaseStoredFieldsFormatTestCase extends BaseIndexFileFormat
       if (random().nextInt(100) < 5) {
         String deletingId = addedIds.remove(random().nextInt(addedIds.size()));
         if (random().nextBoolean()) {
-          iw.deleteDocuments(new TermQuery(new Term("id", deletingId)));
+          iw.deleteDocuments(new TermQuery(new QueryTerm("id", deletingId, 0)));
           addedIds.remove(deletingId);
         } else {
           final Document newDoc = documentFactory.apply(deletingId);

@@ -118,6 +118,6 @@ public class TestSpanQueryParserSimpleSample extends LuceneTestCase {
     SpanQuery spanquery = spansQueryTreeBuilder.build(queryTree);
 
     assertTrue(spanquery instanceof SpanTermQuery);
-    assertEquals(spanquery.toString(), "index:text");
+    assertEquals(spanquery.toString(), "index:text[0]");
   }
 }

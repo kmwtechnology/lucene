@@ -30,8 +30,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MergePolicy;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -104,7 +104,7 @@ public class TestSearchForDuplicates extends LuceneTestCase {
     IndexReader reader = DirectoryReader.open(directory);
     IndexSearcher searcher = newSearcher(reader);
 
-    Query query = new TermQuery(new Term(PRIORITY_FIELD, HIGH_PRIORITY));
+    Query query = new TermQuery(new QueryTerm(PRIORITY_FIELD, HIGH_PRIORITY, 0));
     out.println("Query: " + query.toString(PRIORITY_FIELD));
     if (VERBOSE) {
       System.out.println("TEST: search query=" + query);
@@ -122,9 +122,9 @@ public class TestSearchForDuplicates extends LuceneTestCase {
 
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
     booleanQuery.add(
-        new TermQuery(new Term(PRIORITY_FIELD, HIGH_PRIORITY)), BooleanClause.Occur.SHOULD);
+        new TermQuery(new QueryTerm(PRIORITY_FIELD, HIGH_PRIORITY, 0)), BooleanClause.Occur.SHOULD);
     booleanQuery.add(
-        new TermQuery(new Term(PRIORITY_FIELD, MED_PRIORITY)), BooleanClause.Occur.SHOULD);
+        new TermQuery(new QueryTerm(PRIORITY_FIELD, MED_PRIORITY, 0)), BooleanClause.Occur.SHOULD);
     out.println("Query: " + booleanQuery.build().toString(PRIORITY_FIELD));
 
     hits = searcher.search(booleanQuery.build(), MAX_DOCS, sort).scoreDocs;

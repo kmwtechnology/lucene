@@ -75,8 +75,8 @@ import org.apache.lucene.queryparser.charstream.FastCharStream;
  * use a different method for date conversion.
  * </p>
  *
- * <p>Note that QueryParser is <em>not</em> thread-safe.</p> 
- * 
+ * <p>Note that QueryParser is <em>not</em> thread-safe.</p>
+ *
  * <p><b>NOTE</b>: there is a new QueryParser in contrib, which matches
  * the same syntax as this class, but is more modular,
  * enabling substantial customization to how a query is created.
@@ -182,7 +182,8 @@ ret = CONJ_OR;
     throw new Error("Missing return statement in function");
 }
 
-  final public int Modifiers() throws ParseException {int ret = MOD_NONE;
+  final public int Modifiers() throws ParseException {queryPos++;
+  int ret = MOD_NONE;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case NOT:
     case PLUS:
@@ -652,9 +653,9 @@ q = handleQuotedTerm(field, term, fuzzySlop);
   Query firstQuery = null;
     text = jj_consume_token(TERM);
 if (splitOnWhitespace) {
-      firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false);
-      addClause(clauses, CONJ_NONE, MOD_NONE, firstQuery);
-    }
+    firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false, text.beginColumn);
+    addClause(clauses, CONJ_NONE, MOD_NONE, firstQuery);
+  }
     if (getToken(1).kind == TERM && allowedPostMultiTerm(getToken(2).kind)) {
 
     } else {
@@ -665,11 +666,11 @@ if (splitOnWhitespace) {
     while (true) {
       followingText = jj_consume_token(TERM);
 if (splitOnWhitespace) {
-        Query q = getFieldQuery(field, discardEscapeChar(followingText.image), false);
-        addClause(clauses, CONJ_NONE, MOD_NONE, q);
-      } else { // build up the text to send to analysis
-        text.image += " " + followingText.image;
-      }
+    Query q = getFieldQuery(field, discardEscapeChar(followingText.image), false, text.beginColumn);
+    addClause(clauses, CONJ_NONE, MOD_NONE, q);
+  } else { // build up the text to send to analysis
+    text.image += " " + followingText.image;
+  }
       if (getToken(1).kind == TERM && allowedPostMultiTerm(getToken(2).kind)) {
         ;
       } else {
@@ -677,10 +678,10 @@ if (splitOnWhitespace) {
       }
     }
 if (splitOnWhitespace == false) {
-      firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false);
-      addMultiTermClauses(clauses, firstQuery);
-    }
-    {if ("" != null) return firstQuery;}
+    firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false, text.beginColumn);
+    addMultiTermClauses(clauses, firstQuery);
+  }
+  {if ("" != null) return firstQuery;}
     throw new Error("Missing return statement in function");
 }
 
@@ -708,19 +709,19 @@ if (splitOnWhitespace == false) {
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_MultiTerm_391_3_6()
+  private boolean jj_3R_MultiTerm_392_3_6()
  {
     return false;
   }
 
-  private boolean jj_3R_Clause_308_9_5()
+  private boolean jj_3R_Clause_309_9_5()
  {
     if (jj_scan_token(STAR)) return true;
     if (jj_scan_token(COLON)) return true;
     return false;
   }
 
-  private boolean jj_3R_Clause_307_7_4()
+  private boolean jj_3R_Clause_308_7_4()
  {
     if (jj_scan_token(TERM)) return true;
     if (jj_scan_token(COLON)) return true;
@@ -729,17 +730,17 @@ if (splitOnWhitespace == false) {
 
   private boolean jj_3_2()
  {
-    if (jj_3R_MultiTerm_383_3_3()) return true;
+    if (jj_3R_MultiTerm_384_3_3()) return true;
     return false;
   }
 
   private boolean jj_3_1()
  {
-    if (jj_3R_MultiTerm_383_3_3()) return true;
+    if (jj_3R_MultiTerm_384_3_3()) return true;
     return false;
   }
 
-  private boolean jj_3R_MultiTerm_393_5_7()
+  private boolean jj_3R_MultiTerm_394_5_7()
  {
     if (jj_scan_token(TERM)) return true;
     return false;
@@ -749,25 +750,25 @@ if (splitOnWhitespace == false) {
  {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_Clause_307_7_4()) {
+    if (jj_3R_Clause_308_7_4()) {
     jj_scanpos = xsp;
-    if (jj_3R_Clause_308_9_5()) return true;
+    if (jj_3R_Clause_309_9_5()) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_MultiTerm_383_3_3()
+  private boolean jj_3R_MultiTerm_384_3_3()
  {
     if (jj_scan_token(TERM)) return true;
     jj_lookingAhead = true;
     jj_semLA = getToken(1).kind == TERM && allowedPostMultiTerm(getToken(2).kind);
     jj_lookingAhead = false;
-    if (!jj_semLA || jj_3R_MultiTerm_391_3_6()) return true;
+    if (!jj_semLA || jj_3R_MultiTerm_392_3_6()) return true;
     Token xsp;
-    if (jj_3R_MultiTerm_393_5_7()) return true;
+    if (jj_3R_MultiTerm_394_5_7()) return true;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_MultiTerm_393_5_7()) { jj_scanpos = xsp; break; }
+      if (jj_3R_MultiTerm_394_5_7()) { jj_scanpos = xsp; break; }
     }
     return false;
   }

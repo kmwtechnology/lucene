@@ -25,7 +25,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -82,7 +82,7 @@ public class TestNRTCachingDirectory extends BaseDirectoryTestCase {
         final IndexSearcher s = newSearcher(r);
         // Just make sure search can run; we can't assert
         // totHits since it could be 0
-        s.search(new TermQuery(new Term("body", "the")), 10);
+        s.search(new TermQuery(new QueryTerm("body", "the", 0)), 10);
         // System.out.println("tot hits " + hits.totalHits);
       }
     }
@@ -102,7 +102,7 @@ public class TestNRTCachingDirectory extends BaseDirectoryTestCase {
 
     r = DirectoryReader.open(dir);
     for (BytesRef id : ids) {
-      assertEquals(1, r.docFreq(new Term("docid", id)));
+      assertEquals(1, r.docFreq(new QueryTerm("docid", id, 0)));
     }
     r.close();
     cachedDir.close();

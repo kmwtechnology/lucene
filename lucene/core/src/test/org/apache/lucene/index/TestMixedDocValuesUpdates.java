@@ -475,7 +475,7 @@ public class TestMixedDocValuesUpdates extends LuceneTestCase {
     BinaryDocValues binaryIdValues = null;
     for (LeafReaderContext c : reader.leaves()) {
       TopDocs topDocs =
-          new IndexSearcher(c.reader()).search(new TermQuery(new Term("id", "" + doc)), 10);
+          new IndexSearcher(c.reader()).search(new TermQuery(new QueryTerm("id", "" + doc, 0)), 10);
       if (topDocs.totalHits.value == 1) {
         assertNull(numericIdValues);
         assertNull(binaryIdValues);
@@ -563,7 +563,7 @@ public class TestMixedDocValuesUpdates extends LuceneTestCase {
         try {
           Long value = values[i];
           TopDocs topDocs =
-              new IndexSearcher(reader).search(new TermQuery(new Term("id", "" + i)), 10);
+              new IndexSearcher(reader).search(new TermQuery(new QueryTerm("id", "" + i, 0)), 10);
           assertEquals(topDocs.totalHits.value, 1);
           int docID = topDocs.scoreDocs[0].doc;
           List<LeafReaderContext> leaves = reader.leaves();
@@ -590,7 +590,8 @@ public class TestMixedDocValuesUpdates extends LuceneTestCase {
     long seqId = -1;
     do { // retry if we just committing a merge
       try (DirectoryReader reader = DirectoryReader.open(writer)) {
-        TopDocs topDocs = new IndexSearcher(reader).search(new TermQuery(doc), 10);
+        TopDocs topDocs =
+            new IndexSearcher(reader).search(new TermQuery(QueryTerm.asQueryTerm(doc)), 10);
         assertEquals(1, topDocs.totalHits.value);
         int theDoc = topDocs.scoreDocs[0].doc;
         seqId = writer.tryUpdateDocValue(reader, theDoc, fields);

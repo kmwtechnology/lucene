@@ -294,7 +294,8 @@ public class TestSortingCodecReader extends LuceneTestCase {
               assertEquals(idNext, result.scoreDocs[0].doc);
 
               result =
-                  searcher.search(new TermQuery(new Term("string_id", "" + ids.longValue())), 1);
+                  searcher.search(
+                      new TermQuery(new QueryTerm("string_id", "" + ids.longValue(), 0)), 1);
               assertEquals(1, result.totalHits.value);
               assertEquals(idNext, result.scoreDocs[0].doc);
             }

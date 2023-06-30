@@ -22,7 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiTerms;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -60,10 +60,10 @@ public class TestPhrasePrefixQuery extends LuceneTestCase {
     MultiPhraseQuery.Builder query1builder = new MultiPhraseQuery.Builder();
     // PhrasePrefixQuery query2 = new PhrasePrefixQuery();
     MultiPhraseQuery.Builder query2builder = new MultiPhraseQuery.Builder();
-    query1builder.add(new Term("body", "blueberry"));
-    query2builder.add(new Term("body", "strawberry"));
+    query1builder.add(new QueryTerm("body", "blueberry", 0));
+    query2builder.add(new QueryTerm("body", "strawberry", 0));
 
-    LinkedList<Term> termsWithPrefix = new LinkedList<>();
+    LinkedList<QueryTerm> termsWithPrefix = new LinkedList<>();
 
     // this TermEnum gives "piccadilly", "pie" and "pizza".
     String prefix = "pi";
@@ -72,14 +72,14 @@ public class TestPhrasePrefixQuery extends LuceneTestCase {
     do {
       String s = te.term().utf8ToString();
       if (s.startsWith(prefix)) {
-        termsWithPrefix.add(new Term("body", s));
+        termsWithPrefix.add(new QueryTerm("body", s, 0));
       } else {
         break;
       }
     } while (te.next() != null);
 
-    query1builder.add(termsWithPrefix.toArray(new Term[0]));
-    query2builder.add(termsWithPrefix.toArray(new Term[0]));
+    query1builder.add(termsWithPrefix.toArray(new QueryTerm[0]));
+    query2builder.add(termsWithPrefix.toArray(new QueryTerm[0]));
 
     ScoreDoc[] result;
     result = searcher.search(query1builder.build(), 1000).scoreDocs;

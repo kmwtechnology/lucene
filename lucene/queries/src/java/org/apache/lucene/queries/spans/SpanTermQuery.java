@@ -23,6 +23,7 @@ import java.util.Objects;
 import org.apache.lucene.index.IndexReaderContext;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
@@ -39,11 +40,11 @@ import org.apache.lucene.search.ScoreMode;
  */
 public class SpanTermQuery extends SpanQuery {
 
-  protected final Term term;
+  protected final QueryTerm term;
   protected final TermStates termStates;
 
   /** Construct a SpanTermQuery matching the named term's spans. */
-  public SpanTermQuery(Term term) {
+  public SpanTermQuery(QueryTerm term) {
     this.term = Objects.requireNonNull(term);
     this.termStates = null;
   }
@@ -52,7 +53,7 @@ public class SpanTermQuery extends SpanQuery {
    * Expert: Construct a SpanTermQuery matching the named term's spans, using the provided
    * TermStates
    */
-  public SpanTermQuery(Term term, TermStates termStates) {
+  public SpanTermQuery(QueryTerm term, TermStates termStates) {
     this.term = Objects.requireNonNull(term);
     this.termStates = termStates;
   }

@@ -98,8 +98,8 @@ import org.apache.lucene.queryparser.charstream.FastCharStream;
  * use a different method for date conversion.
  * </p>
  *
- * <p>Note that QueryParser is <em>not</em> thread-safe.</p> 
- * 
+ * <p>Note that QueryParser is <em>not</em> thread-safe.</p>
+ *
  * <p><b>NOTE</b>: there is a new QueryParser in contrib, which matches
  * the same syntax as this class, but is more modular,
  * enabling substantial customization to how a query is created.
@@ -109,7 +109,7 @@ public class QueryParser extends QueryParserBase {
    * Use {@link QueryParserBase#setDefaultOperator} to change it.
    */
   static public enum Operator { OR, AND }
-  
+
   /** default split on whitespace behavior */
   public static final boolean DEFAULT_SPLIT_ON_WHITESPACE = false;
 
@@ -243,6 +243,7 @@ int Conjunction() : {
 }
 
 int Modifiers() : {
+  queryPos++;
   int ret = MOD_NONE;
 }
 {
@@ -382,30 +383,30 @@ Query MultiTerm(String field, List<BooleanClause> clauses) : {
 {
   text=<TERM>
   {
-    if (splitOnWhitespace) {
-      firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false);
-      addClause(clauses, CONJ_NONE, MOD_NONE, firstQuery);
-    }
+  if (splitOnWhitespace) {
+    firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false, text.beginColumn);
+    addClause(clauses, CONJ_NONE, MOD_NONE, firstQuery);
   }
+}
   // Both lookaheads are required; the first lookahead vets the first following term and the second lookahead vets the rest
   LOOKAHEAD({ getToken(1).kind == TERM && allowedPostMultiTerm(getToken(2).kind) })
   (
     LOOKAHEAD({ getToken(1).kind == TERM && allowedPostMultiTerm(getToken(2).kind) })
     followingText=<TERM>
     {
-      if (splitOnWhitespace) {
-        Query q = getFieldQuery(field, discardEscapeChar(followingText.image), false);
-        addClause(clauses, CONJ_NONE, MOD_NONE, q);
-      } else { // build up the text to send to analysis
-        text.image += " " + followingText.image;
-      }
-    }
+  if (splitOnWhitespace) {
+    Query q = getFieldQuery(field, discardEscapeChar(followingText.image), false, text.beginColumn);
+    addClause(clauses, CONJ_NONE, MOD_NONE, q);
+  } else { // build up the text to send to analysis
+    text.image += " " + followingText.image;
+  }
+}
   )+
   {
-    if (splitOnWhitespace == false) {
-      firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false);
-      addMultiTermClauses(clauses, firstQuery);
-    }
-    return firstQuery;
+  if (splitOnWhitespace == false) {
+    firstQuery = getFieldQuery(field, discardEscapeChar(text.image), false, text.beginColumn);
+    addMultiTermClauses(clauses, firstQuery);
   }
+  return firstQuery;
+}
 }

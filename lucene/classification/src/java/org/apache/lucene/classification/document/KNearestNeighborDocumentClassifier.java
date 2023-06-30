@@ -26,7 +26,7 @@ import org.apache.lucene.classification.ClassificationResult;
 import org.apache.lucene.classification.KNearestNeighborClassifier;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -145,7 +145,7 @@ public class KNearestNeighborDocumentClassifier extends KNearestNeighborClassifi
       }
       mlt.setBoostFactor(1); // restore neutral boost for next field
     }
-    Query classFieldQuery = new WildcardQuery(new Term(classFieldName, "*"));
+    Query classFieldQuery = new WildcardQuery(new QueryTerm(classFieldName, "*", 0));
     mltQuery.add(new BooleanClause(classFieldQuery, BooleanClause.Occur.MUST));
     if (query != null) {
       mltQuery.add(query, BooleanClause.Occur.MUST);

@@ -22,7 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
@@ -76,9 +76,9 @@ public class TestSimilarity extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
     searcher.setSimilarity(new SimpleSimilarity());
 
-    Term a = new Term("field", "a");
-    Term b = new Term("field", "b");
-    Term c = new Term("field", "c");
+    QueryTerm a = new QueryTerm("field", "a", 0);
+    QueryTerm b = new QueryTerm("field", "b", 0);
+    QueryTerm c = new QueryTerm("field", "c", 0);
 
     assertScore(searcher, new TermQuery(b), 1.0f);
 
@@ -113,11 +113,11 @@ public class TestSimilarity extends LuceneTestCase {
           }
         });
 
-    PhraseQuery pq = new PhraseQuery(a.field(), a.bytes(), c.bytes());
+    PhraseQuery pq = new PhraseQuery(a.field(), new int[] {0, 0}, a.bytes(), c.bytes());
     // System.out.println(pq.toString("field"));
     assertScore(searcher, pq, 1.0f);
 
-    pq = new PhraseQuery(2, a.field(), a.bytes(), b.bytes());
+    pq = new PhraseQuery(2, a.field(), new int[] {0, 0}, a.bytes(), b.bytes());
     // System.out.println(pq.toString("field"));
     assertScore(searcher, pq, 0.5f);
 

@@ -35,7 +35,7 @@ import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.function.valuesource.BytesRefFieldSource;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Sort;
@@ -137,10 +137,11 @@ public class TestDistinctValuesCollector extends AbstractGroupingTestCase {
     // === Search for content:random
     FirstPassGroupingCollector<Comparable<Object>> firstCollector =
         createRandomFirstPassCollector(new Sort(), GROUP_FIELD, 10);
-    indexSearcher.search(new TermQuery(new Term("content", "random")), firstCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "random", 0)), firstCollector);
     DistinctValuesCollector<Comparable<Object>, Comparable<Object>> distinctValuesCollector =
         createDistinctCountCollector(firstCollector, COUNT_FIELD);
-    indexSearcher.search(new TermQuery(new Term("content", "random")), distinctValuesCollector);
+    indexSearcher.search(
+        new TermQuery(new QueryTerm("content", "random", 0)), distinctValuesCollector);
 
     List<DistinctValuesCollector.GroupCount<Comparable<Object>, Comparable<Object>>> gcs =
         distinctValuesCollector.getGroups();
@@ -171,9 +172,10 @@ public class TestDistinctValuesCollector extends AbstractGroupingTestCase {
 
     // === Search for content:some
     firstCollector = createRandomFirstPassCollector(new Sort(), GROUP_FIELD, 10);
-    indexSearcher.search(new TermQuery(new Term("content", "some")), firstCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "some", 0)), firstCollector);
     distinctValuesCollector = createDistinctCountCollector(firstCollector, COUNT_FIELD);
-    indexSearcher.search(new TermQuery(new Term("content", "some")), distinctValuesCollector);
+    indexSearcher.search(
+        new TermQuery(new QueryTerm("content", "some", 0)), distinctValuesCollector);
 
     gcs = distinctValuesCollector.getGroups();
     Collections.sort(gcs, cmp);
@@ -198,9 +200,10 @@ public class TestDistinctValuesCollector extends AbstractGroupingTestCase {
 
     // === Search for content:blob
     firstCollector = createRandomFirstPassCollector(new Sort(), GROUP_FIELD, 10);
-    indexSearcher.search(new TermQuery(new Term("content", "blob")), firstCollector);
+    indexSearcher.search(new TermQuery(new QueryTerm("content", "blob", 0)), firstCollector);
     distinctValuesCollector = createDistinctCountCollector(firstCollector, COUNT_FIELD);
-    indexSearcher.search(new TermQuery(new Term("content", "blob")), distinctValuesCollector);
+    indexSearcher.search(
+        new TermQuery(new QueryTerm("content", "blob", 0)), distinctValuesCollector);
 
     gcs = distinctValuesCollector.getGroups();
     Collections.sort(gcs, cmp);
@@ -237,10 +240,10 @@ public class TestDistinctValuesCollector extends AbstractGroupingTestCase {
 
         FirstPassGroupingCollector<Comparable<Object>> firstCollector =
             createRandomFirstPassCollector(groupSort, GROUP_FIELD, topN);
-        searcher.search(new TermQuery(new Term("content", term)), firstCollector);
+        searcher.search(new TermQuery(new QueryTerm("content", term, 0)), firstCollector);
         DistinctValuesCollector<Comparable<Object>, Comparable<Object>> distinctValuesCollector =
             createDistinctCountCollector(firstCollector, COUNT_FIELD);
-        searcher.search(new TermQuery(new Term("content", term)), distinctValuesCollector);
+        searcher.search(new TermQuery(new QueryTerm("content", term, 0)), distinctValuesCollector);
         @SuppressWarnings("unchecked")
         List<DistinctValuesCollector.GroupCount<Comparable<Object>, Comparable<Object>>>
             actualResult = distinctValuesCollector.getGroups();

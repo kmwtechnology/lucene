@@ -16,6 +16,7 @@
  */
 package org.apache.lucene.search;
 
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.automaton.Automaton;
@@ -29,14 +30,14 @@ import org.apache.lucene.util.automaton.Automaton;
 public class PrefixQuery extends AutomatonQuery {
 
   /** Constructs a query for terms starting with <code>prefix</code>. */
-  public PrefixQuery(Term prefix) {
+  public PrefixQuery(QueryTerm prefix) {
     this(prefix, CONSTANT_SCORE_REWRITE);
   }
 
   /**
    * Constructs a query for terms starting with <code>prefix</code> using a defined RewriteMethod
    */
-  public PrefixQuery(Term prefix, RewriteMethod rewriteMethod) {
+  public PrefixQuery(QueryTerm prefix, RewriteMethod rewriteMethod) {
     super(prefix, toAutomaton(prefix.bytes()), Integer.MAX_VALUE, true, rewriteMethod);
   }
 

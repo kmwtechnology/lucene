@@ -47,7 +47,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.queries.intervals.IntervalQuery;
 import org.apache.lucene.queries.intervals.Intervals;
 import org.apache.lucene.queries.spans.SpanNearQuery;
@@ -178,7 +178,7 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
             analyzer,
             reader -> {
               MatcherAssert.assertThat(
-                  highlights(reader, new TermQuery(new Term(field, "foo"))),
+                  highlights(reader, new TermQuery(new QueryTerm(field, "foo", 0))),
                   containsInAnyOrder(
                       fmt("0: (%s: '>foo< bar baz')", field),
                       fmt("1: (%s: 'bar >foo< baz')", field),
@@ -199,9 +199,13 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
   private void checkBooleanMultifieldQuery(String field) throws Exception {
     Query query =
         new BooleanQuery.Builder()
-            .add(new PhraseQuery(1, field, "foo", "baz"), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(FLD_NON_EXISTING, "abc")), BooleanClause.Occur.SHOULD)
-            .add(new TermQuery(new Term(field, "xyz")), BooleanClause.Occur.MUST_NOT)
+            .add(
+                new PhraseQuery(1, field, new int[] {0, 0}, "foo", "baz"),
+                BooleanClause.Occur.SHOULD)
+            .add(
+                new TermQuery(new QueryTerm(FLD_NON_EXISTING, "abc", 0)),
+                BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new QueryTerm(field, "xyz", 0)), BooleanClause.Occur.MUST_NOT)
             .build();
 
     new IndexBuilder(this::toField)
@@ -542,8 +546,12 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       new BooleanQuery.Builder()
-                          .add(new PhraseQuery(1, field, "foo", "baz"), BooleanClause.Occur.SHOULD)
-                          .add(new TermQuery(new Term(field, "bar")), BooleanClause.Occur.SHOULD)
+                          .add(
+                              new PhraseQuery(1, field, new int[] {0, 0}, "foo", "baz"),
+                              BooleanClause.Occur.SHOULD)
+                          .add(
+                              new TermQuery(new QueryTerm(field, "bar", 0)),
+                              BooleanClause.Occur.SHOULD)
                           .build()),
                   containsInAnyOrder(fmt("0: (%s: '>foo >bar< baz< abc')", field)));
 
@@ -551,9 +559,15 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       new BooleanQuery.Builder()
-                          .add(new PhraseQuery(1, field, "foo", "baz"), BooleanClause.Occur.SHOULD)
-                          .add(new TermQuery(new Term(field, "bar")), BooleanClause.Occur.SHOULD)
-                          .add(new TermQuery(new Term(field, "baz")), BooleanClause.Occur.SHOULD)
+                          .add(
+                              new PhraseQuery(1, field, new int[] {0, 0}, "foo", "baz"),
+                              BooleanClause.Occur.SHOULD)
+                          .add(
+                              new TermQuery(new QueryTerm(field, "bar", 0)),
+                              BooleanClause.Occur.SHOULD)
+                          .add(
+                              new TermQuery(new QueryTerm(field, "baz", 0)),
+                              BooleanClause.Occur.SHOULD)
                           .build()),
                   containsInAnyOrder(fmt("0: (%s: '>foo >bar< >baz<< abc')", field)));
             });
@@ -579,13 +593,13 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
             analyzer,
             reader -> {
               MatcherAssert.assertThat(
-                  highlights(reader, new TermQuery(new Term(field, "syn1"))),
+                  highlights(reader, new TermQuery(new QueryTerm(field, "syn1", 0))),
                   containsInAnyOrder(fmt("0: (%s: '>foo bar< baz')", field)));
 
               // [syn2 syn3] = baz
               // so both these queries highlight baz.
               MatcherAssert.assertThat(
-                  highlights(reader, new TermQuery(new Term(field, "syn3"))),
+                  highlights(reader, new TermQuery(new QueryTerm(field, "syn3", 0))),
                   containsInAnyOrder(
                       fmt("0: (%s: 'foo bar >baz<')", field),
                       fmt("1: (%s: 'bar foo >baz<')", field),
@@ -625,8 +639,8 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       SpanNearQuery.newOrderedNearQuery(field)
-                          .addClause(new SpanTermQuery(new Term(field, "bar")))
-                          .addClause(new SpanTermQuery(new Term(field, "foo")))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "bar", 0)))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "foo", 0)))
                           .build()),
                   containsInAnyOrder(fmt("1: (%s: '>bar foo< baz')", field)));
 
@@ -634,9 +648,9 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       SpanNearQuery.newOrderedNearQuery(field)
-                          .addClause(new SpanTermQuery(new Term(field, "bar")))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "bar", 0)))
                           .addGap(1)
-                          .addClause(new SpanTermQuery(new Term(field, "foo")))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "foo", 0)))
                           .build()),
                   containsInAnyOrder(fmt("2: (%s: '>bar baz foo<')", field)));
 
@@ -644,8 +658,8 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       SpanNearQuery.newUnorderedNearQuery(field)
-                          .addClause(new SpanTermQuery(new Term(field, "foo")))
-                          .addClause(new SpanTermQuery(new Term(field, "bar")))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "foo", 0)))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "bar", 0)))
                           .build()),
                   containsInAnyOrder(
                       fmt("0: (%s: '>foo bar< baz')", field),
@@ -655,8 +669,8 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   highlights(
                       reader,
                       SpanNearQuery.newUnorderedNearQuery(field)
-                          .addClause(new SpanTermQuery(new Term(field, "foo")))
-                          .addClause(new SpanTermQuery(new Term(field, "bar")))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "foo", 0)))
+                          .addClause(new SpanTermQuery(new QueryTerm(field, "bar", 0)))
                           .setSlop(1)
                           .build()),
                   containsInAnyOrder(
@@ -693,7 +707,8 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
                   };
 
               MatcherAssert.assertThat(
-                  highlights(customSuppliers, reader, new TermQuery(new Term(field, "bar"))),
+                  highlights(
+                      customSuppliers, reader, new TermQuery(new QueryTerm(field, "bar", 0))),
                   containsInAnyOrder(
                       fmt("0: (%s: '>foo bar<')", field),
                       fmt("1: (%s: '>foo bar< | >baz baz<')", field)));
@@ -720,7 +735,7 @@ public class TestMatchRegionRetriever extends LuceneTestCase {
             analyzer,
             reader -> {
               MatcherAssert.assertThat(
-                  highlights(reader, new TermQuery(new Term(field, "bar"))),
+                  highlights(reader, new TermQuery(new QueryTerm(field, "bar", 0))),
                   containsInAnyOrder(
                       fmt("0: (%s: 'foo >bar<')", field),
                       fmt("1: (%s: 'foo >bar< | baz >bar<')", field)));

@@ -29,7 +29,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.analysis.MockAnalyzer;
 import org.apache.lucene.tests.index.RandomIndexWriter;
@@ -42,10 +42,10 @@ public class TestConstantScoreScorer extends LuceneTestCase {
 
   private static final Query TERM_QUERY =
       new BooleanQuery.Builder()
-          .add(new TermQuery(new Term(FIELD, "foo")), Occur.MUST)
-          .add(new TermQuery(new Term(FIELD, "bar")), Occur.MUST)
+          .add(new TermQuery(new QueryTerm(FIELD, "foo", 0)), Occur.MUST)
+          .add(new TermQuery(new QueryTerm(FIELD, "bar", 0)), Occur.MUST)
           .build();
-  private static final Query PHRASE_QUERY = new PhraseQuery(FIELD, "foo", "bar");
+  private static final Query PHRASE_QUERY = new PhraseQuery(FIELD, new int[] {0, 0}, "foo", "bar");
 
   public void testMatching_ScoreMode_COMPLETE() throws Exception {
     testMatching(ScoreMode.COMPLETE);
@@ -244,15 +244,17 @@ public class TestConstantScoreScorer extends LuceneTestCase {
     CollectorManager<TopScoreDocCollector, TopDocs> manager =
         TopScoreDocCollector.createSharedManager(10, null, 10);
     TopDocs topDocs =
-        is.search(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), manager);
+        is.search(new ConstantScoreQuery(new TermQuery(new QueryTerm("key", "foo", 0))), manager);
     assertEquals(11, topDocs.totalHits.value);
     assertEquals(TotalHits.Relation.GREATER_THAN_OR_EQUAL_TO, topDocs.totalHits.relation);
 
     manager = TopScoreDocCollector.createSharedManager(10, null, 10);
     Query query =
         new BooleanQuery.Builder()
-            .add(new ConstantScoreQuery(new TermQuery(new Term("key", "foo"))), Occur.SHOULD)
-            .add(new ConstantScoreQuery(new TermQuery(new Term("key", "bar"))), Occur.FILTER)
+            .add(
+                new ConstantScoreQuery(new TermQuery(new QueryTerm("key", "foo", 0))), Occur.SHOULD)
+            .add(
+                new ConstantScoreQuery(new TermQuery(new QueryTerm("key", "bar", 0))), Occur.FILTER)
             .build();
     topDocs = is.search(query, manager);
     assertEquals(11, topDocs.totalHits.value);

@@ -29,7 +29,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
@@ -497,7 +497,7 @@ public class TestPhraseWildcardQuery extends LuceneTestCase {
             .setSlop(slop);
     for (String term : terms) {
       if (term.contains("*") || term.contains("?")) {
-        builder.addMultiTerm(new WildcardQuery(new Term(field, term)));
+        builder.addMultiTerm(new WildcardQuery(new QueryTerm(field, term, 0)));
       } else {
         builder.addTerm(new BytesRef(term));
       }
@@ -516,8 +516,8 @@ public class TestPhraseWildcardQuery extends LuceneTestCase {
       String term = terms[i];
       spanQueries[i] =
           term.contains("*") || term.contains("?")
-              ? new SpanMultiTermQueryWrapper<>(new WildcardQuery(new Term(field, term)))
-              : new SpanTermQuery(new Term(field, term));
+              ? new SpanMultiTermQueryWrapper<>(new WildcardQuery(new QueryTerm(field, term, 0)))
+              : new SpanTermQuery(new QueryTerm(field, term, 0));
     }
     return new SpanNearQuery(spanQueries, slop, true);
   }
@@ -527,40 +527,40 @@ public class TestPhraseWildcardQuery extends LuceneTestCase {
     MultiPhraseQuery.Builder builder = new MultiPhraseQuery.Builder().setSlop(slop);
     for (String term : terms) {
       if (term.contains("*") || term.contains("?")) {
-        Term[] expansions = expandMultiTerm(field, term, maxExpansions);
+        QueryTerm[] expansions = expandMultiTerm(field, term, maxExpansions);
         if (expansions.length > 0) {
           builder.add(expansions);
         } else {
-          builder.add(new Term(field, "non-matching-term"));
+          builder.add(new QueryTerm(field, "non-matching-term", 0));
         }
       } else {
-        builder.add(new Term(field, term));
+        builder.add(new QueryTerm(field, term, 0));
       }
     }
     return builder.build();
   }
 
-  protected Term[] expandMultiTerm(String field, String term, int maxExpansions)
+  protected QueryTerm[] expandMultiTerm(String field, String term, int maxExpansions)
       throws IOException {
     if (maxExpansions == 0) {
-      return new Term[0];
+      return new QueryTerm[0];
     }
-    Set<Term> expansions = new HashSet<>();
-    WildcardQuery wq = new WildcardQuery(new Term(field, term));
+    Set<QueryTerm> expansions = new HashSet<>();
+    WildcardQuery wq = new WildcardQuery(new QueryTerm(field, term, 0));
     expansion:
     for (final LeafReaderContext ctx : reader.leaves()) {
       Terms terms = ctx.reader().terms(field);
       if (terms != null) {
         TermsEnum termsEnum = wq.getTermsEnum(terms);
         while (termsEnum.next() != null) {
-          expansions.add(new Term(field, termsEnum.term()));
+          expansions.add(new QueryTerm(field, termsEnum.term(), 0));
           if (expansions.size() >= maxExpansions) {
             break expansion;
           }
         }
       }
     }
-    return expansions.toArray(new Term[0]);
+    return expansions.toArray(new QueryTerm[0]);
   }
 
   protected static boolean equals(ScoreDoc result1, ScoreDoc result2) {

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.FieldMaskingSpanQuery;
 import org.apache.lucene.queries.spans.SpanContainingQuery;
@@ -42,7 +43,7 @@ public class TestSpanExtractors extends LuceneTestCase {
   private Set<Term> collectTerms(Query q) {
     QueryTree tree = treeBuilder.buildTree(q, TermWeightor.DEFAULT);
     Set<Term> terms = new HashSet<>();
-    tree.collectTerms((f, b) -> terms.add(new Term(f, b)));
+    tree.collectTerms((f, b) -> terms.add(new QueryTerm(f, b, 0)));
     return terms;
   }
 
@@ -50,13 +51,13 @@ public class TestSpanExtractors extends LuceneTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanTermQuery(new Term("field1", "term1")),
-              new SpanTermQuery(new Term("field1", "term"))
+              new SpanTermQuery(new QueryTerm("field1", "term1", 0)),
+              new SpanTermQuery(new QueryTerm("field1", "term", 0))
             },
             0,
             true);
 
-    Set<Term> expected = Collections.singleton(new Term("field1", "term1"));
+    Set<Term> expected = Collections.singleton(new QueryTerm("field1", "term1", 0));
     assertEquals(expected, collectTerms(q));
   }
 
@@ -64,37 +65,40 @@ public class TestSpanExtractors extends LuceneTestCase {
     SpanNearQuery q =
         new SpanNearQuery(
             new SpanQuery[] {
-              new SpanMultiTermQueryWrapper<>(new RegexpQuery(new Term("field", "super.*cali.*"))),
-              new SpanTermQuery(new Term("field", "is"))
+              new SpanMultiTermQueryWrapper<>(
+                  new RegexpQuery(new QueryTerm("field", "super.*cali.*", 0))),
+              new SpanTermQuery(new QueryTerm("field", "is", 0))
             },
             0,
             true);
 
-    Set<Term> expected = Collections.singleton(new Term("field", "is"));
+    Set<Term> expected = Collections.singleton(new QueryTerm("field", "is", 0));
     assertEquals(expected, collectTerms(q));
   }
 
   public void testSpanOrExtractor() {
     SpanOrQuery or =
         new SpanOrQuery(
-            new SpanTermQuery(new Term("field", "term1")),
-            new SpanTermQuery(new Term("field", "term2")));
+            new SpanTermQuery(new QueryTerm("field", "term1", 0)),
+            new SpanTermQuery(new QueryTerm("field", "term2", 0)));
     Set<Term> expected =
-        new HashSet<>(Arrays.asList(new Term("field", "term1"), new Term("field", "term2")));
+        new HashSet<>(
+            Arrays.asList(new QueryTerm("field", "term1", 0), new QueryTerm("field", "term2", 0)));
     assertEquals(expected, collectTerms(or));
   }
 
   public void testSpanMultiTerms() {
-    SpanQuery q = new SpanMultiTermQueryWrapper<>(new RegexpQuery(new Term("field", "term.*")));
+    SpanQuery q =
+        new SpanMultiTermQueryWrapper<>(new RegexpQuery(new QueryTerm("field", "term.*", 0)));
     Set<Term> terms = collectTerms(q);
     assertEquals(1, terms.size());
     assertEquals(TermFilteredPresearcher.ANYTOKEN_FIELD, terms.iterator().next().field());
   }
 
   public void testSpanWithin() {
-    Term t1 = new Term("field", "term1");
-    Term t2 = new Term("field", "term22");
-    Term t3 = new Term("field", "term333");
+    QueryTerm t1 = new QueryTerm("field", "term1", 0);
+    QueryTerm t2 = new QueryTerm("field", "term22", 0);
+    QueryTerm t3 = new QueryTerm("field", "term333", 0);
     SpanWithinQuery swq =
         new SpanWithinQuery(
             SpanNearQuery.newOrderedNearQuery("field")
@@ -107,9 +111,9 @@ public class TestSpanExtractors extends LuceneTestCase {
   }
 
   public void testSpanContains() {
-    Term t1 = new Term("field", "term1");
-    Term t2 = new Term("field", "term22");
-    Term t3 = new Term("field", "term333");
+    QueryTerm t1 = new QueryTerm("field", "term1", 0);
+    QueryTerm t2 = new QueryTerm("field", "term22", 0);
+    QueryTerm t3 = new QueryTerm("field", "term333", 0);
     SpanContainingQuery swq =
         new SpanContainingQuery(
             SpanNearQuery.newOrderedNearQuery("field")
@@ -122,13 +126,13 @@ public class TestSpanExtractors extends LuceneTestCase {
   }
 
   public void testFieldMaskingSpanQuery() {
-    Term t1 = new Term("field", "term1");
+    QueryTerm t1 = new QueryTerm("field", "term1", 0);
     FieldMaskingSpanQuery q = new FieldMaskingSpanQuery(new SpanTermQuery(t1), "field2");
     assertEquals(Collections.singleton(t1), collectTerms(q));
   }
 
   public void testSpanPositionQuery() {
-    Term t1 = new Term("field", "term");
+    QueryTerm t1 = new QueryTerm("field", "term", 0);
     Query q = new SpanFirstQuery(new SpanTermQuery(t1), 10);
     assertEquals(Collections.singleton(t1), collectTerms(q));
   }

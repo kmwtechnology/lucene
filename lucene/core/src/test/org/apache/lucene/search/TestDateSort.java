@@ -22,8 +22,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.tests.index.RandomIndexWriter;
 import org.apache.lucene.tests.util.LuceneTestCase;
@@ -75,7 +75,7 @@ public class TestDateSort extends LuceneTestCase {
     IndexSearcher searcher = newSearcher(reader);
 
     Sort sort = new Sort(new SortField(DATE_TIME_FIELD, SortField.Type.STRING, true));
-    Query query = new TermQuery(new Term(TEXT_FIELD, "document"));
+    Query query = new TermQuery(new QueryTerm(TEXT_FIELD, "document", 0));
 
     // Execute the search and process the search results.
     String[] actualOrder = new String[5];

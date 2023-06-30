@@ -31,7 +31,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -45,7 +45,7 @@ import org.apache.lucene.tests.util.TestUtil;
 public class TestSimpleFragmentsBuilder extends AbstractTestCase {
 
   public void test1TermIndex() throws Exception {
-    FieldFragList ffl = ffl(new TermQuery(new Term(F, "a")), "a");
+    FieldFragList ffl = ffl(new TermQuery(new QueryTerm(F, "a", 0)), "a");
     SimpleFragmentsBuilder sfb = new SimpleFragmentsBuilder();
     assertEquals("<b>a</b>", sfb.createFragment(reader, 0, F, ffl));
 
@@ -55,7 +55,8 @@ public class TestSimpleFragmentsBuilder extends AbstractTestCase {
   }
 
   public void test2Frags() throws Exception {
-    FieldFragList ffl = ffl(new TermQuery(new Term(F, "a")), "a b b b b b b b b b b b a b a b");
+    FieldFragList ffl =
+        ffl(new TermQuery(new QueryTerm(F, "a", 0)), "a b b b b b b b b b b b a b a b");
     SimpleFragmentsBuilder sfb = new SimpleFragmentsBuilder();
     String[] f = sfb.createFragments(reader, 0, F, ffl, 3);
     // 3 snippets requested, but should be 2
@@ -66,8 +67,8 @@ public class TestSimpleFragmentsBuilder extends AbstractTestCase {
 
   public void test3Frags() throws Exception {
     BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
-    booleanQuery.add(new TermQuery(new Term(F, "a")), BooleanClause.Occur.SHOULD);
-    booleanQuery.add(new TermQuery(new Term(F, "c")), BooleanClause.Occur.SHOULD);
+    booleanQuery.add(new TermQuery(new QueryTerm(F, "a", 0)), BooleanClause.Occur.SHOULD);
+    booleanQuery.add(new TermQuery(new QueryTerm(F, "c", 0)), BooleanClause.Occur.SHOULD);
 
     FieldFragList ffl =
         ffl(booleanQuery.build(), "a b b b b b b b b b b b a b a b b b b b c a a b b");
@@ -80,7 +81,7 @@ public class TestSimpleFragmentsBuilder extends AbstractTestCase {
   }
 
   public void testTagsAndEncoder() throws Exception {
-    FieldFragList ffl = ffl(new TermQuery(new Term(F, "a")), "<h1> a </h1>");
+    FieldFragList ffl = ffl(new TermQuery(new QueryTerm(F, "a", 0)), "<h1> a </h1>");
     SimpleFragmentsBuilder sfb = new SimpleFragmentsBuilder();
     String[] preTags = {"["};
     String[] postTags = {"]"};

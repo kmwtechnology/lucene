@@ -21,8 +21,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.QueryTerm;
 import org.apache.lucene.index.StoredFields;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.similarities.IndriDirichletSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
@@ -144,7 +144,7 @@ public class TestIndriAndQuery extends LuceneTestCase {
 
   /** macro */
   protected Query tq(String f, String t) {
-    return new TermQuery(new Term(f, t));
+    return new TermQuery(new QueryTerm(f, t, 0));
   }
 
   /** macro */
